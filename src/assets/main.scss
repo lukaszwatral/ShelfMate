@@ -1,0 +1,15 @@
+@import "normalize.css";
+
+@import "bootstrap/scss/functions";
+@import "bootstrap/scss/variables";
+
+@import "bootstrap/scss/bootstrap";
+@import "bootstrap-icons/font/bootstrap-icons.css";
+
+body {
+  min-height: 100vh;
+}
+
+[v-cloak] {
+  display: none;
+}
