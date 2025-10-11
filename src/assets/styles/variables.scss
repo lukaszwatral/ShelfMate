@@ -1,0 +1,21 @@
+$background-color: #f3f3f3;
+$header-color: #27292B;
+$footer-color: #27292B;
+$text-color: #6b6b6b;
+$logo-background: #6542cf;
+
+:root {
+  --background-color: $background-color;
+  --header-color: $header-color;
+  --footer-color: $footer-color;
+  --text-color: $text-color;
+  --logo-background: $logo-background;
+}
+
+body.dark-theme {
+    --background-color: #27292B;
+    --header-color: #f3f3f3;
+    --footer-color: #f3f3f3;
+    --text-color: #f3f3f3;
+    --logo-background: #6542cf;
+  }
