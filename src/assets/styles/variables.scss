@@ -1,8 +1,38 @@
-$background-color: #f3f3f3;
-$header-color: #27292B;
-$footer-color: #27292B;
-$text-color: #6b6b6b;
-$logo-background: #6542cf;
+// blue theme
+
+$background-color: #caf0f8;
+$header-color: #03045e;
+$footer-color: #03045e;
+$text-color: #0077b6;
+$logo-background: #0077b6;
+$container-background: rgba(255, 255, 255, 0.3);
+$primary-color: #0077b6;
+$secondary-color: #ffc8dd;
+$gradient-first: #03045e;
+$gradient-second: #0077b6;
+$gradient-third: #1a78a5;
+
+// purple theme
+
+//$background-color: #eacafd;
+//$header-color: #5a189a;
+//$footer-color: #5a189a;
+//$text-color: #7b2cbf;
+//$logo-background: #7b2cbf;
+//$container-background: rgba(255, 255, 255, 0.3);
+//$primary-color: #7b2cbf;
+//$secondary-color: #ffc8dd;
+
+// green theme
+
+//$background-color: #ccd5ae;
+//$header-color: #283618;
+//$footer-color: #283618;
+//$text-color: #606c38;
+//$logo-background: #606c38;
+//$container-background: rgba(255, 255, 255, 0.3);
+//$primary-color: #606c38;
+//$secondary-color: #ffc8dd;
 
 :root {
   --background-color: $background-color;
@@ -13,9 +43,9 @@ $logo-background: #6542cf;
 }
 
 body.dark-theme {
-    --background-color: #27292B;
-    --header-color: #f3f3f3;
-    --footer-color: #f3f3f3;
-    --text-color: #f3f3f3;
-    --logo-background: #6542cf;
-  }
+  --background-color: #27292b;
+  --header-color: #f3f3f3;
+  --footer-color: #f3f3f3;
+  --text-color: #f3f3f3;
+  --logo-background: #6542cf;
+}

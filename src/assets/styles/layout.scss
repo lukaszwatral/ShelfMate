@@ -1,6 +1,11 @@
-@import "variables";
+@import 'variables';
 * {
-  font-family: 'Tahoma', Segoe UI, Geneva, Verdana, sans-serif;
+  font-family:
+    'Tahoma',
+    Segoe UI,
+    Geneva,
+    Verdana,
+    sans-serif;
   margin: 0;
   padding: 0;
   box-sizing: border-box;
@@ -14,7 +19,6 @@
   align-items: center;
   padding: 24px;
 }
-
 
 .header {
   color: white;
@@ -33,12 +37,11 @@
   background: $header-color;
   overflow: hidden;
 
-
   .search-container {
     display: grid;
     grid-template-columns: 1fr 30px;
     width: 100%;
-    background: $background-color;
+    background: #f3f3f3;
     padding: 8px;
     border-radius: 25px;
     input {

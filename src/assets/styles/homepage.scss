@@ -1,6 +1,11 @@
-@import "variables";
+@import 'variables';
 * {
-  font-family: 'Tahoma', Segoe UI, Geneva, Verdana, sans-serif;
+  font-family:
+    'Tahoma',
+    Segoe UI,
+    Geneva,
+    Verdana,
+    sans-serif;
   margin: 0;
   padding: 0;
   box-sizing: border-box;
@@ -9,19 +14,21 @@
 .homepage {
   display: grid;
   grid-template-rows: auto 1fr;
+  color: $text-color;
 
   .logo {
     display: grid;
     grid-template-columns: auto 1fr;
-    grid-template-areas: "logo title" "subtitle subtitle";
+    grid-template-areas: 'logo title' 'subtitle subtitle';
     justify-self: flex-start;
     column-gap: 1em;
     place-items: center;
+    margin-bottom: 1em;
     .title {
       grid-area: title;
       font-size: 48px;
       font-weight: bold;
-      background: linear-gradient(120deg, rgb(51, 30, 143) 0%, #4e39b5 54.17%, #6542cf 100%);
+      background: linear-gradient(90deg, $gradient-first 0%, $gradient-second 54.17%, $gradient-third 100%);
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
       background-clip: text;
@@ -44,42 +51,152 @@
 
   .content {
     display: grid;
+    grid-template-columns: 1fr;
+    gap: 1em;
     width: 100%;
     height: 100%;
 
     .dashboard {
-      display: block;
+      display: flex;
+      flex-direction: column;
       font-size: 24px;
       font-weight: bold;
       width: 100%;
-      background: #aaa;
+      background: $container-background;
+      border-radius: 10px;
+      padding: 1em;
 
       .dashboard-content {
         display: grid;
-        grid-template-columns: 1fr 1fr 1fr;
+        grid-template-columns: repeat(3, 1fr);
         gap: 1em;
 
         .tile-container {
-text-align: center;
+          margin-top: 1em;
+          width: 100%;
+          text-align: center;
           .tile {
             aspect-ratio: 1/1;
-           display: flex;
+            display: flex;
             justify-self: center;
             align-self: center;
-            background: #2c3e50;
+            background: $primary-color;
             width: auto;
             padding: 1em;
+
+            span {
+              color: white;
+              display: flex;
+              width: 100%;
+              height: 100%;
+              justify-content: center;
+              align-items: center;
+            }
           }
 
           .tile-name {
-            font-size: 18px;
-            font-weight: normal;
+            font-size: clamp(14px, 2vw, 18px);
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            max-width: 100%;
             margin-bottom: 0.5em;
           }
         }
       }
     }
+    .add-button {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      width: 100%;
+      height: 100%;
+      background: $primary-color;
+      border-radius: 25px;
+      border: none;
+      padding: 0.3em 1em;
+      cursor: pointer;
+      font-size: 1.2rem;
+      font-weight: bold;
+      color: #fff;
+    }
 
+    .collection-slider-container {
+      span:first-child {
+        font-weight: bold;
+      }
+      .collection-slider {
+        display: grid;
+        grid-template-columns: auto 1fr auto;
+        gap: 1em;
+        background: $container-background;
+        padding: 10px;
+        border-radius: 10px;
+        place-items: center;
+
+        img {
+          width: 64px;
+          height: 64px;
+        }
+
+        span {
+          justify-self: flex-start;
+          text-wrap: wrap;
+          white-space: wrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          max-width: 100%;
+          font-size: 16px;
+          font-weight: bold;
+        }
+
+        .count-container {
+          display: grid;
+          grid-template-columns: 1fr;
+
+          span {
+            justify-self: center;
+            font-weight: normal;
+          }
+
+          span:first-child {
+            font-size: 24px;
+            font-weight: bold;
+          }
+        }
+      }
+    }
+
+    .expiry-date-items {
+      background: $secondary-color;
+      border-radius: 10px;
+      padding: 10px;
+      display: grid;
+      grid-template-columns: auto auto 1fr;
+      gap: 1em;
+
+      i {
+        font-size: 32px;
+        background: red;
+        aspect-ratio: 1/1;
+        display: flex;
+        justify-self: center;
+        align-self: center;
+        color: white;
+        border-radius: 50%;
+      }
+      span:nth-child(2) {
+        font-size: 32px;
+        font-weight: bold;
+      }
+      span {
+        text-wrap: wrap;
+        white-space: wrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        max-width: 100%;
+        font-size: 16px;
+      }
+    }
   }
 }
-
