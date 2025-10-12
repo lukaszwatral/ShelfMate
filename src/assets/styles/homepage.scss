@@ -18,6 +18,7 @@
 
   .logo {
     display: grid;
+    width: 100%;
     grid-template-columns: auto 1fr;
     grid-template-areas: 'logo title' 'subtitle subtitle';
     justify-self: flex-start;

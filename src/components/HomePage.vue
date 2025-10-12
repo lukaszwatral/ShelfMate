@@ -35,7 +35,7 @@
         </div>
 
         <button class="add-button shadow-sm">
-          <i class="bi bi-plus icon-large"></i> Dodaj pierwszy przedmiot
+          <i class="bi bi-plus icon-large"></i> Dodaj przedmiot
         </button>
 
         <div class="collection-slider-container">

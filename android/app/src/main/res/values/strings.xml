@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">ShelfMate</string>
+    <string name="title_activity_main">ShelfMate</string>
+    <string name="package_name">pl.shelfmate.app</string>
+    <string name="custom_url_scheme">pl.shelfmate.app</string>
+</resources>
