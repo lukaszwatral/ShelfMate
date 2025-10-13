@@ -1,7 +1,15 @@
 <template>
-  <HomePage />
-
-  <!--  <RouterView />-->
+  <div class="app-container">
+    <AppHeader />
+    <main>
+      <router-view v-slot="{ Component }">
+        <transition name="fade" mode="out-in">
+          <component :is="Component" />
+        </transition>
+      </router-view>
+    </main>
+    <AppFooter />
+  </div>
 </template>
 <script setup>
 import { onMounted } from 'vue'
