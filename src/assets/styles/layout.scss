@@ -17,12 +17,13 @@
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  padding: 24px;
+  box-sizing: border-box;
+  padding: 70px 24px;
 }
 
 .header {
   color: white;
-  position: absolute;
+  position: fixed;
   top: 0;
   left: 0;
   width: 100%;
@@ -64,7 +65,7 @@
 
 .footer {
   color: white;
-  position: absolute;
+  position: fixed;
   bottom: 0;
   left: 0;
   width: 100%;

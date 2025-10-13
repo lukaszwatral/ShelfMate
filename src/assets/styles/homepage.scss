@@ -15,38 +15,45 @@
   display: grid;
   grid-template-rows: auto 1fr;
   color: $text-color;
+  height: calc(100vh - 140px);
+  padding-top: 10px;
+  padding-bottom: 10px;
+  overflow-y: auto;
 
-  .logo {
+  .logo-container {
     display: grid;
     width: 100%;
-    grid-template-columns: auto 1fr;
-    grid-template-areas: 'logo title' 'subtitle subtitle';
+    grid-template-columns: 1fr;
     justify-self: flex-start;
     column-gap: 1em;
     place-items: center;
     margin-bottom: 1em;
-    .title {
-      grid-area: title;
-      font-size: 48px;
-      font-weight: bold;
-      background: linear-gradient(90deg, $gradient-first 0%, $gradient-second 54.17%, $gradient-third 100%);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
-      color: transparent;
+    .logo {
+      display: grid;
+      grid-template-columns: auto 1fr;
+      gap: 0.5em;
+      .title {
+        font-size: 48px;
+        font-weight: bold;
+        background: linear-gradient(90deg, $gradient-first 0%, $gradient-second 54.17%, $gradient-third 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        color: transparent;
+      }
+
+      img {
+        width: 72px;
+        height: 72px;
+        background: $logo-background;
+        border-radius: 25%;
+        padding: 8px;
+        place-self: center;
+      }
     }
     .subtitle {
       margin-top: 0.2em;
-      grid-area: subtitle;
       font-size: 20px;
-    }
-    img {
-      grid-area: logo;
-      width: 72px;
-      height: 72px;
-      background: $logo-background;
-      border-radius: 25%;
-      padding: 8px;
     }
   }
 

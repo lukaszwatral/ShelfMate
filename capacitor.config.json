@@ -1,5 +1,10 @@
 {
   "appId": "pl.shelfmate.app",
   "appName": "ShelfMate",
-  "webDir": "dist"
+  "webDir": "dist",
+  "bundledWebRuntime": false,
+  "server": {
+    "url": "http://localhost:5173",
+    "cleartext": true
+  }
 }

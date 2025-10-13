@@ -15,6 +15,7 @@
     "host": "vite --host"
   },
   "dependencies": {
+    "@capacitor-community/sqlite": "^7.0.2",
     "@capacitor/android": "^7.4.3",
     "@capacitor/cli": "^7.4.3",
     "@capacitor/core": "^7.4.3",
@@ -22,6 +23,7 @@
     "@popperjs/core": "^2.11.8",
     "bootstrap": "^5.3.8",
     "bootstrap-icons": "^1.13.1",
+    "jeep-sqlite": "^2.8.0",
     "normalize.css": "^8.0.1",
     "pinia": "^3.0.3",
     "vue": "^3.5.22",

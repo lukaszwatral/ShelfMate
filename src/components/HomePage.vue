@@ -2,10 +2,12 @@
   <div class="app-container">
     <AppHeader />
     <div class="homepage">
-      <div class="logo">
-        <img src="@/assets/images/logo.png" alt="logo" />
-        <div class="title">
-          <span class="title">ShelfMate</span>
+      <div class="logo-container">
+        <div class="logo">
+          <img src="@/assets/images/logo.png" alt="logo" />
+          <div class="title">
+            <span class="title">ShelfMate</span>
+          </div>
         </div>
         <span class="subtitle">{{ $t('home.subtitle') }}</span>
       </div>
@@ -73,14 +75,26 @@
 </template>
 
 <script setup>
+import { ref, onMounted } from 'vue'
 import AppHeader from '@/components/Header.vue'
 import AppFooter from '@/components/Footer.vue'
+import { dbService } from '@/services/database.js'
 
-// Import `useI18n` jest potrzebny, jeśli chcesz używać tłumaczeń wewnątrz <script setup>
-// np. const pageTitle = t('home.dashboardTitle')
-// Jeśli używasz tylko $t w szablonie, ten import nie jest ściśle wymagany.
 import { useI18n } from 'vue-i18n'
 const { t } = useI18n()
+
+const books = ref([])
+const newBookTitle = ref('')
+const isDbReady = ref(false)
+
+onMounted(async () => {
+  try {
+    await dbService.initialize()
+    isDbReady.value = true
+  } catch (err) {
+    console.error('Failed to initialize database on mount:', err)
+  }
+})
 </script>
 
 <style scoped></style>
