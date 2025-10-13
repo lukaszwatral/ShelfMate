@@ -35,7 +35,12 @@
       .title {
         font-size: 48px;
         font-weight: bold;
-        background: linear-gradient(90deg, $gradient-first 0%, $gradient-second 54.17%, $gradient-third 100%);
+        background: linear-gradient(
+          90deg,
+          $gradient-first 0%,
+          $gradient-second 54.17%,
+          $gradient-third 100%
+        );
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
         background-clip: text;
