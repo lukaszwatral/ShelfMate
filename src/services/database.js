@@ -1,85 +1,170 @@
+import { Capacitor } from '@capacitor/core'
+import { CapacitorSQLite, SQLiteConnection, SQLiteDBConnection } from '@capacitor-community/sqlite'
 
-import { Capacitor } from '@capacitor/core';
-import { CapacitorSQLite, SQLiteConnection, SQLiteDBConnection } from '@capacitor-community/sqlite';
-import { JeepSqlite } from 'jeep-sqlite/dist/components/jeep-sqlite';
+const DB_NAME = 'shelfmate.db'
 
-const DB_NAME = 'shelfmate_db';
+const sqlite = new SQLiteConnection(CapacitorSQLite)
+let db
 
-class DatabaseService {
-  constructor() {
-    this.sqlite = null;
-    this.db = null;
-    this.isInitialized = false;
-  }
+const dbCreationQuery = `
+PRAGMA foreign_keys = ON;
 
-  async initialize() {
-    if (this.isInitialized) return;
+-- Tabele główne i ich tłumaczenia
+CREATE TABLE IF NOT EXISTS Categories (
+    id INTEGER PRIMARY KEY AUTOINCREMENT
+);
 
-    try {
-      const platform = Capacitor.getPlatform();
-      this.sqlite = new SQLiteConnection(CapacitorSQLite);
+CREATE TABLE IF NOT EXISTS CategoryTranslations (
+    category_id INTEGER NOT NULL,
+    lang_code TEXT NOT NULL,
+    name TEXT NOT NULL,
+    description TEXT,
+    PRIMARY KEY (category_id, lang_code),
+    FOREIGN KEY (category_id) REFERENCES Categories(id) ON DELETE CASCADE
+);
 
-      if (platform === 'web') {
-        // Ensure the custom element is defined only once
-        if (!customElements.get('jeep-sqlite')) {
-          customElements.define('jeep-sqlite', JeepSqlite);
-        }
-        const jeepSqliteEl = document.createElement('jeep-sqlite');
-        document.body.appendChild(jeepSqliteEl);
-        await customElements.whenDefined('jeep-sqlite');
-        await this.sqlite.initWebStore();
-      }
+CREATE TABLE IF NOT EXISTS CustomFields (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    type TEXT NOT NULL
+);
 
-      const ret = await this.sqlite.checkConnectionsConsistency();
-      const isConn = (await this.sqlite.isConnection(DB_NAME, false)).result;
+CREATE TABLE IF NOT EXISTS CustomFieldTranslations (
+    field_id INTEGER NOT NULL,
+    lang_code TEXT NOT NULL,
+    name TEXT NOT NULL,
+    PRIMARY KEY (field_id, lang_code),
+    FOREIGN KEY (field_id) REFERENCES CustomFields(id) ON DELETE CASCADE
+);
 
-      if (ret.result && isConn) {
-        this.db = await this.sqlite.retrieveConnection(DB_NAME, false);
-      } else {
-        this.db = await this.sqlite.createConnection(DB_NAME, false, 'no-encryption', 1, false);
-      }
+-- Pozostałe tabele
+CREATE TABLE IF NOT EXISTS Places (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT NOT NULL,
+    description TEXT,
+    parent_id INTEGER,
+    FOREIGN KEY (parent_id) REFERENCES Places(id) ON DELETE CASCADE
+);
 
-      await this.db.open();
-      await this.setupSchema();
-      this.isInitialized = true;
-      console.log('Database initialized successfully');
-    } catch (err) {
-      console.error('Error initializing database:', err);
-      throw err;
+CREATE TABLE IF NOT EXISTS Tags (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT NOT NULL UNIQUE
+);
+
+CREATE TABLE IF NOT EXISTS Items (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT NOT NULL,
+    description TEXT,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    value REAL,
+    barcode TEXT,
+    nfc_tag TEXT,
+    category_id INTEGER,
+    place_id INTEGER,
+    FOREIGN KEY (category_id) REFERENCES Categories(id) ON DELETE SET NULL,
+    FOREIGN KEY (place_id) REFERENCES Places(id) ON DELETE SET NULL
+);
+
+CREATE TABLE IF NOT EXISTS CategoryFields (
+    category_id INTEGER NOT NULL,
+    field_id INTEGER NOT NULL,
+    PRIMARY KEY (category_id, field_id),
+    FOREIGN KEY (category_id) REFERENCES Categories(id) ON DELETE CASCADE,
+    FOREIGN KEY (field_id) REFERENCES CustomFields(id) ON DELETE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS ItemCustomFieldValues (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    item_id INTEGER NOT NULL,
+    field_id INTEGER NOT NULL,
+    value TEXT NOT NULL,
+    FOREIGN KEY (item_id) REFERENCES Items(id) ON DELETE CASCADE,
+    FOREIGN KEY (field_id) REFERENCES CustomFields(id) ON DELETE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS Files (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    item_id INTEGER NOT NULL,
+    path TEXT NOT NULL,
+    type TEXT,
+    FOREIGN KEY (item_id) REFERENCES Items(id) ON DELETE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS ItemTags (
+    item_id INTEGER NOT NULL,
+    tag_id INTEGER NOT NULL,
+    PRIMARY KEY (item_id, tag_id),
+    FOREIGN KEY (item_id) REFERENCES Items(id) ON DELETE CASCADE,
+    FOREIGN KEY (tag_id) REFERENCES Tags(id) ON DELETE CASCADE
+);
+
+-- Domyślne dane startowe (wersja wielojęzyczna)
+INSERT OR IGNORE INTO Categories (id) VALUES (1), (2), (3), (4), (5), (6), (7);
+
+INSERT OR IGNORE INTO CategoryTranslations (category_id, lang_code, name, description) VALUES
+    (1, 'pl', 'Elektronika', 'Sprzęt RTV, AGD, komputery i akcesoria'),
+    (2, 'pl', 'Dokumenty', 'Ważne dokumenty, umowy, faktury, gwarancje'),
+    (3, 'pl', 'Książki', 'Kolekcja książek, komiksów i czasopism'),
+    (4, 'pl', 'Ubrania', 'Odzież, obuwie i akcesoria'),
+    (5, 'pl', 'Narzędzia', 'Narzędzia ręczne, elektronarzędzia i sprzęt warsztatowy'),
+    (6, 'pl', 'Pamiątki', 'Przedmioty o wartości sentymentalnej, pamiątki z podróży'),
+    (7, 'pl', 'Ogólne', 'Przedmioty, które nie pasują do innych kategorii');
+
+INSERT OR IGNORE INTO CategoryTranslations (category_id, lang_code, name, description) VALUES
+    (1, 'en', 'Electronics', 'Home electronics, appliances, computers and accessories'),
+    (2, 'en', 'Documents', 'Important documents, contracts, invoices, warranties'),
+    (3, 'en', 'Books', 'Collection of books, comics and magazines'),
+    (4, 'en', 'Clothes', 'Clothing, footwear and accessories'),
+    (5, 'en', 'Tools', 'Hand tools, power tools and workshop equipment'),
+    (6, 'en', 'Souvenirs', 'Items with sentimental value, travel souvenirs'),
+    (7, 'en', 'General', 'Items that do not fit into other categories');
+
+INSERT OR IGNORE INTO CustomFields (id, type) VALUES
+    (1, 'text'), (2, 'text'), (3, 'text'), (4, 'date'), (5, 'date'),
+    (6, 'text'), (7, 'text'), (8, 'number'), (9, 'text'), (10, 'text');
+
+INSERT OR IGNORE INTO CustomFieldTranslations (field_id, lang_code, name) VALUES
+    (1, 'pl', 'Producent'), (2, 'pl', 'Model'), (3, 'pl', 'Numer seryjny'),
+    (4, 'pl', 'Data zakupu'), (5, 'pl', 'Koniec gwarancji'), (6, 'pl', 'Autor'),
+    (7, 'pl', 'ISBN'), (8, 'pl', 'Rok wydania'), (9, 'pl', 'Rozmiar'), (10, 'pl', 'Kolor');
+
+INSERT OR IGNORE INTO CustomFieldTranslations (field_id, lang_code, name) VALUES
+    (1, 'en', 'Manufacturer'), (2, 'en', 'Model'), (3, 'en', 'Serial number'),
+    (4, 'en', 'Purchase date'), (5, 'en', 'Warranty ends'), (6, 'en', 'Author'),
+    (7, 'en', 'ISBN'), (8, 'en', 'Publication year'), (9, 'en', 'Size'), (10, 'en', 'Color');
+
+INSERT OR IGNORE INTO CategoryFields (category_id, field_id) VALUES
+    (1, 1), (1, 2), (1, 3), (1, 4), (1, 5),
+    (3, 6), (3, 7), (3, 8);
+`
+
+const initializeDatabase = async () => {
+  try {
+    const isDb = (await sqlite.isDatabase(DB_NAME)).result
+    db = await sqlite.createConnection(DB_NAME, false, 'no-encryption', 1)
+    await db.open()
+
+    if (!isDb) {
+      console.log(`Baza danych ${DB_NAME} nie znaleziona. Tworzenie nowej...`)
+      await db.execute(dbCreationQuery)
+      console.log('Baza danych utworzona i wypełniona danymi startowymi.')
+    } else {
+      console.log('Baza danych już istnieje. Pomijanie tworzenia.')
     }
-  }
 
-  async setupSchema() {
-    // Example schema setup
-    const schema = `
-      CREATE TABLE IF NOT EXISTS books (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        title TEXT NOT NULL,
-        author TEXT
-      );
-    `;
-    await this.db.execute(schema);
-  }
-
-  async execute(statement) {
-    if (!this.isInitialized) {
-      throw new Error('Database not initialized. Call initialize() first.');
-    }
-    return this.db.execute(statement);
-  }
-
-  async query(statement, values = []) {
-    if (!this.isInitialized) {
-      throw new Error('Database not initialized. Call initialize() first.');
-    }
-    return this.db.query(statement, values);
-  }
-
-  getDb() {
-    return this.db;
+    return db
+  } catch (err) {
+    console.error('Błąd podczas inicjalizacji bazy danych:', err)
+    throw err
   }
 }
 
-// Export a singleton instance
-export const dbService = new DatabaseService();
+const getDb = () => {
+  if (!db) {
+    throw new Error(
+      'Baza danych nie została zainicjalizowana. Wywołaj najpierw initializeDatabase().',
+    )
+  }
+  return db
+}
 
+export { initializeDatabase, getDb }
