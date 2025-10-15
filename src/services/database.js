@@ -1,5 +1,5 @@
 import { Capacitor } from '@capacitor/core'
-import { CapacitorSQLite, SQLiteConnection, SQLiteDBConnection } from '@capacitor-community/sqlite'
+import { CapacitorSQLite, SQLiteConnection } from '@capacitor-community/sqlite'
 
 const DB_NAME = 'shelfmate.db'
 
@@ -7,144 +7,217 @@ const sqlite = new SQLiteConnection(CapacitorSQLite)
 let db
 
 const dbCreationQuery = `
+-- Włączenie obsługi kluczy obcych w SQLite
 PRAGMA foreign_keys = ON;
 
--- Tabele główne i ich tłumaczenia
-CREATE TABLE IF NOT EXISTS Categories (
-    id INTEGER PRIMARY KEY AUTOINCREMENT
-);
+-- ============================================
+-- TABELE GŁÓWNE I PODSTAWOWE
+-- ============================================
 
-CREATE TABLE IF NOT EXISTS CategoryTranslations (
-    category_id INTEGER NOT NULL,
-    lang_code TEXT NOT NULL,
-    name TEXT NOT NULL,
-    description TEXT,
-    PRIMARY KEY (category_id, lang_code),
-    FOREIGN KEY (category_id) REFERENCES Categories(id) ON DELETE CASCADE
-);
-
-CREATE TABLE IF NOT EXISTS CustomFields (
+-- Zunifikowana tabela dla wszystkich obiektów (przedmiotów, kategorii, miejsc itp.)
+CREATE TABLE IF NOT EXISTS Entity (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    type TEXT NOT NULL
-);
-
-CREATE TABLE IF NOT EXISTS CustomFieldTranslations (
-    field_id INTEGER NOT NULL,
-    lang_code TEXT NOT NULL,
-    name TEXT NOT NULL,
-    PRIMARY KEY (field_id, lang_code),
-    FOREIGN KEY (field_id) REFERENCES CustomFields(id) ON DELETE CASCADE
-);
-
--- Pozostałe tabele
-CREATE TABLE IF NOT EXISTS Places (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    name TEXT NOT NULL,
-    description TEXT,
+    type TEXT NOT NULL,
     parent_id INTEGER,
-    FOREIGN KEY (parent_id) REFERENCES Places(id) ON DELETE CASCADE
-);
-
-CREATE TABLE IF NOT EXISTS Tags (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    name TEXT NOT NULL UNIQUE
-);
-
-CREATE TABLE IF NOT EXISTS Items (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
     name TEXT NOT NULL,
     description TEXT,
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    value REAL,
-    barcode TEXT,
-    nfc_tag TEXT,
-    category_id INTEGER,
-    place_id INTEGER,
-    FOREIGN KEY (category_id) REFERENCES Categories(id) ON DELETE SET NULL,
-    FOREIGN KEY (place_id) REFERENCES Places(id) ON DELETE SET NULL
+    icon TEXT,
+    color TEXT,
+    sort_order INTEGER,
+    is_archived BOOLEAN NOT NULL DEFAULT 0,
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME,
+    deleted_at DATETIME,
+    FOREIGN KEY (parent_id) REFERENCES Entity(id) ON DELETE SET NULL
 );
 
-CREATE TABLE IF NOT EXISTS CategoryFields (
-    category_id INTEGER NOT NULL,
-    field_id INTEGER NOT NULL,
-    PRIMARY KEY (category_id, field_id),
-    FOREIGN KEY (category_id) REFERENCES Categories(id) ON DELETE CASCADE,
-    FOREIGN KEY (field_id) REFERENCES CustomFields(id) ON DELETE CASCADE
-);
-
-CREATE TABLE IF NOT EXISTS ItemCustomFieldValues (
+-- Tabela definicji tagów
+CREATE TABLE IF NOT EXISTS Tag (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    item_id INTEGER NOT NULL,
-    field_id INTEGER NOT NULL,
-    value TEXT NOT NULL,
-    FOREIGN KEY (item_id) REFERENCES Items(id) ON DELETE CASCADE,
-    FOREIGN KEY (field_id) REFERENCES CustomFields(id) ON DELETE CASCADE
+    name TEXT NOT NULL UNIQUE,
+    color TEXT,
+    icon TEXT,
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE TABLE IF NOT EXISTS Files (
+-- ============================================
+-- TABELE ŁĄCZĄCE I POMOCNICZE
+-- ============================================
+
+-- Tabela asocjacyjna łącząca encje z tagami (wiele-do-wielu)
+CREATE TABLE IF NOT EXISTS EntityTag (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    item_id INTEGER NOT NULL,
-    path TEXT NOT NULL,
-    type TEXT,
-    FOREIGN KEY (item_id) REFERENCES Items(id) ON DELETE CASCADE
-);
-
-CREATE TABLE IF NOT EXISTS ItemTags (
-    item_id INTEGER NOT NULL,
+    entity_id INTEGER NOT NULL,
     tag_id INTEGER NOT NULL,
-    PRIMARY KEY (item_id, tag_id),
-    FOREIGN KEY (item_id) REFERENCES Items(id) ON DELETE CASCADE,
-    FOREIGN KEY (tag_id) REFERENCES Tags(id) ON DELETE CASCADE
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (entity_id) REFERENCES Entity(id) ON DELETE CASCADE,
+    FOREIGN KEY (tag_id) REFERENCES Tag(id) ON DELETE CASCADE,
+    UNIQUE(entity_id, tag_id)
 );
 
--- Domyślne dane startowe (wersja wielojęzyczna)
-INSERT OR IGNORE INTO Categories (id) VALUES (1), (2), (3), (4), (5), (6), (7);
+-- Tabela dla plików powiązanych z encjami
+CREATE TABLE IF NOT EXISTS File (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    entity_id INTEGER NOT NULL,
+    file_path TEXT NOT NULL,
+    file_name TEXT NOT NULL,
+    mime_type TEXT,
+    is_primary BOOLEAN NOT NULL DEFAULT 0,
+    is_icon BOOLEAN NOT NULL DEFAULT 0,
+    thumbnail_path TEXT,
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (entity_id) REFERENCES Entity(id) ON DELETE CASCADE
+);
 
-INSERT OR IGNORE INTO CategoryTranslations (category_id, lang_code, name, description) VALUES
-    (1, 'pl', 'Elektronika', 'Sprzęt RTV, AGD, komputery i akcesoria'),
-    (2, 'pl', 'Dokumenty', 'Ważne dokumenty, umowy, faktury, gwarancje'),
-    (3, 'pl', 'Książki', 'Kolekcja książek, komiksów i czasopism'),
-    (4, 'pl', 'Ubrania', 'Odzież, obuwie i akcesoria'),
-    (5, 'pl', 'Narzędzia', 'Narzędzia ręczne, elektronarzędzia i sprzęt warsztatowy'),
-    (6, 'pl', 'Pamiątki', 'Przedmioty o wartości sentymentalnej, pamiątki z podróży'),
-    (7, 'pl', 'Ogólne', 'Przedmioty, które nie pasują do innych kategorii');
+-- Tabela dla kodów (kreskowych, QR itp.) powiązanych z encjami
+CREATE TABLE IF NOT EXISTS Code (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    entity_id INTEGER NOT NULL,
+    code_type TEXT NOT NULL,
+    code_value TEXT NOT NULL,
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (entity_id) REFERENCES Entity(id) ON DELETE CASCADE,
+    UNIQUE(code_value, code_type)
+);
 
-INSERT OR IGNORE INTO CategoryTranslations (category_id, lang_code, name, description) VALUES
-    (1, 'en', 'Electronics', 'Home electronics, appliances, computers and accessories'),
-    (2, 'en', 'Documents', 'Important documents, contracts, invoices, warranties'),
-    (3, 'en', 'Books', 'Collection of books, comics and magazines'),
-    (4, 'en', 'Clothes', 'Clothing, footwear and accessories'),
-    (5, 'en', 'Tools', 'Hand tools, power tools and workshop equipment'),
-    (6, 'en', 'Souvenirs', 'Items with sentimental value, travel souvenirs'),
-    (7, 'en', 'General', 'Items that do not fit into other categories');
 
-INSERT OR IGNORE INTO CustomFields (id, type) VALUES
-    (1, 'text'), (2, 'text'), (3, 'text'), (4, 'date'), (5, 'date'),
-    (6, 'text'), (7, 'text'), (8, 'number'), (9, 'text'), (10, 'text');
+-- ============================================
+-- WZORZEC EAV (POLA NIESTANDARDOWE)
+-- ============================================
 
-INSERT OR IGNORE INTO CustomFieldTranslations (field_id, lang_code, name) VALUES
-    (1, 'pl', 'Producent'), (2, 'pl', 'Model'), (3, 'pl', 'Numer seryjny'),
-    (4, 'pl', 'Data zakupu'), (5, 'pl', 'Koniec gwarancji'), (6, 'pl', 'Autor'),
-    (7, 'pl', 'ISBN'), (8, 'pl', 'Rok wydania'), (9, 'pl', 'Rozmiar'), (10, 'pl', 'Kolor');
+-- Definicje pól niestandardowych, powiązane z typem encji
+CREATE TABLE IF NOT EXISTS CustomField (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    entity_type TEXT NOT NULL,
+    field_name TEXT NOT NULL,
+    field_type TEXT NOT NULL CHECK(field_type IN ('text', 'number', 'date', 'boolean', 'select')),
+    is_required BOOLEAN NOT NULL DEFAULT 0,
+    default_value TEXT,
+    options TEXT, -- np. JSON z opcjami dla typu 'select'
+    sort_order INTEGER,
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME
+);
 
-INSERT OR IGNORE INTO CustomFieldTranslations (field_id, lang_code, name) VALUES
-    (1, 'en', 'Manufacturer'), (2, 'en', 'Model'), (3, 'en', 'Serial number'),
-    (4, 'en', 'Purchase date'), (5, 'en', 'Warranty ends'), (6, 'en', 'Author'),
-    (7, 'en', 'ISBN'), (8, 'en', 'Publication year'), (9, 'en', 'Size'), (10, 'en', 'Color');
+-- Wartości pól niestandardowych dla konkretnych encji
+CREATE TABLE IF NOT EXISTS CustomFieldValue (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    entity_id INTEGER NOT NULL,
+    custom_field_id INTEGER NOT NULL,
+    field_value TEXT,
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME,
+    FOREIGN KEY (entity_id) REFERENCES Entity(id) ON DELETE CASCADE,
+    FOREIGN KEY (custom_field_id) REFERENCES CustomField(id) ON DELETE CASCADE,
+    UNIQUE(entity_id, custom_field_id)
+);
 
-INSERT OR IGNORE INTO CategoryFields (category_id, field_id) VALUES
-    (1, 1), (1, 2), (1, 3), (1, 4), (1, 5),
-    (3, 6), (3, 7), (3, 8);
+
+-- ============================================
+-- TABELE SYSTEMOWE
+-- ============================================
+
+-- Tabela ustawień aplikacji (magazyn klucz-wartość)
+CREATE TABLE IF NOT EXISTS Setting (
+    key TEXT PRIMARY KEY NOT NULL,
+    value TEXT,
+    updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS Locale (
+code TEXT PRIMARY KEY NOT NULL,
+name TEXT NOT NULL,
+created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+
+-- ============================================
+-- TRIGGERS (WYZWALACZE) DO AUTOMATYCZNEJ AKTUALIZACJI DAT
+-- ============================================
+
+CREATE TRIGGER IF NOT EXISTS [UpdateEntityUpdatedAt]
+AFTER UPDATE ON Entity FOR EACH ROW
+BEGIN
+    UPDATE Entity SET updated_at = CURRENT_TIMESTAMP WHERE id = old.id;
+END;
+
+CREATE TRIGGER IF NOT EXISTS [UpdateCustomFieldUpdatedAt]
+AFTER UPDATE ON CustomField FOR EACH ROW
+BEGIN
+    UPDATE CustomField SET updated_at = CURRENT_TIMESTAMP WHERE id = old.id;
+END;
+
+CREATE TRIGGER IF NOT EXISTS [UpdateCustomFieldValueUpdatedAt]
+AFTER UPDATE ON CustomFieldValue FOR EACH ROW
+BEGIN
+    UPDATE CustomFieldValue SET updated_at = CURRENT_TIMESTAMP WHERE id = old.id;
+END;
+
+CREATE TRIGGER IF NOT EXISTS [UpdateSettingUpdatedAt]
+AFTER UPDATE ON Setting FOR EACH ROW
+BEGIN
+    UPDATE Setting SET updated_at = CURRENT_TIMESTAMP WHERE key = old.key;
+END;
+
+
+-- ============================================
+-- WSTĘPNE DANE STARTOWE
+-- ============================================
+
+-- Wstawienie dawnych Kategorii do tabeli Entity z typem 'category'
+INSERT INTO Entity (type, name, description, icon, color) VALUES
+('category', 'Elektronika', 'Urządzenia elektroniczne, gadżety i akcesoria.', 'icon-electronics', '#4A90E2'),
+('category', 'Dokumenty', 'Ważne dokumenty, umowy, certyfikaty.', 'icon-documents', '#F5A623'),
+('category', 'Narzędzia', 'Narzędzia ręczne, elektronarzędzia i osprzęt.', 'icon-tools', '#7ED321'),
+('category', 'Książki', 'Książki, czasopisma i inne materiały do czytania.', 'icon-books', '#BD10E0');
+
+-- Wstawienie dawnych Miejsc do tabeli Entity z typem 'place'
+INSERT INTO Entity (type, name, description, parent_id) VALUES
+('place', 'Dom', 'Główne miejsce zamieszkania', NULL),
+('place', 'Biuro', 'Miejsce pracy', NULL);
+
+-- Przykład wstawienia zagnieżdżonego miejsca (dziecka encji 'Dom')
+INSERT INTO Entity (type, name, description, parent_id) VALUES
+('place', 'Garaż', 'Garaż przydomowy', (SELECT id FROM Entity WHERE name = 'Dom' AND type = 'place'));
+INSERT INTO Locale (code, name) VALUES
+('pl', 'Polski'),
+('en', 'English');
+
+INSERT INTO Setting (key, value) VALUES
+('locale', 'pl');
+
 `
 
-const initializeDatabase = async () => {
+const initializeDatabase = async (forceCreate = false) => {
   try {
-    const isDb = (await sqlite.isDatabase(DB_NAME)).result
-    db = await sqlite.createConnection(DB_NAME, false, 'no-encryption', 1)
+    // Handle forceCreate first
+    if (forceCreate) {
+      if ((await sqlite.isConnection(DB_NAME)).result) {
+        console.log(`forceCreate=true. Zamykanie istniejącego połączenia: ${DB_NAME}`)
+        await sqlite.closeConnection(DB_NAME)
+      }
+      if ((await sqlite.isDatabase(DB_NAME)).result) {
+        console.log(`forceCreate=true. Usuwanie istniejącej bazy danych: ${DB_NAME}`)
+        await sqlite.deleteDatabase(DB_NAME)
+      }
+      db = null // Reset our local reference
+    }
+
+    let dbExists = (await sqlite.isDatabase(DB_NAME)).result
+
+    // Establish the connection
+    try {
+      db = await sqlite.retrieveConnection(DB_NAME)
+      console.log(`Pobrano istniejące połączenie: ${DB_NAME}`)
+    } catch (e) {
+      console.log(`Tworzenie nowego połączenia: ${DB_NAME}`)
+      db = await sqlite.createConnection(DB_NAME, false, 'no-encryption', 1)
+    }
+
     await db.open()
 
-    if (!isDb) {
-      console.log(`Baza danych ${DB_NAME} nie znaleziona. Tworzenie nowej...`)
+    if (!dbExists) {
+      console.log(`Tworzenie schematu i danych startowych dla bazy: ${DB_NAME}`)
       await db.execute(dbCreationQuery)
       console.log('Baza danych utworzona i wypełniona danymi startowymi.')
     } else {
