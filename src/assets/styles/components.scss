@@ -1,0 +1,126 @@
+.content-container {
+  box-sizing: border-box;
+  width: 100%;
+  color: $text-color;
+  height: calc(100vh - 140px);
+  padding-top: 10px;
+  padding-bottom: 10px;
+  overflow-y: auto;
+}
+.add-button {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  //height: 100%;
+  background: $primary-color;
+  border-radius: 25px;
+  border: none;
+  padding: 0.3em 1em;
+  cursor: pointer;
+  font-size: 1.2rem;
+  font-weight: bold;
+  color: #fff;
+}
+
+.entity-container {
+    span.title {
+        font-size: 40px;
+      font-weight: bold;
+    }
+
+    .add-button {
+      margin: 1em 0;
+    }
+
+  .entity-list {
+    ul {
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      li {
+        padding: 1em;
+        margin: 0.5em 0;
+        width: 100%;
+        list-style: none;
+        background: rgba(255, 255, 255, 0.4);
+      }
+    }
+  }
+
+  .entity-toggle {
+    background: rgba(255, 255, 255, 0.5);
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    place-items: stretch center;
+    //padding: 1em;
+    border-radius: 10px;
+    margin-top: 0.5em;
+    position: relative;
+    gap: 0;
+
+    div {
+      padding: 0.5em;
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 100%;
+      width: 100%;
+
+      font-weight: bold;
+      font-size: 1.1em;
+      min-height: 40px;
+      border-radius: 0;
+      background: #fff;
+      z-index: 2;
+    }
+.entity-toggle-option:first-child {
+  border-radius: 8px 0 0 8px;
+}
+    .entity-toggle-option:last-child {
+      border-radius: 0 8px 8px 0;
+    }
+
+    .entity-toggle-option:not(:last-child) {
+      border-right: 1px solid #1a78a5;
+    }
+    .entity-toggle-option.active {
+      background: $primary-color;
+      color: #fff;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+      font-weight: bold;
+      transition: background 0.2s, color 0.2s;
+      z-index: 3;
+      position: relative;
+    }
+  }
+
+  .buttons-container {
+    background:none;
+    margin: 1em 0;
+  display: grid;
+    grid-template-columns: 40px auto 40px 40px;
+    gap: 0.5em;
+
+    .action-button {
+      aspect-ratio: 1/1;
+      width: 100%;
+      height: 100%;
+      border: none;
+      padding: 20px;
+      background: $action-button;
+      color: white;
+      border-radius: 15px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      cursor: pointer;
+    }
+  }
+
+
+
+}
+
+

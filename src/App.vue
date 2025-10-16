@@ -1,13 +1,11 @@
 <template>
   <div class="app-container">
     <AppHeader />
-    <main>
-      <router-view v-slot="{ Component }">
-        <transition name="fade" mode="out-in">
-          <component :is="Component" />
-        </transition>
-      </router-view>
-    </main>
+    <router-view v-slot="{ Component }">
+      <transition name="fade" mode="out-in">
+        <component :is="Component" />
+      </transition>
+    </router-view>
     <AppFooter />
   </div>
 </template>

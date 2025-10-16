@@ -71,10 +71,6 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
-import AppHeader from '@/components/Header.vue'
-import AppFooter from '@/components/Footer.vue'
-
 import { useI18n } from 'vue-i18n'
 const { t } = useI18n()
 </script>

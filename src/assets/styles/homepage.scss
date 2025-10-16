@@ -13,7 +13,6 @@
 
 .homepage {
   display: grid;
-  grid-template-rows: auto 1fr;
   color: $text-color;
   height: calc(100vh - 140px);
   padding-top: 10px;
