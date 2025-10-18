@@ -15,9 +15,11 @@
         <i class="bi bi-grid"></i>
       </button>
     </div>
-    <button class="add-button shadow-sm">
-      <i class="bi bi-plus icon-large"></i> {{ $t('item.addItem') }}
-    </button>
+    <router-link :to="{ name: 'addEntity' }">
+      <button class="add-button shadow-sm">
+        <i class="bi bi-plus icon-large"></i> {{ $t('item.addItem') }}
+      </button>
+    </router-link>
     <div class="entity-list">
       <ul v-for="item in items" v-bind:key="item.id">
         <li class="shadow-sm">{{ item.name }}</li>

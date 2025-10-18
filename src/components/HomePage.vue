@@ -10,33 +10,35 @@
       <span class="subtitle">{{ $t('home.subtitle') }}</span>
     </div>
     <div class="content">
-      <div class="dashboard shadow-sm">
+      <div class="dashboard shadow-sm" v-if="dashboardData">
         <span>{{ $t('home.dashboardTitle') }}</span>
         <div class="dashboard-content">
           <div class="tile-container">
             <div class="tile">
-              <span>0</span>
+              <span>{{ itemsCount }}</span>
             </div>
             <span class="tile-name">{{ $t('home.items') }}</span>
           </div>
           <div class="tile-container">
             <div class="tile">
-              <span>0</span>
+              <span>{{ categoriesCount }}</span>
             </div>
             <span class="tile-name">{{ $t('home.categories') }}</span>
           </div>
           <div class="tile-container">
             <div class="tile">
-              <span>0 </span>
+              <span>{{ placesCount }}</span>
             </div>
             <span class="tile-name">{{ $t('home.places') }}</span>
           </div>
         </div>
       </div>
 
-      <button class="add-button shadow-sm">
-        <i class="bi bi-plus icon-large"></i> {{ $t('home.addItem') }}
-      </button>
+      <router-link :to="{ name: 'addEntity' }">
+        <button class="add-button shadow-sm">
+          <i class="bi bi-plus icon-large"></i> {{ $t('home.addItem') }}
+        </button>
+      </router-link>
 
       <div class="collection-slider-container">
         <span>{{ $t('home.largestCollections') }}</span>
@@ -71,8 +73,23 @@
 </template>
 
 <script setup>
-import { useI18n } from 'vue-i18n'
-const { t } = useI18n()
+import { onMounted, ref, computed } from 'vue'
+import { getDashboardData } from '@/services/entityService.js'
+
+const dashboardData = ref({ items: [], categories: [], places: [] })
+
+const itemsCount = computed(() => dashboardData.value?.items?.length ?? 0)
+const categoriesCount = computed(() => dashboardData.value?.categories?.length ?? 0)
+const placesCount = computed(() => dashboardData.value?.places?.length ?? 0)
+
+onMounted(async () => {
+  try {
+    const data = await getDashboardData()
+    dashboardData.value = data ?? { items: [], categories: [], places: [] }
+  } catch (e) {
+    dashboardData.value = { items: [], categories: [], places: [] }
+  }
+})
 </script>
 
 <style scoped></style>

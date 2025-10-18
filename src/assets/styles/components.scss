@@ -119,8 +119,37 @@
     }
   }
 
+  .entity-row {
+    display: grid;
+    grid-template-columns: 24px auto 24px;
+    grid-template-areas: 'icon name toggle' 'icon description toggle';
+    align-items: center;
+    gap: 1em;
+  }
 
+  .toggle-btn {
+    grid-area: toggle;
+    width: 24px;
+    height: 24px;
+    background: none;
+    border: none;
+  }
+  .children-list {
+    padding-left: 16px;
+    margin: 6px 0 0 0;
+    list-style: none;
+  }
+  .entity-description {
+    grid-area: description;
+  }
 
+  .entity-name {
+    grid-area: name;
+  }
+
+  .entity-icon {
+    grid-area: icon;
+  }
 }
 
 

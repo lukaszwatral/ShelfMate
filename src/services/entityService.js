@@ -1,4 +1,9 @@
-import { findAllByType } from '@/services/entityRepository.js'
+import { findAll, findAllByType, addEntity } from '@/services/entityRepository.js'
+
+async function getEntities() {
+  const entities = await findAll()
+  return entities
+}
 
 async function getCategories() {
   const categories = await findAllByType('category')
@@ -18,4 +23,22 @@ async function getItems() {
   return items
 }
 
-export { getCategories, getPlaces, getItems }
+async function createEntity(entity) {
+  const result = await addEntity(entity)
+
+  return result
+}
+
+async function getDashboardData() {
+  const categories = await getCategories()
+  const places = await getPlaces()
+  const items = await getItems()
+
+  return {
+    categories,
+    places,
+    items,
+  }
+}
+
+export { getEntities, getCategories, getPlaces, getItems, createEntity, getDashboardData }

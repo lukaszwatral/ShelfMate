@@ -1,9 +1,11 @@
 <template>
   <div class="content-container entity-container">
     <EntityToggle />
-    <button class="add-button shadow-sm">
-      <i class="bi bi-plus icon-large"></i> {{ $t('category.addCategory') }}
-    </button>
+    <router-link :to="{ name: 'addEntity' }">
+      <button class="add-button shadow-sm">
+        <i class="bi bi-plus icon-large"></i> {{ $t('category.addCategory') }}
+      </button>
+    </router-link>
     <div class="entity-list">
       <ul v-for="category in categories" v-bind:key="category.id">
         <li class="shadow-sm">{{ category.name }}</li>

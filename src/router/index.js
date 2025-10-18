@@ -32,6 +32,11 @@ const router = createRouter({
       name: 'settings',
       component: () => import('@/views/SettingsView.vue'),
     },
+    {
+      path: '/entity/add',
+      name: 'addEntity',
+      component: () => import('@/views/AddEntityView.vue'),
+    },
   ],
 })
 

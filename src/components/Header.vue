@@ -5,7 +5,9 @@
       <i class="bi bi-search icon-small"></i>
     </div>
     <i class="bi bi-upc-scan"></i>
-    <i class="bi bi-plus icon-large"></i>
+    <router-link :to="{ name: 'addEntity' }">
+      <i class="bi bi-plus icon-large"></i>
+    </router-link>
   </div>
 </template>
 
