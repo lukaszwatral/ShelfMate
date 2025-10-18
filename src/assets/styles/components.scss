@@ -2,7 +2,7 @@
   box-sizing: border-box;
   width: 100%;
   color: $text-color;
-  height: calc(100vh - 140px);
+  height: calc(100vh - 140px - env(safe-area-inset-top));
   padding-top: 10px;
   padding-bottom: 10px;
   overflow-y: auto;
