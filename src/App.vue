@@ -10,8 +10,8 @@
   </div>
 </template>
 <script setup>
-import { onMounted } from 'vue'
-import { initializeDatabase, getDb } from './services/database.js'
+import { onMounted, onUnmounted } from 'vue'
+import { initializeDatabase, getDb, closeDbConnection } from './services/database.js'
 import AppHeader from '@/components/Header.vue'
 import AppFooter from '@/components/Footer.vue'
 

@@ -24,14 +24,14 @@
 }
 
 .entity-container {
-    span.title {
-        font-size: 40px;
-      font-weight: bold;
-    }
+  span.title {
+    font-size: 40px;
+    font-weight: bold;
+  }
 
-    .add-button {
-      margin: 1em 0;
-    }
+  .add-button {
+    margin: 1em 0;
+  }
 
   .entity-list {
     ul {
@@ -75,9 +75,9 @@
       background: #fff;
       z-index: 2;
     }
-.entity-toggle-option:first-child {
-  border-radius: 8px 0 0 8px;
-}
+    .entity-toggle-option:first-child {
+      border-radius: 8px 0 0 8px;
+    }
     .entity-toggle-option:last-child {
       border-radius: 0 8px 8px 0;
     }
@@ -88,18 +88,20 @@
     .entity-toggle-option.active {
       background: $primary-color;
       color: #fff;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
       font-weight: bold;
-      transition: background 0.2s, color 0.2s;
+      transition:
+        background 0.2s,
+        color 0.2s;
       z-index: 3;
       position: relative;
     }
   }
 
   .buttons-container {
-    background:none;
+    background: none;
     margin: 1em 0;
-  display: grid;
+    display: grid;
     grid-template-columns: 40px auto 40px 40px;
     gap: 0.5em;
 
@@ -152,4 +154,30 @@
   }
 }
 
+.settings {
+  display: flex;
+  flex-direction: column;
+  gap: 1em;
+  label[for='language'] {
+    margin-right: 0.5em;
+  }
+  h1 {
+    font-size: 32px;
+    font-weight: bold;
+  }
+}
 
+.settings-row {
+  display: flex;
+  align-items: center;
+  gap: 1em;
+
+  .dropdown button {
+    background: rgba(0, 0, 0, 0.5);
+    border: none;
+  }
+
+  .dropdown li {
+    padding: 0.5em;
+  }
+}

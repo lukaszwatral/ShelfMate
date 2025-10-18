@@ -1,6 +1,6 @@
 export default {
   home: {
-    subtitle: 'Store it where you want, how you want.',
+    subtitle: 'Store it your way.',
     dashboardTitle: 'Dashboard',
     items: 'Items',
     categories: 'Categories',
@@ -13,5 +13,41 @@ export default {
   },
   category: {
     title: 'Categories',
+    addCategory: 'Add category',
+    loading: 'Loading categories...',
+    noCategories: 'No categories',
+  },
+  place: {
+    title: 'Places',
+    addPlace: 'Add place',
+    loading: 'Loading places...',
+    noPlaces: 'No places',
+  },
+  item: {
+    title: 'Items',
+    addItem: 'Add item',
+    loading: 'Loading items...',
+    noItems: 'No items',
+  },
+  settings: {
+    title: 'Settings',
+    chooseLanguage: 'Choose language',
+  },
+  addEntity: {
+    type: 'Type',
+    typeDefault: 'Select type',
+    item: 'Item',
+    category: 'Category',
+    place: 'Place',
+    parentEntity: 'Parent entity',
+    null: 'None',
+    name: 'Name',
+    namePlaceholder: 'e.g. LEGO set',
+    description: 'Description',
+    descriptionPlaceholder: 'e.g. LEGO 75192 Star Wars Millennium Falcon',
+    add: 'Add',
+  },
+  header: {
+    searchPlaceholder: 'Search item...',
   },
 }

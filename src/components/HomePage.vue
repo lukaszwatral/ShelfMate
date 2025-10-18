@@ -13,24 +13,31 @@
       <div class="dashboard shadow-sm" v-if="dashboardData">
         <span>{{ $t('home.dashboardTitle') }}</span>
         <div class="dashboard-content">
-          <div class="tile-container">
-            <div class="tile">
-              <span>{{ itemsCount }}</span>
+          <router-link :to="{ name: 'item' }">
+            <div class="tile-container">
+              <div class="tile">
+                <span>{{ itemsCount }}</span>
+              </div>
+
+              <span class="tile-name">{{ $t('home.items') }}</span>
             </div>
-            <span class="tile-name">{{ $t('home.items') }}</span>
-          </div>
-          <div class="tile-container">
-            <div class="tile">
-              <span>{{ categoriesCount }}</span>
+          </router-link>
+          <router-link :to="{ name: 'category' }">
+            <div class="tile-container">
+              <div class="tile">
+                <span>{{ categoriesCount }}</span>
+              </div>
+              <span class="tile-name">{{ $t('home.categories') }}</span>
             </div>
-            <span class="tile-name">{{ $t('home.categories') }}</span>
-          </div>
-          <div class="tile-container">
-            <div class="tile">
-              <span>{{ placesCount }}</span>
+          </router-link>
+          <router-link :to="{ name: 'place' }">
+            <div class="tile-container">
+              <div class="tile">
+                <span>{{ placesCount }}</span>
+              </div>
+              <span class="tile-name">{{ $t('home.places') }}</span>
             </div>
-            <span class="tile-name">{{ $t('home.places') }}</span>
-          </div>
+          </router-link>
         </div>
       </div>
 
@@ -76,6 +83,7 @@
 import { onMounted, ref, computed } from 'vue'
 import { getDashboardData } from '@/services/entityService.js'
 
+const localecode = ref('')
 const dashboardData = ref({ items: [], categories: [], places: [] })
 
 const itemsCount = computed(() => dashboardData.value?.items?.length ?? 0)

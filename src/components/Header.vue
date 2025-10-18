@@ -1,7 +1,7 @@
 <template>
   <div class="header shadow-sm">
     <div class="search-container shadow-sm">
-      <input type="text" placeholder="Wyszukaj przedmiot..." />
+      <input type="text" :placeholder="$t('header.searchPlaceholder')" />
       <i class="bi bi-search icon-small"></i>
     </div>
     <i class="bi bi-upc-scan"></i>
@@ -12,6 +12,9 @@
 </template>
 
 <script setup>
+import { useI18n } from 'vue-i18n'
+
+const { t } = useI18n()
 defineOptions({
   name: 'AppHeader',
 })

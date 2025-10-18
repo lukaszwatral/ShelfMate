@@ -14,5 +14,40 @@ export default {
   category: {
     title: 'Kategorie',
     addCategory: 'Dodaj kategorię',
+    loading: 'Ładowanie kategorii...',
+    noCategories: 'Brak kategorii',
+  },
+  place: {
+    title: 'Miejsca',
+    addPlace: 'Dodaj miejsce',
+    loading: 'Ładowanie miejsc...',
+    noPlaces: 'Brak miejsc',
+  },
+  item: {
+    title: 'Przedmioty',
+    addItem: 'Dodaj przedmiot',
+    loading: 'Ładowanie przedmiotów...',
+    noItems: 'Brak przedmiotów',
+  },
+  settings: {
+    title: 'Ustawienia',
+    chooseLanguage: 'Wybierz język',
+  },
+  addEntity: {
+    type: 'Typ',
+    typeDefault: 'Wybierz typ',
+    item: 'Przedmiot',
+    category: 'Kategoria',
+    place: 'Miejsce',
+    parentEntity: 'Encja nadrzędna',
+    null: 'Brak',
+    name: 'Nazwa',
+    namePlaceholder: 'np. zestaw LEGO',
+    description: 'Opis',
+    descriptionPlaceholder: 'np. LEGO 75192 Star Wars Sokół Millennium',
+    add: 'Dodaj',
+  },
+  header: {
+    searchPlaceholder: 'Wyszukaj przedmiot...',
   },
 }

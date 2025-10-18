@@ -30,9 +30,8 @@
         </EntityTree>
       </ul>
 
-      <div v-else-if="isLoading">Ładowanie...</div>
-      <div v-else-if="error">Błąd: {{ error.message || error }}</div>
-      <div v-else>Brak miejsc</div>
+      <div v-else-if="isLoading">{{ $t('place.loading') }}</div>
+      <div v-else>{{ $t('place.noPlaces') }}</div>
     </div>
   </div>
 </template>

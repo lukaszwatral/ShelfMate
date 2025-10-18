@@ -4,9 +4,11 @@ import en from './translations/messages.en.js'
 
 const messages = { pl, en }
 
-export default createI18n({
-  legacy: false,
-  locale: 'pl',
-  fallbackLocale: 'en',
-  messages,
-})
+export function createAppI18n(locale = 'pl') {
+  return createI18n({
+    legacy: false,
+    locale,
+    fallbackLocale: 'en',
+    messages,
+  })
+}

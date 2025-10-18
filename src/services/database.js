@@ -240,4 +240,16 @@ const getDb = () => {
   return db
 }
 
-export { initializeDatabase, getDb }
+const closeDbConnection = async () => {
+  try {
+    if ((await sqlite.isConnection(DB_NAME)).result) {
+      await sqlite.closeConnection(DB_NAME)
+      db = null
+      console.log(`Połączenie z bazą ${DB_NAME} zostało zamknięte.`)
+    }
+  } catch (err) {
+    console.error('Błąd podczas zamykania połączenia z bazą:', err)
+  }
+}
+
+export { initializeDatabase, getDb, closeDbConnection }
