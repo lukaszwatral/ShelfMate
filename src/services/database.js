@@ -189,18 +189,35 @@ INSERT INTO Setting (key, value) VALUES
 `
 
 const initializeDatabase = async (forceCreate = false) => {
-  try {
-    // Handle forceCreate first
-    if (forceCreate) {
+  console.log(DB_NAME)
+  console.log('polaczenie', (await sqlite.isConnection(DB_NAME)).result)
+
+  // Jeśli połączenie już istnieje i nie wymuszamy ponownego utworzenia, zwróć istniejące
+  if (db && !forceCreate) {
+    try {
       if ((await sqlite.isConnection(DB_NAME)).result) {
-        console.log(`forceCreate=true. Zamykanie istniejącego połączenia: ${DB_NAME}`)
-        await sqlite.closeConnection(DB_NAME)
+        return db
       }
+    } catch (e) {}
+  }
+
+  try {
+    // Zawsze próbuj zamknąć połączenie przed utworzeniem nowego
+    try {
+      await sqlite.closeConnection(DB_NAME)
+      db = null
+      console.log(`Zamknięto połączenie z bazą: ${DB_NAME}`)
+    } catch (e) {
+      // Jeśli nie uda się zamknąć, loguj i kontynuuj
+      console.warn(`Nie udało się zamknąć połączenia: ${DB_NAME}`, e)
+    }
+
+    if (forceCreate) {
       if ((await sqlite.isDatabase(DB_NAME)).result) {
         console.log(`forceCreate=true. Usuwanie istniejącej bazy danych: ${DB_NAME}`)
         await sqlite.deleteDatabase(DB_NAME)
       }
-      db = null // Reset our local reference
+      db = null
     }
 
     let dbExists = (await sqlite.isDatabase(DB_NAME)).result
