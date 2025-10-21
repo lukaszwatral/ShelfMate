@@ -50,4 +50,8 @@ export default {
   header: {
     searchPlaceholder: 'Wyszukaj przedmiot...',
   },
+  removeEntity: {
+    alertTitle: 'Usuń {entity}',
+    alertMessage: 'Czy na pewno chcesz usunąć {entity}? Tej operacji nie da się cofnąć!',
+  },
 }

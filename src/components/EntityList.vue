@@ -1,7 +1,7 @@
 <template>
   <div class="entity-list mt-3">
     <ul v-if="rows.length" class="list-unstyled">
-      <EntityTree v-for="row in rows" :key="row.id" :entity="row">
+      <EntityTree v-for="row in rows" :key="row.id" :entity="row" @removeEntity="loadRows">
         <template #entity="{ entity }">
           <template v-if="entity.type === 'category'">
             <i class="bi bi-tag-fill entity-icon"></i>

@@ -12,17 +12,23 @@
         <span class="entity-name">{{ entity.name }}</span>
         <span class="entity-description">{{ entity.description }}</span>
       </slot>
-      <button
-        v-if="entity.children && entity.children.length"
-        class="toggle-btn"
-        type="button"
-        @click="toggle"
-        aria-label="toggle children"
-      >
-        <span></span>
-        <i v-if="expanded" class="bi-chevron-up"></i>
-        <i v-else class="bi-chevron-down"></i>
-      </button>
+      <div class="entity-actions">
+        <button><i class="bi bi-pencil-square icon-small"></i></button>
+        <button @click="toggleRemoveAction(entity)">
+          <i class="bi bi-trash-fill icon-small"></i>
+        </button>
+        <button
+          v-if="entity.children && entity.children.length"
+          class="toggle-btn"
+          type="button"
+          @click="toggle"
+          aria-label="toggle children"
+        >
+          <span></span>
+          <i v-if="expanded" class="bi-chevron-up"></i>
+          <i v-else class="bi-chevron-down"></i>
+        </button>
+      </div>
     </div>
   </li>
   <transition name="slide-fade">
@@ -43,10 +49,17 @@
 
 <script setup>
 import { ref } from 'vue'
+import { removeEntity } from '@/services/entityService.js'
+import { Dialog } from '@capacitor/dialog'
+import { useI18n } from 'vue-i18n'
+
+const { t } = useI18n()
 
 defineOptions({
   name: 'EntityTree',
 })
+
+const emit = defineEmits(['removeEntity'])
 
 const props = defineProps({
   entity: { type: Object, required: true },
@@ -57,6 +70,17 @@ const expanded = ref(false)
 
 const toggle = () => {
   expanded.value = !expanded.value
+}
+
+async function toggleRemoveAction(entity) {
+  const { value } = await Dialog.confirm({
+    title: t('removeEntity.alertTitle', { entity: entity.name }),
+    message: t('removeEntity.alertMessage', { entity: entity.name }),
+  })
+  if (value) {
+    await removeEntity(entity)
+    emit('removeEntity')
+  }
 }
 </script>
 

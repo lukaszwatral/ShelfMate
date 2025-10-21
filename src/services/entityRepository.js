@@ -21,4 +21,15 @@ const addEntity = async (entity) => {
   return result.insertId || null
 }
 
-export { findAll, findAllByType, addEntity }
+const findById = async (id) => {
+  const db = getDb()
+  const result = await db.query(`SELECT * FROM Entity WHERE id = ?;`, [id])
+  return result.values[0] || null
+}
+
+const remove = async (id) => {
+  const db = getDb()
+  await db.query(`DELETE FROM Entity WHERE id = ?;`, [id])
+}
+
+export { findAll, findAllByType, addEntity, findById, remove }

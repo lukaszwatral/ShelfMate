@@ -50,4 +50,8 @@ export default {
   header: {
     searchPlaceholder: 'Search item...',
   },
+  removeEntity: {
+    alertTitle: 'Remove {entity}',
+    alertMessage: 'Are you sure you want to remove {entity}? This action cannot be undone!',
+  },
 }

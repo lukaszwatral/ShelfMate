@@ -1,4 +1,4 @@
-import { findAll, findAllByType, addEntity } from '@/services/entityRepository.js'
+import { findAll, findAllByType, addEntity, remove } from '@/services/entityRepository.js'
 
 async function getEntities() {
   const entities = await findAll()
@@ -41,4 +41,16 @@ async function getDashboardData() {
   }
 }
 
-export { getEntities, getCategories, getPlaces, getItems, createEntity, getDashboardData }
+async function removeEntity(entity) {
+  await remove(entity.id)
+}
+
+export {
+  getEntities,
+  getCategories,
+  getPlaces,
+  getItems,
+  createEntity,
+  getDashboardData,
+  removeEntity,
+}

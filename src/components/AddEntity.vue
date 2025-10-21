@@ -1,39 +1,48 @@
 <template>
-  <div>
+  <div class="add-entity-container">
     <form @submit.prevent="addEntity">
-      <label for="type">{{ $t('addEntity.type') }}:</label>
-      <select name="type" id="type" required v-model="newEntity.type">
-        <option :value="null">{{ $t('addEntity.typeDefault') }}</option>
-        <option value="item">{{ $t('addEntity.item') }}</option>
-        <option value="category">{{ $t('addEntity.category') }}</option>
-        <option value="place">{{ $t('addEntity.place') }}</option>
-      </select>
+      <div class="form-floating">
+        <select name="type" class="form-select" id="type" required v-model="newEntity.type">
+          <option :value="null">{{ $t('addEntity.typeDefault') }}</option>
+          <option value="item">{{ $t('addEntity.item') }}</option>
+          <option value="category">{{ $t('addEntity.category') }}</option>
+          <option value="place">{{ $t('addEntity.place') }}</option>
+        </select>
+        <label for="type">{{ $t('addEntity.type') }}</label>
+      </div>
 
-      <label for="parent">{{ $t('addEntity.parentEntity') }}:</label>
-      <select name="parent" id="parent" v-model="newEntity.parentId">
-        <option :value="null">{{ $t('addEntity.null') }}</option>
-        <option v-for="entity in allEntities" :key="entity.id" :value="entity.id">
-          {{ entity.name }} ({{ entity.type }})
-        </option>
-      </select>
+      <div class="form-floating">
+        <select name="parent" id="parent" class="form-select" v-model="newEntity.parentId">
+          <option :value="null">{{ $t('addEntity.null') }}</option>
+          <option v-for="entity in allEntities" :key="entity.id" :value="entity.id">
+            {{ entity.name }} ({{ entity.type }})
+          </option>
+        </select>
+        <label for="parent">{{ $t('addEntity.parentEntity') }}</label>
+      </div>
+      <div class="form-floating">
+        <input
+          id="name"
+          type="text"
+          class="form-control"
+          :placeholder="$t('addEntity.namePlaceholder')"
+          required
+          v-model="newEntity.name"
+        />
+        <label for="name" class="form-label">{{ $t('addEntity.name') }}</label>
+      </div>
+      <div class="form-floating">
+        <textarea
+          id="description"
+          type="text"
+          :placeholder="$t('addEntity.descriptionPlaceholder')"
+          v-model="newEntity.description"
+          class="form-control"
+        />
+        <label for="description">{{ $t('addEntity.description') }}</label>
+      </div>
 
-      <label for="name">{{ $t('addEntity.name') }}:</label>
-      <input
-        id="name"
-        type="text"
-        :placeholder="$t('addEntity.namePlaceholder')"
-        required
-        v-model="newEntity.name"
-      />
-      <label for="description">{{ $t('addEntity.description') }}:</label>
-      <input
-        id="description"
-        type="text"
-        :placeholder="$t('addEntity.descriptionPlaceholder')"
-        v-model="newEntity.description"
-      />
-
-      <button type="submit">{{ $t('addEntity.add') }}</button>
+      <button class="btn btn-primary" type="submit">{{ $t('addEntity.add') }}</button>
     </form>
   </div>
 </template>
@@ -57,12 +66,15 @@ const newEntity = ref({
   parentId: null,
 })
 
-onMounted(async () => {
+async function fetchEntities() {
   try {
     allEntities.value = await getEntities()
   } catch (error) {
     console.error('Error fetching entities:', error)
   }
+}
+onMounted(async () => {
+  await fetchEntities()
 })
 
 async function addEntity() {
@@ -76,6 +88,8 @@ async function addEntity() {
       description: '',
       parentId: null,
     }
+
+    await fetchEntities()
   } catch (error) {
     console.error('Error adding entity:', error)
   }

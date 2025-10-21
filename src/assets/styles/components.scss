@@ -131,12 +131,23 @@
     gap: 1em;
   }
 
-  .toggle-btn {
+  .entity-actions {
     grid-area: toggle;
-    width: 24px;
-    height: 24px;
-    background: none;
-    border: none;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5em;
+
+
+    button {
+      width: 24px;
+      height: 24px;
+      background: none;
+      border: none;
+    }
+
+    .bi-trash-fill {
+      color: $danger;
+    }
   }
   .children-list {
     padding-left: 16px;
@@ -144,10 +155,14 @@
     list-style: none;
   }
   .entity-description {
+    font-size: 0.9em;
+    color: $text-color;
     grid-area: description;
   }
 
   .entity-name {
+    font-size: 1.2em;
+    font-weight: bold;
     grid-area: name;
   }
 
@@ -181,5 +196,14 @@
 
   .dropdown li {
     padding: 0.5em;
+  }
+}
+
+.add-entity-container {
+  width: 100%;
+  form {
+    display: flex;
+    flex-direction: column;
+    gap: 1em;
   }
 }
