@@ -201,6 +201,8 @@
 
 .add-entity-container {
   width: 100%;
+  margin: 20px auto;
+  overflow-y: auto;
   form {
     display: flex;
     flex-direction: column;

@@ -54,4 +54,18 @@ export default {
     alertTitle: 'Usuń {entity}',
     alertMessage: 'Czy na pewno chcesz usunąć {entity}? Tej operacji nie da się cofnąć!',
   },
+  attributeTypeDescriptions: {
+    text: 'Tekst (jedna linia)',
+    number: 'Liczba',
+    date: 'Data',
+    datetime: 'Data i czas',
+    textarea: 'Pole tekstowe (wiele linii)',
+    checkbox: 'Pole wielokrotnego wyboru',
+    radio: 'Pole jednokrotnego wyboru',
+    select: 'Lista rozwijana',
+    file: 'Plik',
+    image: 'Obraz',
+    color: 'Wybór koloru',
+    url: 'Adres URL',
+  },
 }

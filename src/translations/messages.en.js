@@ -54,4 +54,18 @@ export default {
     alertTitle: 'Remove {entity}',
     alertMessage: 'Are you sure you want to remove {entity}? This action cannot be undone!',
   },
+  attributeTypeDescriptions: {
+    text: 'Text (single line)',
+    number: 'Number',
+    date: 'Date',
+    datetime: 'Date and time',
+    textarea: 'Textarea (multiple lines)',
+    checkbox: 'Checkbox (multiple choice)',
+    radio: 'Radio button (single choice)',
+    select: 'Dropdown list',
+    file: 'File',
+    image: 'Image',
+    color: 'Color picker',
+    url: 'URL',
+  },
 }

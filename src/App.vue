@@ -8,6 +8,7 @@
     </router-view>
     <AppFooter />
   </div>
+  <input type=""
 </template>
 <script setup>
 import { onMounted, onUnmounted } from 'vue'
