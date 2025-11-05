@@ -84,7 +84,42 @@
                   required
                 />
               </div>
-              <div class="d-flex align-items-center gap-2">
+              <!-- Opcje dla radio, checkbox, select -->
+              <div v-if="['radio', 'checkbox', 'select'].includes(attr.type)" class="mb-2 ms-4">
+                <label>Opcje:</label>
+                <div
+                  v-for="(option, optIdx) in attr.options"
+                  :key="optIdx"
+                  class="d-flex gap-2 mb-1"
+                >
+                  <input
+                    type="text"
+                    class="form-control"
+                    v-model="attr.options[optIdx]"
+                    placeholder="Wartość opcji"
+                    required
+                  />
+                  <button
+                    type="button"
+                    class="btn btn-danger btn-sm"
+                    @click="attr.options.splice(optIdx, 1)"
+                  >
+                    Usuń
+                  </button>
+                </div>
+                <button
+                  type="button"
+                  class="btn btn-secondary btn-sm mt-1"
+                  @click="attr.options.push('')"
+                >
+                  Dodaj opcję
+                </button>
+              </div>
+              <!-- Pole wartości nie jest dostępne dla radio, checkbox, select -->
+              <div
+                v-if="!['radio', 'checkbox', 'select'].includes(attr.type)"
+                class="d-flex align-items-center gap-2"
+              >
                 <label class="form-label mb-0">Wartość:</label>
                 <component
                   :is="attr.type === 'textarea' ? 'textarea' : 'input'"
@@ -153,6 +188,7 @@ function addAttribute() {
     type: AttributeTypeEnumValues[0],
     value: '',
     id: Date.now() + Math.random(),
+    options: [],
   })
 }
 
@@ -162,6 +198,16 @@ function removeAttribute(idx) {
 
 function updateAttribute(idx, key, val) {
   attributes.value[idx][key] = val
+  // Jeśli zmieniamy typ na radio, checkbox lub select, resetuj opcje
+  if (key === 'type' && ['radio', 'checkbox', 'select'].includes(val)) {
+    attributes.value[idx].options = []
+    // Dla tych typów nie ma wartości domyślnej
+    attributes.value[idx].value = ''
+  }
+  // Jeśli zmieniamy typ na inny niż radio, checkbox, select, usuń opcje
+  if (key === 'type' && !['radio', 'checkbox', 'select'].includes(val)) {
+    attributes.value[idx].options = []
+  }
 }
 
 async function fetchEntities() {
