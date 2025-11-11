@@ -206,6 +206,46 @@
   form {
     display: flex;
     flex-direction: column;
-    gap: 1em;
+    gap: 0.5em;
+
+    .form-label {
+      font-weight: bold;
+    }
+
+    .required-field {
+      color: red;
+    }
+
+    .form-input-container{
+      display: grid;
+      grid-template-columns: 1fr;
+
+      .form-control, .form-select {
+        &:focus, &:active {
+          outline: none;
+          border: 1px solid $primary-color;
+          box-shadow: none;
+        }
+      }
+
+
+      .input-with-icon {
+        display: grid;
+        grid-template-columns: auto 32px;
+        background: $input-bg;
+        padding-left: 0;
+
+        .form-control {
+          background: none;
+          border: none;
+          outline: none;
+        }
+
+        i {
+          justify-self: center;
+          align-self: center;
+        }
+      }
+    }
   }
 }

@@ -35,7 +35,7 @@ export default {
   },
   addEntity: {
     type: 'Typ',
-    typeDefault: 'Wybierz typ',
+    typeDefault: 'Wybierz typ encji',
     item: 'Przedmiot',
     category: 'Kategoria',
     place: 'Miejsce',
@@ -46,6 +46,7 @@ export default {
     description: 'Opis',
     descriptionPlaceholder: 'np. LEGO 75192 Star Wars Sokół Millennium',
     add: 'Dodaj',
+    code: 'Kod',
   },
   header: {
     searchPlaceholder: 'Wyszukaj przedmiot...',

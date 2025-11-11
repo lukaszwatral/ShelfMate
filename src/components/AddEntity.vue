@@ -1,45 +1,92 @@
 <template>
   <div class="add-entity-container">
     <form @submit.prevent="addEntity">
-      <div class="form-floating">
-        <select name="type" class="form-select" id="type" required v-model="newEntity.type">
-          <option :value="null">{{ $t('addEntity.typeDefault') }}</option>
-          <option value="item">{{ $t('addEntity.item') }}</option>
-          <option value="category">{{ $t('addEntity.category') }}</option>
-          <option value="place">{{ $t('addEntity.place') }}</option>
-        </select>
-        <label for="type">{{ $t('addEntity.type') }}</label>
-      </div>
-      <div class="form-floating">
-        <select name="parent" id="parent" class="form-select" v-model="newEntity.parentId">
-          <option :value="null">{{ $t('addEntity.null') }}</option>
-          <option v-for="entity in allEntities" :key="entity.id" :value="entity.id">
-            {{ entity.name }} ({{ entity.type }})
-          </option>
-        </select>
-        <label for="parent">{{ $t('addEntity.parentEntity') }}</label>
-      </div>
-      <div class="form-floating">
-        <input
-          id="name"
-          type="text"
-          class="form-control"
-          :placeholder="$t('addEntity.namePlaceholder')"
-          required
-          v-model="newEntity.name"
+      <div class="form-input-container shadow-sm">
+        <label for="type" class="form-label">{{ $t('addEntity.type') }}:</label>
+        <VueSelect
+          v-model="newEntity.type"
+          name="type"
+          :options="[
+            { label: $t('addEntity.category'), value: 'category' },
+            { label: $t('addEntity.place'), value: 'place' },
+            { label: $t('addEntity.item'), value: 'item' },
+          ]"
+          :placeholder="$t('addEntity.typeDefault')"
+          :isClearable="false"
+          :isSearchable="false"
         />
-        <label for="name" class="form-label">{{ $t('addEntity.name') }}</label>
       </div>
-      <div class="form-floating">
-        <textarea
-          id="description"
-          type="text"
-          :placeholder="$t('addEntity.descriptionPlaceholder')"
-          v-model="newEntity.description"
-          class="form-control"
-        />
-        <label for="description">{{ $t('addEntity.description') }}</label>
-      </div>
+      <template v-if="newEntity.type">
+        <div class="form-input-container shadow-sm">
+          <label for="parent" class="form-label">{{ $t('addEntity.parentEntity') }}:</label>
+          <VueSelect
+            v-model="newEntity.parentId"
+            name="parent"
+            :options="[
+              { label: $t('addEntity.null'), value: null },
+              ...(newEntity.type === 'category'
+                ? allCategories.map((cat) => ({
+                    label: `${cat.name} (${t('addEntity.' + cat.type)})`,
+                    value: cat.id,
+                  }))
+                : allEntities.map((ent) => ({
+                    label: `${ent.name} (${t('addEntity.' + ent.type)})`,
+                    value: ent.id,
+                  }))),
+            ]"
+            :placeholder="$t('addEntity.null')"
+          />
+        </div>
+
+        <div class="form-input-container shadow-sm" v-if="newEntity.type !== 'category'">
+          <label for="category" class="form-label">{{ $t('addEntity.category') }}:</label>
+          <VueSelect
+            v-model="newEntity.categoryId"
+            name="category"
+            :options="allCategories.map((cat) => ({ label: cat.name, value: cat.id }))"
+            :placeholder="$t('addEntity.null')"
+          />
+        </div>
+
+        <div class="form-input-container shadow-sm">
+          <label for="name" class="form-label">{{ $t('addEntity.name') }}:</label>
+          <input
+            id="name"
+            type="text"
+            class="form-control"
+            :placeholder="$t('addEntity.namePlaceholder')"
+            required
+            v-model="newEntity.name"
+          />
+        </div>
+        <div class="form-input-container shadow-sm">
+          <label for="description" class="form-label">{{ $t('addEntity.description') }}:</label>
+          <textarea
+            id="description"
+            type="text"
+            :placeholder="$t('addEntity.descriptionPlaceholder')"
+            v-model="newEntity.description"
+            class="form-control"
+          />
+        </div>
+
+        <div class="form-input-container shadow-sm">
+          <label for="name" class="form-label"
+            >{{ $t('addEntity.code') }}: <i class="bi bi-info-circle icon-small"></i
+          ></label>
+          <div class="input-with-icon form-control">
+            <input
+              id="name"
+              type="text"
+              class="form-control"
+              placeholder=""
+              readonly
+              v-model="newEntity.code"
+            />
+            <i class="bi bi-upc-scan" @click="scanBarcode"></i>
+          </div>
+        </div>
+      </template>
 
       <div class="accordion" id="attributesAccordion">
         <div v-for="(attr, idx) in attributes" :key="attr.id" class="accordion-item">
@@ -161,11 +208,16 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import VueSelect from 'vue3-select-component'
+import { ref, onMounted, watch } from 'vue'
 import { createEntity, getEntities } from '@/services/entityService.js'
 import { useI18n } from 'vue-i18n'
 import { AttributeTypeDescriptions, AttributeTypeEnumValues } from '@/Enum/AttributeTypeEnum.js'
-
+import {
+  CapacitorBarcodeScanner,
+  CapacitorBarcodeScannerTypeHint,
+} from '@capacitor/barcode-scanner'
+import 'vue3-select-component/styles'
 const { t } = useI18n()
 
 defineOptions({
@@ -173,14 +225,19 @@ defineOptions({
 })
 
 const allEntities = ref([])
+const allCategories = ref([])
 const newEntity = ref({
   type: null,
   name: '',
   description: '',
   parentId: null,
+  categoryId: null,
+  code: '',
+  attributes: [],
 })
 
 const attributes = ref([])
+const barcode = ref(null)
 
 function addAttribute() {
   attributes.value.push({
@@ -212,14 +269,25 @@ function updateAttribute(idx, key, val) {
 
 async function fetchEntities() {
   try {
-    allEntities.value = await getEntities()
+    const entities = await getEntities()
+    allEntities.value = entities.filter((entity) => entity.type !== 'category')
+    allCategories.value = entities.filter((entity) => entity.type === 'category')
   } catch (error) {
     console.error('Error fetching entities:', error)
   }
 }
+
 onMounted(async () => {
   await fetchEntities()
 })
+
+watch(
+  () => newEntity.value.type,
+  () => {
+    newEntity.value.parentId = null
+    newEntity.value.categoryId = null
+  },
+)
 
 async function addEntity() {
   try {
@@ -231,13 +299,21 @@ async function addEntity() {
       type: null,
       name: '',
       description: '',
+      code: '',
       parentId: null,
+      categoryId: null,
     }
     attributes.value = []
     await fetchEntities()
   } catch (error) {
     console.error('Error adding entity:', error)
   }
+}
+const scanBarcode = async () => {
+  const result = await CapacitorBarcodeScanner.scanBarcode({
+    hint: CapacitorBarcodeScannerTypeHint.ALL,
+  })
+  newEntity.value.code = result.ScanResult
 }
 </script>
 
