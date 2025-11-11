@@ -46,6 +46,8 @@ export default {
     description: 'Description',
     descriptionPlaceholder: 'e.g. LEGO 75192 Star Wars Millennium Falcon',
     add: 'Add',
+    code: 'Code',
+    icon: 'Icon',
   },
   header: {
     searchPlaceholder: 'Search item...',

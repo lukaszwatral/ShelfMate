@@ -7,14 +7,27 @@
           v-model="newEntity.type"
           name="type"
           :options="[
-            { label: $t('addEntity.category'), value: 'category' },
-            { label: $t('addEntity.place'), value: 'place' },
-            { label: $t('addEntity.item'), value: 'item' },
+            { label: $t('addEntity.category'), value: 'category', icon: 'tag' },
+            { label: $t('addEntity.place'), value: 'place', icon: 'box-seam' },
+            { label: $t('addEntity.item'), value: 'item', icon: 'bag' },
           ]"
           :placeholder="$t('addEntity.typeDefault')"
           :isClearable="false"
           :isSearchable="false"
-        />
+        >
+          <template #option="{ option }">
+            <span class="select-option">
+              <i v-if="option.icon" :class="`bi bi-${option.icon}`"></i>
+              <span>{{ option.label }}</span>
+            </span>
+          </template>
+          <template #value="{ option }">
+            <span class="select-option">
+              <i v-if="option.icon" :class="`bi bi-${option.icon}`"></i>
+              <span>{{ option.label }}</span>
+            </span>
+          </template>
+        </VueSelect>
       </div>
       <template v-if="newEntity.type">
         <div class="form-input-container shadow-sm">
@@ -28,14 +41,30 @@
                 ? allCategories.map((cat) => ({
                     label: `${cat.name} (${t('addEntity.' + cat.type)})`,
                     value: cat.id,
+                    icon: cat.icon,
                   }))
                 : allEntities.map((ent) => ({
                     label: `${ent.name} (${t('addEntity.' + ent.type)})`,
                     value: ent.id,
+                    icon: ent.icon,
                   }))),
             ]"
             :placeholder="$t('addEntity.null')"
-          />
+          >
+            <template #option="{ option }">
+              <span class="select-option">
+                <i v-if="option.icon" :class="`bi bi-${option.icon}`"></i>
+                <span>{{ option.label }}</span>
+              </span>
+            </template>
+
+            <template #value="{ option }">
+              <span class="select-option">
+                <i v-if="option.icon" :class="`bi bi-${option.icon}`"></i>
+                <span>{{ option.label }}</span>
+              </span>
+            </template>
+          </VueSelect>
         </div>
 
         <div class="form-input-container shadow-sm" v-if="newEntity.type !== 'category'">
@@ -43,9 +72,25 @@
           <VueSelect
             v-model="newEntity.categoryId"
             name="category"
-            :options="allCategories.map((cat) => ({ label: cat.name, value: cat.id }))"
+            :options="
+              allCategories.map((cat) => ({ label: cat.name, value: cat.id, icon: cat.icon }))
+            "
             :placeholder="$t('addEntity.null')"
-          />
+          >
+            <template #option="{ option }">
+              <span class="select-option">
+                <i v-if="option.icon" :class="`bi bi-${option.icon}`"></i>
+                <span>{{ option.label }}</span>
+              </span>
+            </template>
+
+            <template #value="{ option }">
+              <span class="select-option">
+                <i v-if="option.icon" :class="`bi bi-${option.icon}`"></i>
+                <span>{{ option.label }}</span>
+              </span>
+            </template>
+          </VueSelect>
         </div>
 
         <div class="form-input-container shadow-sm">
@@ -85,6 +130,29 @@
             />
             <i class="bi bi-upc-scan" @click="scanBarcode"></i>
           </div>
+        </div>
+
+        <div class="form-input-container shadow-sm">
+          <label for="icon" class="form-label">{{ $t('addEntity.icon') }}: </label>
+          <VueSelect
+            v-model="newEntity.icon"
+            name="icon"
+            :options="iconNamesArray.map((icon) => ({ label: icon, value: icon }))"
+          >
+            <template #value="{ option }">
+              <span class="select-option">
+                <i :class="`bi bi-${option.label}`"></i>
+                <span>{{ option.label }}</span>
+              </span>
+            </template>
+
+            <template #option="{ option }">
+              <span class="select-option">
+                <i :class="`bi bi-${option.label}`"></i>
+                <span>{{ option.label }}</span>
+              </span>
+            </template>
+          </VueSelect>
         </div>
       </template>
 
@@ -133,12 +201,8 @@
               </div>
               <!-- Opcje dla radio, checkbox, select -->
               <div v-if="['radio', 'checkbox', 'select'].includes(attr.type)" class="mb-2 ms-4">
-                <label>Opcje:</label>
-                <div
-                  v-for="(option, optIdx) in attr.options"
-                  :key="optIdx"
-                  class="d-flex gap-2 mb-1"
-                >
+                v-for="(option, optIdx) in attr.options"
+                <div v-for="(_, optIdx) in attr.options" :key="optIdx" class="d-flex gap-2 mb-1">
                   <input
                     type="text"
                     class="form-control"
@@ -218,6 +282,7 @@ import {
   CapacitorBarcodeScannerTypeHint,
 } from '@capacitor/barcode-scanner'
 import 'vue3-select-component/styles'
+import iconsObject from 'bootstrap-icons/font/bootstrap-icons.json'
 const { t } = useI18n()
 
 defineOptions({
@@ -233,13 +298,14 @@ const newEntity = ref({
   parentId: null,
   categoryId: null,
   code: '',
+  icon: '',
   attributes: [],
 })
 
 const attributes = ref([])
-const barcode = ref(null)
-
+const iconNamesArray = Object.keys(iconsObject)
 function addAttribute() {
+  const barcode = ref(null)
   attributes.value.push({
     name: '',
     type: AttributeTypeEnumValues[0],
@@ -300,6 +366,7 @@ async function addEntity() {
       name: '',
       description: '',
       code: '',
+      icon: '',
       parentId: null,
       categoryId: null,
     }

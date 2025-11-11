@@ -219,32 +219,25 @@ INSERT INTO Entity (type, name, description, parent_id) VALUES
   ('place', 'Biuro', 'Miejsce pracy', NULL);
 
 -- Przykład zagnieżdżonego miejsca (Garaż W Domu)
-INSERT INTO Entity (type, name, description, parent_id) VALUES
-('place', 'Garaż', 'Garaż przydomowy', (SELECT id FROM Entity WHERE name = 'Dom' AND type = 'place'));
+INSERT INTO Entity (type, name, description, icon, parent_id) VALUES
+('place', 'Garaż', 'Garaż przydomowy', 'house',(SELECT id FROM Entity WHERE name = 'Dom' AND type = 'place'));
 
 -- Wstawienie KATEGORII (używają 'category_id' do klasyfikacji)
 INSERT INTO Entity (type, name, description, icon, color, category_id) VALUES
-('category', 'Elektronika', 'Urządzenia elektroniczne.', 'icon-electronics', '#4A90E2', NULL),
-  ('category', 'Dokumenty', 'Ważne dokumenty.', 'icon-documents', '#F5A623', NULL),
-  ('category', 'Narzędzia', 'Narzędzia ręczne i osprzęt.', 'icon-tools', '#7ED321', NULL),
-  ('category', 'Książki', 'Książki i czasopisma.', 'icon-books', '#BD10E0', NULL);
+('category', 'Elektronika', 'Urządzenia elektroniczne.', 'laptop', '#4A90E2', NULL),
+  ('category', 'Dokumenty', 'Ważne dokumenty.', 'paperclip', '#F5A623', NULL),
+  ('category', 'Narzędzia', 'Narzędzia ręczne i osprzęt.', 'tools', '#7ED321', NULL),
+  ('category', 'Książki', 'Książki i czasopisma.', 'book', '#BD10E0', NULL);
 
 -- Przykład zagnieżdżonej kategorii (AGD W Elektronice)
-INSERT INTO Entity (type, name, description, icon, color, category_id) VALUES
-('category', 'AGD', 'Sprzęt gospodarstwa domowego', 'icon-agd', '#4A90E2', (SELECT id FROM Entity WHERE name = 'Elektronika' AND type = 'category'));
-
--- Wstawienie domyślnych pól do szablonów
-  INSERT INTO CustomField (category_template_id, field_name, field_type) VALUES
-((SELECT id FROM Entity WHERE name = 'Elektronika'), 'Gwarancja', 'date'),
-((SELECT id FROM Entity WHERE name = 'Elektronika'), 'Producent', 'text'),
-((SELECT id FROM Entity WHERE name = 'AGD'), 'Klasa energetyczna', 'select'); -- 'options' mogłyby być np. '["A", "B", "C"]'
+INSERT INTO Entity (type, name, description, icon, color, parent_id) VALUES
+('category', 'AGD', 'Sprzęt gospodarstwa domowego', 'tv', '#4A90E2', (SELECT id FROM Entity WHERE name = 'Elektronika' AND type = 'category'));
 
 -- Wstawienie języków i ustawień
 INSERT INTO Locale (code, name) VALUES ('pl', 'Polski'), ('en', 'English');
 INSERT INTO Setting (key, value) VALUES ('locale', 'pl');
 
 `
-
 const initializeDatabase = async (forceCreate = false) => {
   console.log(DB_NAME)
   console.log('polaczenie', (await sqlite.isConnection(DB_NAME)).result)

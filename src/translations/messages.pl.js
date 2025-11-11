@@ -47,6 +47,7 @@ export default {
     descriptionPlaceholder: 'np. LEGO 75192 Star Wars Sokół Millennium',
     add: 'Dodaj',
     code: 'Kod',
+    icon: 'Ikona',
   },
   header: {
     searchPlaceholder: 'Wyszukaj przedmiot...',

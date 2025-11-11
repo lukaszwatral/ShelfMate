@@ -2,7 +2,7 @@ import { getDb } from '@/services/database.js'
 
 const findAll = async () => {
   const db = getDb()
-  const result = await db.query(`SELECT id, name, type FROM Entity ORDER BY name;`)
+  const result = await db.query(`SELECT id, name, type, icon FROM Entity ORDER BY name;`)
   return result.values || []
 }
 

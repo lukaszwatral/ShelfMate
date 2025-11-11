@@ -228,6 +228,14 @@
         }
       }
 
+      .select-option {
+        display: flex;
+        gap: 10px;
+        align-items: center;
+        width: 100%;
+      }
+
+
 
       .input-with-icon {
         display: grid;
