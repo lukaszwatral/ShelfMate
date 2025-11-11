@@ -3,7 +3,12 @@
     <ul v-if="rows.length" class="list-unstyled">
       <EntityTree v-for="row in rows" :key="row.id" :entity="row" @removeEntity="loadRows">
         <template #entity="{ entity }">
-          <template v-if="entity.type === 'category'">
+          <template v-if="entity.icon">
+            <i :class="`bi bi-${entity.icon} entity-icon`"></i>
+            <span class="entity-name">{{ entity.name }}</span>
+            <span class="entity-description">{{ entity.description }}</span>
+          </template>
+          <template v-else-if="entity.type === 'category'">
             <i class="bi bi-tag-fill entity-icon"></i>
             <span class="entity-name">{{ entity.name }}</span>
             <span class="entity-description">{{ entity.description }}</span>

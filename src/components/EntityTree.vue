@@ -6,7 +6,8 @@
   >
     <div class="entity-row">
       <slot name="entity" :entity="entity" :depth="depth">
-        <i v-if="entity.type === 'category'" class="bi bi-tag-fill entity-icon"></i>
+        <i v-if="entity.icon" :class="`bi-bi-${entity.icon} entity-icon`"></i>
+        <i v-else-if="entity.type === 'category'" class="bi bi-tag-fill entity-icon"></i>
         <i v-else-if="entity.type === 'place'" class="bi-box-seam-fill entity-icon"></i>
         <i v-else-if="entity.type === 'item'" class="bi-bag-fill entity-icon"></i>
         <span class="entity-name">{{ entity.name }}</span>
