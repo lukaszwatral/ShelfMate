@@ -3,28 +3,40 @@
     <h1>{{ $t('settings.title') }}</h1>
     <div class="settings-row">
       <label for="language">{{ $t('settings.chooseLanguage') }}: </label>
-      <div class="dropdown shadow-sm">
-        <button
-          class="btn btn-secondary dropdown-toggle"
-          type="button"
-          data-bs-toggle="dropdown"
-          aria-expanded="false"
+      <div class="form-input-container shadow-sm">
+        <VueSelect
+          name="language"
+          v-model="selectedLocale"
+          :options="
+            availableLocales.map((locale) => ({
+              label: locale.name,
+              value: locale.code,
+              img: flagSrc(locale.code),
+            }))
+          "
+          @option-selected="(option) => changeLocale(option.value)"
+          :shouldAutofocusOption="false"
         >
-          <span
-            >{{ selectedLocale.name }}
-            <img :src="flagSrc(selectedLocale.code)" :alt="selectedLocale.code"
-          /></span>
-        </button>
-        <ul class="dropdown-menu">
-          <li
-            class="shadow-sm"
-            v-for="locale in availableLocales"
-            :key="locale.code"
-            @click="changeLocale(locale.code)"
-          >
-            {{ locale.name }} <img :src="flagSrc(locale.code)" :alt="locale.code" />
-          </li>
-        </ul>
+          <template #placeholder>
+            <span class="select-option">
+              <img :src="flagSrc(currentLocale[0].code)" :alt="currentLocale[0].code" />
+              <span>{{ currentLocale[0].name }}</span>
+            </span>
+          </template>
+          <template #value="{ option }">
+            <span class="select-option">
+              <img v-if="option.img" :src="option.img" class="option-flag" :alt="option.label" />
+              <span>{{ option.label }}</span>
+            </span>
+          </template>
+
+          <template #option="{ option }">
+            <span class="select-option">
+              <img v-if="option.img" :src="option.img" class="option-flag" :alt="option.label" />
+              <span>{{ option.label }}</span>
+            </span>
+          </template>
+        </VueSelect>
       </div>
     </div>
   </div>
@@ -32,14 +44,14 @@
 
 <script setup>
 import { getAvailableLocales, getLocale, setLocale } from '@/services/settings.js'
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, watch } from 'vue'
 import { closeDbConnection } from '@/services/database.js'
 import { useI18n } from 'vue-i18n'
-
+import VueSelect from 'vue3-select-component'
 const { t } = useI18n()
 
 defineOptions({
-  name: 'Settings',
+  name: 'AppSettings', // zgodnie z zasadą multi-word
 })
 
 const currentLocale = ref('')
@@ -50,7 +62,6 @@ const isInitialized = ref(false)
 onMounted(async () => {
   currentLocale.value = await getLocale()
   availableLocales.value = await getAvailableLocales()
-  selectedLocale.value = currentLocale.value[0]
   isInitialized.value = true
 })
 
@@ -63,7 +74,7 @@ function flagSrc(code) {
 }
 
 async function changeLocale(code) {
-  if (selectedLocale.value === code) return
+  // if (selectedLocale.value === code) return
   await setLocale(code)
   closeDbConnection()
   window.location.reload()
