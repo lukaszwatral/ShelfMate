@@ -1,7 +1,7 @@
 <template>
   <div class="content-container entity-container">
     <EntityToggle />
-    <router-link :to="{ name: 'addEntity' }">
+    <router-link :to="{ name: 'addEntity', query: { initialType: 'place' } }">
       <button class="add-button shadow-sm">
         <i class="bi bi-plus icon-large"></i> {{ $t('place.addPlace') }}
       </button>

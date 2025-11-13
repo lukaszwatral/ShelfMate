@@ -36,6 +36,7 @@ const router = createRouter({
       path: '/entity/add',
       name: 'addEntity',
       component: () => import('@/views/AddEntityView.vue'),
+      props: (route) => ({ initialType: route.query.initialType || null }),
     },
   ],
 })

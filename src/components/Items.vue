@@ -15,7 +15,7 @@
         <i class="bi bi-grid"></i>
       </button>
     </div>
-    <router-link :to="{ name: 'addEntity' }">
+    <router-link :to="{ name: 'addEntity', query: { initialType: 'item' } }">
       <button class="add-button shadow-sm">
         <i class="bi bi-plus icon-large"></i> {{ $t('item.addItem') }}
       </button>

@@ -217,8 +217,8 @@
     }
 
     .form-input-container{
-      display: grid;
-      grid-template-columns: 1fr;
+      //display: grid;
+      //grid-template-columns: 1fr;
 
       .form-control, .form-select {
         &:focus, &:active {
@@ -254,4 +254,40 @@
   gap: 10px;
   align-items: center;
   width: 100%;
+}
+
+.tooltip-container {
+  position: relative;
+  display: inline-block;
+  cursor: pointer;
+
+  i {
+    font-size: 12px;
+    vertical-align: super;
+    margin-left: 2px;
+  }
+}
+.tooltip-container .tooltip-text {
+  visibility: hidden;
+  min-width: 150px;
+  width: 180px;
+  background-color: #333;
+  color: #fff;
+  text-align: center;
+  border-radius: 4px;
+  padding: 6px 8px;
+  position: absolute;
+  z-index: 10;
+  bottom: 125%;
+  left: 0;
+  opacity: 0;
+  transition: opacity 0.2s;
+  font-size: 0.95em;
+  white-space: pre-line;
+  box-sizing: border-box;
+}
+.tooltip-container:hover .tooltip-text,
+.tooltip-container:focus-within .tooltip-text {
+  visibility: visible;
+  opacity: 1;
 }

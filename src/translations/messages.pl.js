@@ -5,7 +5,7 @@ export default {
     items: 'Przedmioty',
     categories: 'Kategorie',
     places: 'Miejsca',
-    addItem: 'Dodaj przedmiot',
+    addEntity: 'Dodaj encję',
     largestCollections: 'Największe kolekcje:',
     recentCollections: 'Ostatnie kolekcje:',
     expiryWarning: 'przedmiotom kończy się termin przydatności',
@@ -47,7 +47,9 @@ export default {
     descriptionPlaceholder: 'np. LEGO 75192 Star Wars Sokół Millennium',
     add: 'Dodaj',
     code: 'Kod',
+    codeTooltip: 'Tutaj możesz zeskanować lub wpisać kod produktu.',
     icon: 'Ikona',
+    iconPlaceholder: 'Wybierz ikonkę z listy',
   },
   header: {
     searchPlaceholder: 'Wyszukaj przedmiot...',

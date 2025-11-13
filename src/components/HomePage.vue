@@ -43,7 +43,7 @@
 
       <router-link :to="{ name: 'addEntity' }">
         <button class="add-button shadow-sm">
-          <i class="bi bi-plus icon-large"></i> {{ $t('home.addItem') }}
+          <i class="bi bi-plus icon-large"></i> {{ $t('home.addEntity') }}
         </button>
       </router-link>
 

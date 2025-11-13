@@ -2,7 +2,9 @@
   <div class="add-entity-container">
     <form @submit.prevent="addEntity">
       <div class="form-input-container shadow-sm">
-        <label for="type" class="form-label">{{ $t('addEntity.type') }}:</label>
+        <label for="type" class="form-label"
+          >{{ $t('addEntity.type') }}: <span class="required-field">*</span></label
+        >
         <VueSelect
           v-model="newEntity.type"
           name="type"
@@ -94,7 +96,9 @@
         </div>
 
         <div class="form-input-container shadow-sm">
-          <label for="name" class="form-label">{{ $t('addEntity.name') }}:</label>
+          <label for="name" class="form-label"
+            >{{ $t('addEntity.name') }}: <span class="required-field">*</span></label
+          >
           <input
             id="name"
             type="text"
@@ -116,16 +120,17 @@
         </div>
 
         <div class="form-input-container shadow-sm">
-          <label for="name" class="form-label"
-            >{{ $t('addEntity.code') }}: <i class="bi bi-info-circle icon-small"></i
-          ></label>
+          <label for="code" class="form-label"> {{ $t('addEntity.code') }}: </label>
+          <span class="tooltip-container">
+            <i class="bi bi-info-circle-fill"></i>
+            <span class="tooltip-text">{{ t('addEntity.codeTooltip') }}</span>
+          </span>
           <div class="input-with-icon form-control">
             <input
-              id="name"
+              id="code"
               type="text"
               class="form-control"
               placeholder=""
-              readonly
               v-model="newEntity.code"
             />
             <i class="bi bi-upc-scan" @click="scanBarcode"></i>
@@ -138,6 +143,7 @@
             v-model="newEntity.icon"
             name="icon"
             :options="iconNamesArray.map((icon) => ({ label: icon, value: icon }))"
+            :placeholder="t('addEntity.iconPlaceholder')"
           >
             <template #value="{ option }">
               <span class="select-option">
@@ -202,7 +208,7 @@
               <!-- Opcje dla radio, checkbox, select -->
               <div v-if="['radio', 'checkbox', 'select'].includes(attr.type)" class="mb-2 ms-4">
                 v-for="(option, optIdx) in attr.options"
-                <div v-for="(_, optIdx) in attr.options" :key="optIdx" class="d-flex gap-2 mb-1">
+                <div v-for="(opt, optIdx) in attr.options" :key="optIdx" class="d-flex gap-2 mb-1">
                   <input
                     type="text"
                     class="form-control"
@@ -289,6 +295,13 @@ defineOptions({
   name: 'AddEntity',
 })
 
+const props = defineProps({
+  initialType: {
+    type: String,
+    default: null,
+  },
+})
+
 const allEntities = ref([])
 const allCategories = ref([])
 const newEntity = ref({
@@ -305,7 +318,6 @@ const newEntity = ref({
 const attributes = ref([])
 const iconNamesArray = Object.keys(iconsObject)
 function addAttribute() {
-  const barcode = ref(null)
   attributes.value.push({
     name: '',
     type: AttributeTypeEnumValues[0],
@@ -344,6 +356,7 @@ async function fetchEntities() {
 }
 
 onMounted(async () => {
+  newEntity.value.type = props.initialType
   await fetchEntities()
 })
 
@@ -387,5 +400,42 @@ const scanBarcode = async () => {
 <style scoped>
 .accordion-item {
   margin-bottom: 8px;
+}
+.tooltip-container {
+  position: relative;
+  display: inline-block;
+  cursor: pointer;
+}
+.tooltip-container .tooltip-text {
+  visibility: hidden;
+  width: 180px;
+  background-color: #333;
+  color: #fff;
+  text-align: center;
+  border-radius: 4px;
+  padding: 6px 8px;
+  position: absolute;
+  z-index: 10;
+  bottom: 125%;
+  left: 50%;
+  transform: translateX(-50%);
+  opacity: 0;
+  transition: opacity 0.2s;
+  font-size: 0.95em;
+  white-space: pre-line;
+  box-sizing: border-box;
+}
+.tooltip-container:hover .tooltip-text,
+.tooltip-container:focus-within .tooltip-text {
+  visibility: visible;
+  opacity: 1;
+}
+@media (max-width: 400px) {
+  .tooltip-container .tooltip-text {
+    left: 0;
+    transform: none;
+    min-width: 120px;
+    max-width: 90vw;
+  }
 }
 </style>

@@ -5,7 +5,7 @@ export default {
     items: 'Items',
     categories: 'Categories',
     places: 'Places',
-    addItem: 'Add item',
+    addEntity: 'Add entity',
     largestCollections: 'Largest collections:',
     recentCollections: 'Recent collections:',
     expiryWarning: 'items are nearing their expiration date',
@@ -47,7 +47,9 @@ export default {
     descriptionPlaceholder: 'e.g. LEGO 75192 Star Wars Millennium Falcon',
     add: 'Add',
     code: 'Code',
+    codeTooltip: 'Here you can scan or enter the product code.',
     icon: 'Icon',
+    iconPlaceholder: 'Select an icon from the list',
   },
   header: {
     searchPlaceholder: 'Search item...',

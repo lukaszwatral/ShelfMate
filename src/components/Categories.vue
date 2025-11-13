@@ -1,7 +1,7 @@
 <template>
   <div class="content-container entity-container">
     <EntityToggle />
-    <router-link :to="{ name: 'addEntity' }">
+    <router-link :to="{ name: 'addEntity', query: { initialType: 'category' } }">
       <button class="add-button shadow-sm">
         <i class="bi bi-plus icon-large"></i> {{ $t('category.addCategory') }}
       </button>
@@ -20,6 +20,7 @@
 import { getCategories } from '@/services/entityService.js'
 import EntityList from '@/components/EntityList.vue'
 import EntityToggle from '@/components/EntityToggle.vue'
+import AddEntity from '@/components/AddEntity.vue'
 
 defineOptions({ name: 'PlacesList' })
 </script>
