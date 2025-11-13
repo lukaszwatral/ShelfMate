@@ -50,6 +50,17 @@ export default {
     codeTooltip: 'Here you can scan or enter the product code.',
     icon: 'Icon',
     iconPlaceholder: 'Select an icon from the list',
+    attribute: {
+      name: 'Name',
+      type: 'Type',
+      value: 'Value',
+      new: 'New attribute',
+      defaultName: 'New attribute',
+      remove: 'Remove',
+      required: 'Required',
+      namePlaceholder: 'Attribute name',
+      valuePlaceholder: 'Attribute value',
+    },
   },
   header: {
     searchPlaceholder: 'Search item...',

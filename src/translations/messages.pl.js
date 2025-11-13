@@ -50,6 +50,17 @@ export default {
     codeTooltip: 'Tutaj możesz zeskanować lub wpisać kod produktu.',
     icon: 'Ikona',
     iconPlaceholder: 'Wybierz ikonkę z listy',
+    attribute: {
+      name: 'Nazwa',
+      type: 'Typ',
+      value: 'Wartość',
+      new: 'Nowy atrybut',
+      defaultName: 'Nowy atrybut',
+      remove: 'Usuń',
+      required: 'Wymagane',
+      namePlaceholder: 'Nazwa atrybutu',
+      valuePlaceholder: 'Wartość atrybutu',
+    },
   },
   header: {
     searchPlaceholder: 'Wyszukaj przedmiot...',

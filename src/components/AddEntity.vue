@@ -160,119 +160,127 @@
             </template>
           </VueSelect>
         </div>
-      </template>
 
-      <div class="accordion" id="attributesAccordion">
-        <div v-for="(attr, idx) in attributes" :key="attr.id" class="accordion-item">
-          <h2 class="accordion-header" :id="'heading' + attr.id">
-            <button
-              class="accordion-button shadow-sm"
-              type="button"
-              data-bs-toggle="collapse"
-              :data-bs-target="'#collapse' + attr.id"
-              aria-expanded="false"
-              :aria-controls="'collapse' + attr.id"
+        <div class="accordion" id="attributesAccordion">
+          <div v-for="(attr, idx) in attributes" :key="attr.id" class="accordion-item">
+            <h2 class="accordion-header" :id="'heading' + attr.id">
+              <button
+                class="accordion-button shadow-sm"
+                type="button"
+                data-bs-toggle="collapse"
+                :data-bs-target="'#collapse' + attr.id"
+                aria-expanded="false"
+                :aria-controls="'collapse' + attr.id"
+              >
+                <span>{{ attr.name || t('addEntity.attribute.defaultName') }}</span>
+              </button>
+            </h2>
+            <div
+              :id="'collapse' + attr.id"
+              class="accordion-collapse show collapse"
+              :aria-labelledby="'heading' + attr.id"
+              data-bs-parent="#attributesAccordion"
             >
-              <span>{{ attr.name || 'Nowy atrybut' }}</span>
-            </button>
-          </h2>
-          <div
-            :id="'collapse' + attr.id"
-            class="accordion-collapse show collapse"
-            :aria-labelledby="'heading' + attr.id"
-            data-bs-parent="#attributesAccordion"
-          >
-            <div class="accordion-body d-flex flex-column gap-2">
-              <div class="d-flex align-items-center gap-2">
-                <label class="form-label mb-0">Typ:</label>
-                <select
-                  class="form-select"
-                  v-model="attr.type"
-                  @change="updateAttribute(idx, 'type', attr.type)"
-                >
-                  <option v-for="type in AttributeTypeEnumValues" :key="type" :value="type">
-                    {{ t(AttributeTypeDescriptions[type]) }}
-                  </option>
-                </select>
-              </div>
-              <div class="d-flex align-items-center gap-2">
-                <label class="form-label mb-0">Nazwa:</label>
-                <input
-                  type="text"
-                  class="form-control"
-                  v-model="attr.name"
-                  placeholder="Nazwa atrybutu"
-                  required
-                />
-              </div>
-              <!-- Opcje dla radio, checkbox, select -->
-              <div v-if="['radio', 'checkbox', 'select'].includes(attr.type)" class="mb-2 ms-4">
-                v-for="(option, optIdx) in attr.options"
-                <div v-for="(opt, optIdx) in attr.options" :key="optIdx" class="d-flex gap-2 mb-1">
+              <div class="accordion-body d-flex flex-column gap-2">
+                <div class="d-flex align-items-center gap-2">
+                  <label class="form-label mb-0">{{ t('addEntity.attribute.type') }}:</label>
+                  <select
+                    class="form-select"
+                    v-model="attr.type"
+                    @change="updateAttribute(idx, 'type', attr.type)"
+                  >
+                    <option v-for="type in AttributeTypeEnumValues" :key="type" :value="type">
+                      {{ t(AttributeTypeDescriptions[type]) }}
+                    </option>
+                  </select>
+                </div>
+                <div class="d-flex align-items-center gap-2">
+                  <label class="form-label mb-0">{{ t('addEntity.attribute.name') }}: </label>
                   <input
                     type="text"
                     class="form-control"
-                    v-model="attr.options[optIdx]"
-                    placeholder="Wartość opcji"
+                    v-model="attr.name"
+                    :placeholder="t('addEntity.attribute.namePlaceholder')"
                     required
                   />
+                </div>
+                <!-- Opcje dla radio, checkbox, select -->
+                <div v-if="['radio', 'checkbox', 'select'].includes(attr.type)" class="mb-2 ms-4">
+                  v-for="(option, optIdx) in attr.options"
+                  <div
+                    v-for="(opt, optIdx) in attr.options"
+                    :key="optIdx"
+                    class="d-flex gap-2 mb-1"
+                  >
+                    <input
+                      type="text"
+                      class="form-control"
+                      v-model="attr.options[optIdx]"
+                      placeholder="Wartość opcji"
+                      required
+                    />
+                    <button
+                      type="button"
+                      class="btn btn-danger btn-sm"
+                      @click="attr.options.splice(optIdx, 1)"
+                    >
+                      Usuń
+                    </button>
+                  </div>
                   <button
                     type="button"
-                    class="btn btn-danger btn-sm"
-                    @click="attr.options.splice(optIdx, 1)"
+                    class="btn btn-secondary btn-sm mt-1"
+                    @click="attr.options.push('')"
                   >
-                    Usuń
+                    Dodaj opcję
                   </button>
+                </div>
+                <!-- Pole wartości nie jest dostępne dla radio, checkbox, select -->
+                <div
+                  v-if="!['radio', 'checkbox', 'select'].includes(attr.type)"
+                  class="d-flex align-items-center gap-2"
+                >
+                  <label class="form-label mb-0">{{ t('addEntity.attribute.value') }}:</label>
+                  <component
+                    :is="attr.type === 'textarea' ? 'textarea' : 'input'"
+                    :type="attr.type !== 'textarea' ? attr.type : undefined"
+                    class="form-control"
+                    v-model="attr.value"
+                    :required="attr.required"
+                    @input="updateAttribute(idx, 'value', attr.value)"
+                    :placeholder="t('addEntity.attribute.valuePlaceholder')"
+                  />
+                </div>
+                <div class="form-check">
+                  <input
+                    class="form-check-input"
+                    type="checkbox"
+                    :id="'required-' + attr.id"
+                    v-model="attr.required"
+                  />
+                  <label class="form-check-label" :for="'required-' + attr.id">
+                    {{ t('addEntity.attribute.required') }}
+                  </label>
                 </div>
                 <button
                   type="button"
-                  class="btn btn-secondary btn-sm mt-1"
-                  @click="attr.options.push('')"
+                  class="btn btn-danger align-self-end"
+                  @click="removeAttribute(idx)"
                 >
-                  Dodaj opcję
+                  <i class="bi bi-trash"></i> {{ t('addEntity.attribute.remove') }}
                 </button>
               </div>
-              <!-- Pole wartości nie jest dostępne dla radio, checkbox, select -->
-              <div
-                v-if="!['radio', 'checkbox', 'select'].includes(attr.type)"
-                class="d-flex align-items-center gap-2"
-              >
-                <label class="form-label mb-0">Wartość:</label>
-                <component
-                  :is="attr.type === 'textarea' ? 'textarea' : 'input'"
-                  :type="attr.type !== 'textarea' ? attr.type : undefined"
-                  class="form-control"
-                  v-model="attr.value"
-                  :required="attr.required"
-                  @input="updateAttribute(idx, 'value', attr.value)"
-                  placeholder="Wartość atrybutu"
-                />
-              </div>
-              <div class="form-check">
-                <input
-                  class="form-check-input"
-                  type="checkbox"
-                  :id="'required-' + attr.id"
-                  v-model="attr.required"
-                />
-                <label class="form-check-label" :for="'required-' + attr.id"> Wymagane </label>
-              </div>
-              <button
-                type="button"
-                class="btn btn-danger align-self-end"
-                @click="removeAttribute(idx)"
-              >
-                <i class="bi bi-trash"></i> Usuń
-              </button>
             </div>
           </div>
         </div>
-      </div>
 
-      <button class="btn btn-secondary mt-3" type="button" @click="addAttribute">
-        Dodaj atrybut
+        <button class="btn btn-secondary mt-3 add-attribute" type="button" @click="addAttribute">
+          <i class="bi bi-plus icon-small"></i>{{ t('addEntity.attribute.new') }}
+        </button>
+      </template>
+      <button class="btn btn-primary mt-3" type="submit" :disabled="!newEntity.type">
+        {{ $t('addEntity.add') }}
       </button>
-      <button class="btn btn-primary mt-3" type="submit">{{ $t('addEntity.add') }}</button>
     </form>
   </div>
 </template>
