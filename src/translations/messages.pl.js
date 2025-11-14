@@ -60,6 +60,8 @@ export default {
       required: 'Wymagane',
       namePlaceholder: 'Nazwa atrybutu',
       valuePlaceholder: 'Wartość atrybutu',
+      optionPlaceholder: 'Wartość opcji',
+      options: 'Opcje',
     },
   },
   header: {

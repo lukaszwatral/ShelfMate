@@ -205,37 +205,38 @@
                   />
                 </div>
                 <!-- Opcje dla radio, checkbox, select -->
-                <div v-if="['radio', 'checkbox', 'select'].includes(attr.type)" class="mb-2 ms-4">
-                  v-for="(option, optIdx) in attr.options"
-                  <div
-                    v-for="(opt, optIdx) in attr.options"
-                    :key="optIdx"
-                    class="d-flex gap-2 mb-1"
-                  >
-                    <input
-                      type="text"
-                      class="form-control"
-                      v-model="attr.options[optIdx]"
-                      placeholder="Wartość opcji"
-                      required
-                    />
+                <template v-if="['radio', 'checkbox', 'select'].includes(attr.type)">
+                  <label class="form-label mb-0">{{ t('addEntity.attribute.options') }}:</label>
+                  <div class="mb-2 attribute-options-box shadow-sm">
+                    <div
+                      v-for="(opt, optIdx) in attr.options"
+                      :key="optIdx"
+                      class="d-flex gap-2 mb-1"
+                    >
+                      <input
+                        type="text"
+                        class="form-control"
+                        v-model="attr.options[optIdx]"
+                        :placeholder="t('addEntity.attribute.optionPlaceholder')"
+                        required
+                      />
+                      <button
+                        type="button"
+                        class="btn btn-danger btn-sm"
+                        @click="attr.options.splice(optIdx, 1)"
+                      >
+                        {{ t('addEntity.attribute.remove') }}
+                      </button>
+                    </div>
                     <button
                       type="button"
-                      class="btn btn-danger btn-sm"
-                      @click="attr.options.splice(optIdx, 1)"
+                      class="btn btn-secondary btn-sm mt-1"
+                      @click="attr.options.push('')"
                     >
-                      Usuń
+                      <i class="bi bi-plus icon-small"></i>
                     </button>
                   </div>
-                  <button
-                    type="button"
-                    class="btn btn-secondary btn-sm mt-1"
-                    @click="attr.options.push('')"
-                  >
-                    Dodaj opcję
-                  </button>
-                </div>
-                <!-- Pole wartości nie jest dostępne dla radio, checkbox, select -->
+                </template>
                 <div
                   v-if="!['radio', 'checkbox', 'select'].includes(attr.type)"
                   class="d-flex align-items-center gap-2"
@@ -341,13 +342,13 @@ function removeAttribute(idx) {
 
 function updateAttribute(idx, key, val) {
   attributes.value[idx][key] = val
-  // Jeśli zmieniamy typ na radio, checkbox lub select, resetuj opcje
   if (key === 'type' && ['radio', 'checkbox', 'select'].includes(val)) {
-    attributes.value[idx].options = []
-    // Dla tych typów nie ma wartości domyślnej
+    // Dodaj pustą opcję, jeśli lista jest pusta
+    if (!attributes.value[idx].options || attributes.value[idx].options.length === 0) {
+      attributes.value[idx].options = ['']
+    }
     attributes.value[idx].value = ''
   }
-  // Jeśli zmieniamy typ na inny niż radio, checkbox, select, usuń opcje
   if (key === 'type' && !['radio', 'checkbox', 'select'].includes(val)) {
     attributes.value[idx].options = []
   }

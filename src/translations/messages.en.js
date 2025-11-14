@@ -60,6 +60,8 @@ export default {
       required: 'Required',
       namePlaceholder: 'Attribute name',
       valuePlaceholder: 'Attribute value',
+      options: 'Options',
+      optionPlaceholder: 'Option value',
     },
   },
   header: {
