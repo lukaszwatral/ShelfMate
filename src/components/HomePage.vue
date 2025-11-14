@@ -7,11 +7,11 @@
           <span class="title">ShelfMate</span>
         </div>
       </div>
-      <span class="subtitle">{{ $t('home.subtitle') }}</span>
+      <span class="subtitle">{{ trans('home.subtitle') }}</span>
     </div>
     <div class="content">
       <div class="dashboard shadow-sm" v-if="dashboardData">
-        <span>{{ $t('home.dashboardTitle') }}</span>
+        <span>{{ trans('home.dashboardTitle') }}</span>
         <div class="dashboard-content">
           <router-link :to="{ name: 'item' }">
             <div class="tile-container">
@@ -19,7 +19,7 @@
                 <span>{{ itemsCount }}</span>
               </div>
 
-              <span class="tile-name">{{ $t('home.items') }}</span>
+              <span class="tile-name">{{ trans('home.items') }}</span>
             </div>
           </router-link>
           <router-link :to="{ name: 'category' }">
@@ -27,7 +27,7 @@
               <div class="tile">
                 <span>{{ categoriesCount }}</span>
               </div>
-              <span class="tile-name">{{ $t('home.categories') }}</span>
+              <span class="tile-name">{{ trans('home.categories') }}</span>
             </div>
           </router-link>
           <router-link :to="{ name: 'place' }">
@@ -35,7 +35,7 @@
               <div class="tile">
                 <span>{{ placesCount }}</span>
               </div>
-              <span class="tile-name">{{ $t('home.places') }}</span>
+              <span class="tile-name">{{ trans('home.places') }}</span>
             </div>
           </router-link>
         </div>
@@ -43,29 +43,29 @@
 
       <router-link :to="{ name: 'addEntity' }">
         <button class="add-button shadow-sm">
-          <i class="bi bi-plus icon-large"></i> {{ $t('home.addEntity') }}
+          <i class="bi bi-plus icon-large"></i> {{ trans('home.addEntity') }}
         </button>
       </router-link>
 
       <div class="collection-slider-container">
-        <span>{{ $t('home.largestCollections') }}</span>
+        <span>{{ trans('home.largestCollections') }}</span>
         <div class="collection-slider">
           <img class="img-thumbnail" src="@/assets/images/logo.png" alt="logo" />
-          <span>{{ $t('home.collection') }}</span>
+          <span>{{ trans('home.collection') }}</span>
           <div class="count-container">
             <span>0</span>
-            <span>{{ $t('home.items') }}</span>
+            <span>{{ trans('home.items') }}</span>
           </div>
         </div>
       </div>
       <div class="collection-slider-container">
-        <span>{{ $t('home.recentCollections') }}</span>
+        <span>{{ trans('home.recentCollections') }}</span>
         <div class="collection-slider">
           <img class="img-thumbnail" src="@/assets/images/logo.png" alt="logo" />
-          <span>{{ $t('home.collection') }}</span>
+          <span>{{ trans('home.collection') }}</span>
           <div class="count-container">
             <span>0</span>
-            <span>{{ $t('home.items') }}</span>
+            <span>{{ trans('home.items') }}</span>
           </div>
         </div>
       </div>
@@ -73,31 +73,50 @@
       <div class="expiry-date-items shadow-sm">
         <i class="bi bi-exclamation"></i>
         <span>2</span>
-        <span>{{ $t('home.expiryWarning') }}</span>
+        <span>{{ trans('home.expiryWarning') }}</span>
       </div>
     </div>
   </div>
 </template>
 
-<script setup>
-import { onMounted, ref, computed } from 'vue'
+<script>
+import { trans } from '@/translations/translator.js'
 import { getDashboardData } from '@/services/entityService.js'
-
-const localecode = ref('')
-const dashboardData = ref({ items: [], categories: [], places: [] })
-
-const itemsCount = computed(() => dashboardData.value?.items?.length ?? 0)
-const categoriesCount = computed(() => dashboardData.value?.categories?.length ?? 0)
-const placesCount = computed(() => dashboardData.value?.places?.length ?? 0)
-
-onMounted(async () => {
-  try {
-    const data = await getDashboardData()
-    dashboardData.value = data ?? { items: [], categories: [], places: [] }
-  } catch (e) {
-    dashboardData.value = { items: [], categories: [], places: [] }
-  }
-})
+export default {
+  name: 'HomePage',
+  data() {
+    return {
+      dashboardData: {
+        items: [],
+        categories: [],
+        places: [],
+      },
+    }
+  },
+  mounted() {
+    try {
+      getDashboardData().then((data) => {
+        this.dashboardData = data
+      })
+    } catch (error) {
+      this.dashboardData = { items: [], categories: [], places: [] }
+    }
+  },
+  methods: {
+    trans,
+  },
+  computed: {
+    itemsCount() {
+      return this.dashboardData?.items?.length ?? 0
+    },
+    categoriesCount() {
+      return this.dashboardData?.categories?.length ?? 0
+    },
+    placesCount() {
+      return this.dashboardData?.places?.length ?? 0
+    },
+  },
+}
 </script>
 
 <style scoped></style>
