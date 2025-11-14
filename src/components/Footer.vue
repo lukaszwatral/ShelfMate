@@ -32,13 +32,15 @@
   </div>
 </template>
 
-<script setup>
-import { useRoute } from 'vue-router'
-defineOptions({
-  name: 'AppFooter',
-})
-
-const route = useRoute()
+<script>
+export default {
+  name: 'Footer',
+  computed: {
+    route() {
+      return this.$route
+    },
+  },
+}
 </script>
 
 <style scoped></style>
