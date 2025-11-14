@@ -17,7 +17,7 @@
     </div>
     <router-link :to="{ name: 'addEntity', query: { initialType: 'item' } }">
       <button class="add-button shadow-sm">
-        <i class="bi bi-plus icon-large"></i> {{ $t('item.addItem') }}
+        <i class="bi bi-plus icon-large"></i> {{ trans('item.addItem') }}
       </button>
     </router-link>
     <EntityList
@@ -28,14 +28,20 @@
   </div>
 </template>
 
-<script setup>
+<script>
 import { getItems } from '@/services/entityService.js'
-import EntityToggle from '@/components/EntityToggle.vue'
 import EntityList from '@/components/EntityList.vue'
+import EntityToggle from '@/components/EntityToggle.vue'
+import { trans } from '@/translations/translator.js'
 
-defineOptions({
+export default {
   name: 'Items',
-})
+  components: { EntityToggle, EntityList },
+  methods: {
+    trans,
+    getItems,
+  },
+}
 </script>
 
 <style scoped></style>
