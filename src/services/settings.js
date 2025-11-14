@@ -5,7 +5,7 @@ async function getLocale() {
   const result = await db.query(
     `SELECT name, code FROM Locale where code=(SELECT value FROM Setting WHERE key = 'locale');`,
   )
-  return result.values || []
+  return result.values[0] || []
 }
 
 async function getLocaleCode() {

@@ -3,7 +3,7 @@
     <EntityToggle />
     <router-link :to="{ name: 'addEntity', query: { initialType: 'category' } }">
       <button class="add-button shadow-sm">
-        <i class="bi bi-plus icon-large"></i> {{ $t('category.addCategory') }}
+        <i class="bi bi-plus icon-large"></i> {{ trans('category.addCategory') }}
       </button>
     </router-link>
 
@@ -16,13 +16,20 @@
   </div>
 </template>
 
-<script setup>
+<script>
 import { getCategories } from '@/services/entityService.js'
 import EntityList from '@/components/EntityList.vue'
 import EntityToggle from '@/components/EntityToggle.vue'
-import AddEntity from '@/components/AddEntity.vue'
+import { trans } from '@/translations/translator.js'
 
-defineOptions({ name: 'PlacesList' })
+export default {
+  name: 'Categories',
+  components: { EntityToggle, EntityList },
+  methods: {
+    trans,
+    getCategories,
+  },
+}
 </script>
 
 <style scoped></style>

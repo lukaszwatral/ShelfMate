@@ -201,6 +201,7 @@
 
 .add-entity-container {
   width: 100%;
+  height: calc(100vh - 140px - env(safe-area-inset-top));
   margin: 20px auto;
   overflow-y: auto;
   form {

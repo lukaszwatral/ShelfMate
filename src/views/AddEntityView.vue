@@ -1,16 +1,19 @@
-<script setup>
+<template>
+  <AddEntity :initialType="initialType" />
+</template>
+
+<script>
 import AddEntity from '@/components/AddEntity.vue'
 
-const props = defineProps({
-  initialType: {
-    type: String,
-    default: null,
+export default {
+  components: { AddEntity },
+  props: {
+    initialType: {
+      type: String,
+      default: null,
+    },
   },
-})
+}
 </script>
-
-<template>
-  <AddEntity :initialType="props.initialType" />
-</template>
 
 <style scoped></style>

@@ -3,17 +3,17 @@
     <form @submit.prevent="addEntity">
       <div class="form-input-container shadow-sm">
         <label for="type" class="form-label"
-          >{{ $t('addEntity.type') }}: <span class="required-field">*</span></label
+          >{{ trans('addEntity.type') }}: <span class="required-field">*</span></label
         >
         <VueSelect
           v-model="newEntity.type"
           name="type"
           :options="[
-            { label: $t('addEntity.category'), value: 'category', icon: 'tag' },
-            { label: $t('addEntity.place'), value: 'place', icon: 'box-seam' },
-            { label: $t('addEntity.item'), value: 'item', icon: 'bag' },
+            { label: trans('addEntity.category'), value: 'category', icon: 'tag' },
+            { label: trans('addEntity.place'), value: 'place', icon: 'box-seam' },
+            { label: trans('addEntity.item'), value: 'item', icon: 'bag' },
           ]"
-          :placeholder="$t('addEntity.typeDefault')"
+          :placeholder="trans('addEntity.typeDefault')"
           :isClearable="false"
           :isSearchable="false"
         >
@@ -33,25 +33,25 @@
       </div>
       <template v-if="newEntity.type">
         <div class="form-input-container shadow-sm">
-          <label for="parent" class="form-label">{{ $t('addEntity.parentEntity') }}:</label>
+          <label for="parent" class="form-label">{{ trans('addEntity.parentEntity') }}:</label>
           <VueSelect
             v-model="newEntity.parentId"
             name="parent"
             :options="[
-              { label: $t('addEntity.null'), value: null },
+              { label: trans('addEntity.null'), value: null },
               ...(newEntity.type === 'category'
                 ? allCategories.map((cat) => ({
-                    label: `${cat.name} (${t('addEntity.' + cat.type)})`,
+                    label: `${cat.name} (${trans('addEntity.' + cat.type)})`,
                     value: cat.id,
                     icon: cat.icon,
                   }))
                 : allEntities.map((ent) => ({
-                    label: `${ent.name} (${t('addEntity.' + ent.type)})`,
+                    label: `${ent.name} (${trans('addEntity.' + ent.type)})`,
                     value: ent.id,
                     icon: ent.icon,
                   }))),
             ]"
-            :placeholder="$t('addEntity.null')"
+            :placeholder="trans('addEntity.null')"
           >
             <template #option="{ option }">
               <span class="select-option">
@@ -70,14 +70,14 @@
         </div>
 
         <div class="form-input-container shadow-sm" v-if="newEntity.type !== 'category'">
-          <label for="category" class="form-label">{{ $t('addEntity.category') }}:</label>
+          <label for="category" class="form-label">{{ trans('addEntity.category') }}:</label>
           <VueSelect
             v-model="newEntity.categoryId"
             name="category"
             :options="
               allCategories.map((cat) => ({ label: cat.name, value: cat.id, icon: cat.icon }))
             "
-            :placeholder="$t('addEntity.null')"
+            :placeholder="trans('addEntity.null')"
           >
             <template #option="{ option }">
               <span class="select-option">
@@ -97,33 +97,33 @@
 
         <div class="form-input-container shadow-sm">
           <label for="name" class="form-label"
-            >{{ $t('addEntity.name') }}: <span class="required-field">*</span></label
+            >{{ trans('addEntity.name') }}: <span class="required-field">*</span></label
           >
           <input
             id="name"
             type="text"
             class="form-control"
-            :placeholder="$t('addEntity.namePlaceholder')"
+            :placeholder="trans('addEntity.namePlaceholder')"
             required
             v-model="newEntity.name"
           />
         </div>
         <div class="form-input-container shadow-sm">
-          <label for="description" class="form-label">{{ $t('addEntity.description') }}:</label>
+          <label for="description" class="form-label">{{ trans('addEntity.description') }}:</label>
           <textarea
             id="description"
             type="text"
-            :placeholder="$t('addEntity.descriptionPlaceholder')"
+            :placeholder="trans('addEntity.descriptionPlaceholder')"
             v-model="newEntity.description"
             class="form-control"
           />
         </div>
 
         <div class="form-input-container shadow-sm">
-          <label for="code" class="form-label"> {{ $t('addEntity.code') }}: </label>
+          <label for="code" class="form-label"> {{ trans('addEntity.code') }}: </label>
           <span class="tooltip-container">
             <i class="bi bi-info-circle-fill"></i>
-            <span class="tooltip-text">{{ t('addEntity.codeTooltip') }}</span>
+            <span class="tooltip-text">{{ trans('addEntity.codeTooltip') }}</span>
           </span>
           <div class="input-with-icon form-control">
             <input
@@ -138,12 +138,12 @@
         </div>
 
         <div class="form-input-container shadow-sm">
-          <label for="icon" class="form-label">{{ $t('addEntity.icon') }}: </label>
+          <label for="icon" class="form-label">{{ trans('addEntity.icon') }}: </label>
           <VueSelect
             v-model="newEntity.icon"
             name="icon"
             :options="iconNamesArray.map((icon) => ({ label: icon, value: icon }))"
-            :placeholder="t('addEntity.iconPlaceholder')"
+            :placeholder="trans('addEntity.iconPlaceholder')"
           >
             <template #value="{ option }">
               <span class="select-option">
@@ -172,7 +172,7 @@
                 aria-expanded="false"
                 :aria-controls="'collapse' + attr.id"
               >
-                <span>{{ attr.name || t('addEntity.attribute.defaultName') }}</span>
+                <span>{{ attr.name || trans('addEntity.attribute.defaultName') }}</span>
               </button>
             </h2>
             <div
@@ -183,30 +183,29 @@
             >
               <div class="accordion-body d-flex flex-column gap-2">
                 <div class="d-flex align-items-center gap-2">
-                  <label class="form-label mb-0">{{ t('addEntity.attribute.type') }}:</label>
+                  <label class="form-label mb-0">{{ trans('addEntity.attribute.type') }}:</label>
                   <select
                     class="form-select"
                     v-model="attr.type"
                     @change="updateAttribute(idx, 'type', attr.type)"
                   >
                     <option v-for="type in AttributeTypeEnumValues" :key="type" :value="type">
-                      {{ t(AttributeTypeDescriptions[type]) }}
+                      {{ trans(AttributeTypeDescriptions[type]) }}
                     </option>
                   </select>
                 </div>
                 <div class="d-flex align-items-center gap-2">
-                  <label class="form-label mb-0">{{ t('addEntity.attribute.name') }}: </label>
+                  <label class="form-label mb-0">{{ trans('addEntity.attribute.name') }}: </label>
                   <input
                     type="text"
                     class="form-control"
                     v-model="attr.name"
-                    :placeholder="t('addEntity.attribute.namePlaceholder')"
+                    :placeholder="trans('addEntity.attribute.namePlaceholder')"
                     required
                   />
                 </div>
-                <!-- Opcje dla radio, checkbox, select -->
                 <template v-if="['radio', 'checkbox', 'select'].includes(attr.type)">
-                  <label class="form-label mb-0">{{ t('addEntity.attribute.options') }}:</label>
+                  <label class="form-label mb-0">{{ trans('addEntity.attribute.options') }}:</label>
                   <div class="mb-2 attribute-options-box shadow-sm">
                     <div
                       v-for="(opt, optIdx) in attr.options"
@@ -217,7 +216,7 @@
                         type="text"
                         class="form-control"
                         v-model="attr.options[optIdx]"
-                        :placeholder="t('addEntity.attribute.optionPlaceholder')"
+                        :placeholder="trans('addEntity.attribute.optionPlaceholder')"
                         required
                       />
                       <button
@@ -225,7 +224,7 @@
                         class="btn btn-danger btn-sm"
                         @click="attr.options.splice(optIdx, 1)"
                       >
-                        {{ t('addEntity.attribute.remove') }}
+                        {{ trans('addEntity.attribute.remove') }}
                       </button>
                     </div>
                     <button
@@ -241,7 +240,7 @@
                   v-if="!['radio', 'checkbox', 'select'].includes(attr.type)"
                   class="d-flex align-items-center gap-2"
                 >
-                  <label class="form-label mb-0">{{ t('addEntity.attribute.value') }}:</label>
+                  <label class="form-label mb-0">{{ trans('addEntity.attribute.value') }}:</label>
                   <component
                     :is="attr.type === 'textarea' ? 'textarea' : 'input'"
                     :type="attr.type !== 'textarea' ? attr.type : undefined"
@@ -249,7 +248,7 @@
                     v-model="attr.value"
                     :required="attr.required"
                     @input="updateAttribute(idx, 'value', attr.value)"
-                    :placeholder="t('addEntity.attribute.valuePlaceholder')"
+                    :placeholder="trans('addEntity.attribute.valuePlaceholder')"
                   />
                 </div>
                 <div class="form-check">
@@ -260,7 +259,7 @@
                     v-model="attr.required"
                   />
                   <label class="form-check-label" :for="'required-' + attr.id">
-                    {{ t('addEntity.attribute.required') }}
+                    {{ trans('addEntity.attribute.required') }}
                   </label>
                 </div>
                 <button
@@ -268,7 +267,7 @@
                   class="btn btn-danger align-self-end"
                   @click="removeAttribute(idx)"
                 >
-                  <i class="bi bi-trash"></i> {{ t('addEntity.attribute.remove') }}
+                  <i class="bi bi-trash"></i> {{ trans('addEntity.attribute.remove') }}
                 </button>
               </div>
             </div>
@@ -276,21 +275,20 @@
         </div>
 
         <button class="btn btn-secondary mt-3 add-attribute" type="button" @click="addAttribute">
-          <i class="bi bi-plus icon-small"></i>{{ t('addEntity.attribute.new') }}
+          <i class="bi bi-plus icon-small"></i>{{ trans('addEntity.attribute.new') }}
         </button>
       </template>
       <button class="btn btn-primary mt-3" type="submit" :disabled="!newEntity.type">
-        {{ $t('addEntity.add') }}
+        {{ trans('addEntity.add') }}
       </button>
     </form>
   </div>
 </template>
 
-<script setup>
+<script>
+import { trans } from '@/translations/translator.js'
 import VueSelect from 'vue3-select-component'
-import { ref, onMounted, watch } from 'vue'
 import { createEntity, getEntities } from '@/services/entityService.js'
-import { useI18n } from 'vue-i18n'
 import { AttributeTypeDescriptions, AttributeTypeEnumValues } from '@/Enum/AttributeTypeEnum.js'
 import {
   CapacitorBarcodeScanner,
@@ -298,153 +296,95 @@ import {
 } from '@capacitor/barcode-scanner'
 import 'vue3-select-component/styles'
 import iconsObject from 'bootstrap-icons/font/bootstrap-icons.json'
-const { t } = useI18n()
-
-defineOptions({
+export default {
   name: 'AddEntity',
-})
-
-const props = defineProps({
-  initialType: {
-    type: String,
-    default: null,
+  props: {
+    initialType: {
+      type: String,
+      default: null,
+    },
   },
-})
-
-const allEntities = ref([])
-const allCategories = ref([])
-const newEntity = ref({
-  type: null,
-  name: '',
-  description: '',
-  parentId: null,
-  categoryId: null,
-  code: '',
-  icon: '',
-  attributes: [],
-})
-
-const attributes = ref([])
-const iconNamesArray = Object.keys(iconsObject)
-function addAttribute() {
-  attributes.value.push({
-    name: '',
-    type: AttributeTypeEnumValues[0],
-    value: '',
-    id: Date.now() + Math.random(),
-    options: [],
-  })
-}
-
-function removeAttribute(idx) {
-  attributes.value.splice(idx, 1)
-}
-
-function updateAttribute(idx, key, val) {
-  attributes.value[idx][key] = val
-  if (key === 'type' && ['radio', 'checkbox', 'select'].includes(val)) {
-    // Dodaj pustą opcję, jeśli lista jest pusta
-    if (!attributes.value[idx].options || attributes.value[idx].options.length === 0) {
-      attributes.value[idx].options = ['']
+  components: { VueSelect },
+  data() {
+    return {
+      allEntities: [],
+      allCategories: [],
+      attributes: [],
+      iconNamesArray: Object.keys(iconsObject),
+      newEntity: {
+        type: null,
+        parentId: null,
+        categoryId: null,
+        name: '',
+        description: '',
+        code: '',
+        icon: '',
+        attributes: [],
+      },
+      AttributeTypeDescriptions,
+      AttributeTypeEnumValues,
     }
-    attributes.value[idx].value = ''
-  }
-  if (key === 'type' && !['radio', 'checkbox', 'select'].includes(val)) {
-    attributes.value[idx].options = []
-  }
-}
-
-async function fetchEntities() {
-  try {
-    const entities = await getEntities()
-    allEntities.value = entities.filter((entity) => entity.type !== 'category')
-    allCategories.value = entities.filter((entity) => entity.type === 'category')
-  } catch (error) {
-    console.error('Error fetching entities:', error)
-  }
-}
-
-onMounted(async () => {
-  newEntity.value.type = props.initialType
-  await fetchEntities()
-})
-
-watch(
-  () => newEntity.value.type,
-  () => {
-    newEntity.value.parentId = null
-    newEntity.value.categoryId = null
   },
-)
-
-async function addEntity() {
-  try {
-    // Dodaj atrybuty do encji
-    const entityToSave = { ...newEntity.value, attributes: attributes.value }
-    const newId = await createEntity(entityToSave)
-    console.log('Entity added with id:', newId)
-    newEntity.value = {
-      type: null,
-      name: '',
-      description: '',
-      code: '',
-      icon: '',
-      parentId: null,
-      categoryId: null,
-    }
-    attributes.value = []
-    await fetchEntities()
-  } catch (error) {
-    console.error('Error adding entity:', error)
-  }
-}
-const scanBarcode = async () => {
-  const result = await CapacitorBarcodeScanner.scanBarcode({
-    hint: CapacitorBarcodeScannerTypeHint.ALL,
-  })
-  newEntity.value.code = result.ScanResult
+  async mounted() {
+    this.newEntity.type = this.initialType
+    await this.fetchEntities()
+  },
+  methods: {
+    AttributeTypeEnumValues() {
+      return AttributeTypeEnumValues
+    },
+    trans,
+    addAttribute() {
+      this.attributes.push({
+        name: '',
+        type: AttributeTypeEnumValues[0],
+        value: '',
+        id: Date.now() + Math.random(),
+        required: false,
+        options: [],
+      })
+    },
+    removeAttribute(idx) {
+      this.attributes.splice(idx, 1)
+    },
+    updateAttribute(idx, key, val) {
+      this.attributes[idx][key] = val
+      if (key === 'type' && ['radio', 'checkbox', 'select'].includes(val)) {
+        if (!this.attributes[idx].options || this.attributes[idx].options.length <= 0) {
+          this.attributes[idx].options = ['']
+        }
+        this.attributes[idx].value = ''
+      }
+      if (key === 'type' && !['radio', 'checkbox', 'select'].includes(val)) {
+        this.attributes[idx].options = []
+      }
+    },
+    async fetchEntities() {
+      try {
+        const entities = await getEntities()
+        this.allEntities = entities.filter((ent) => ent.type !== 'category')
+        this.allCategories = entities.filter((ent) => ent.type === 'category')
+      } catch (error) {
+        console.error('Error fetching entities:', error)
+      }
+    },
+    async scanBarcode() {
+      const result = await CapacitorBarcodeScanner.scanBarcode({
+        hint: CapacitorBarcodeScannerTypeHint.ALL,
+      })
+      this.newEntity.code = result.ScanResult
+    },
+    async addEntity() {
+      // @TODO add entity function
+    },
+  },
+  watch: {
+    'newEntity.type'(newVal, oldVal) {
+      if (newVal !== oldVal) {
+        this.newEntity.parentId = null
+        this.newEntity.categoryId = null
+      }
+    },
+  },
 }
 </script>
-
-<style scoped>
-.accordion-item {
-  margin-bottom: 8px;
-}
-.tooltip-container {
-  position: relative;
-  display: inline-block;
-  cursor: pointer;
-}
-.tooltip-container .tooltip-text {
-  visibility: hidden;
-  width: 180px;
-  background-color: #333;
-  color: #fff;
-  text-align: center;
-  border-radius: 4px;
-  padding: 6px 8px;
-  position: absolute;
-  z-index: 10;
-  bottom: 125%;
-  left: 50%;
-  transform: translateX(-50%);
-  opacity: 0;
-  transition: opacity 0.2s;
-  font-size: 0.95em;
-  white-space: pre-line;
-  box-sizing: border-box;
-}
-.tooltip-container:hover .tooltip-text,
-.tooltip-container:focus-within .tooltip-text {
-  visibility: visible;
-  opacity: 1;
-}
-@media (max-width: 400px) {
-  .tooltip-container .tooltip-text {
-    left: 0;
-    transform: none;
-    min-width: 120px;
-    max-width: 90vw;
-  }
-}
-</style>
