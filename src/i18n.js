@@ -12,3 +12,5 @@ export function createAppI18n(locale = 'pl') {
     messages,
   })
 }
+
+export const i18n = createAppI18n()
