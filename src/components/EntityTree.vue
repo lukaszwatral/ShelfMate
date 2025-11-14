@@ -47,41 +47,45 @@
     </ul>
   </transition>
 </template>
-
-<script setup>
-import { ref } from 'vue'
-import { removeEntity } from '@/services/entityService.js'
+<script>
+import { trans } from '@/translations/translator.js'
 import { Dialog } from '@capacitor/dialog'
-import { useI18n } from 'vue-i18n'
+import { removeEntity } from '@/services/entityService.js'
 
-const { t } = useI18n()
-
-defineOptions({
+export default {
   name: 'EntityTree',
-})
-
-const emit = defineEmits(['removeEntity'])
-
-const props = defineProps({
-  entity: { type: Object, required: true },
-  depth: { type: Number, default: 0 },
-})
-
-const expanded = ref(false)
-
-const toggle = () => {
-  expanded.value = !expanded.value
-}
-
-async function toggleRemoveAction(entity) {
-  const { value } = await Dialog.confirm({
-    title: t('removeEntity.alertTitle', { entity: entity.name }),
-    message: t('removeEntity.alertMessage', { entity: entity.name }),
-  })
-  if (value) {
-    await removeEntity(entity)
-    emit('removeEntity')
-  }
+  emits: ['removeEntity'],
+  props: {
+    entity: {
+      type: Object,
+      required: true,
+    },
+    depth: {
+      type: Number,
+      default: 0,
+    },
+  },
+  data() {
+    return {
+      expanded: false,
+    }
+  },
+  methods: {
+    trans,
+    toggle() {
+      this.expanded = !this.expanded
+    },
+    async toggleRemoveAction(entity) {
+      const { value } = await Dialog.confirm({
+        title: trans('removeEntity.alertTitle', { entity: entity.name }),
+        message: trans('removeEntity.alertMessage', { entity: entity.name }),
+      })
+      if (value) {
+        await removeEntity(entity)
+        this.$emit('removeEntity')
+      }
+    },
+  },
 }
 </script>
 
@@ -90,26 +94,8 @@ async function toggleRemoveAction(entity) {
   padding-left: 20px;
   list-style: none;
 }
+
 .nested {
   margin: 0 !important;
-}
-.slide-fade-enter-active,
-.slide-fade-leave-active {
-  transition:
-    max-height 0.3s ease-in-out,
-    opacity 0.3s ease-in-out;
-  overflow: hidden;
-}
-
-.slide-fade-enter-from,
-.slide-fade-leave-to {
-  max-height: 0;
-  opacity: 0;
-}
-
-.slide-fade-enter-to,
-.slide-fade-leave-from {
-  max-height: 1000px; /* Adjust if needed for deeply nested content */
-  opacity: 1;
 }
 </style>
