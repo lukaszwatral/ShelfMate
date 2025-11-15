@@ -161,6 +161,11 @@
           </VueSelect>
         </div>
 
+        <div class="form-input-container shadow-sm">
+          <label for="color" class="form-label">{{ trans('addEntity.color') }}: </label>
+          <input type="color" id="color" class="form-control" v-model="newEntity.color" />
+        </div>
+
         <div class="accordion" id="attributesAccordion">
           <div v-for="(attr, idx) in attributes" :key="attr.id" class="accordion-item">
             <h2 class="accordion-header" :id="'heading' + attr.id">
@@ -319,6 +324,7 @@ export default {
         description: '',
         code: '',
         icon: '',
+        color: '',
         attributes: [],
       },
       AttributeTypeDescriptions,
