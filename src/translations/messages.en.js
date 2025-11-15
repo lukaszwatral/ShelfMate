@@ -63,6 +63,7 @@ export default {
       options: 'Options',
       optionPlaceholder: 'Option value',
     },
+    color: 'Color',
   },
   header: {
     searchPlaceholder: 'Search item...',
