@@ -222,7 +222,6 @@
     }
 
     .form-input-container {
-
       .form-control,
       .form-select {
         &:focus,
@@ -249,6 +248,18 @@
           justify-self: center;
           align-self: center;
         }
+      }
+    }
+
+    .icon-text {
+      display: flex;
+      align-items: center;
+      gap: 0.5em;
+      justify-self: center;
+      .submit-button-text {
+        font-weight: bold;
+        letter-spacing: 0.05em;
+        font-size: 1.2em;
       }
     }
   }
@@ -423,11 +434,10 @@
       height: 24px;
       width: 24px;
 
-    &.focused {
-      box-shadow: none;
-      border: none;
-    }
-
+      &.focused {
+        box-shadow: none;
+        border: none;
+      }
     }
 
     .icon-select-option,
@@ -454,7 +464,5 @@
       align-items: center;
       justify-content: center;
     }
-
-
   }
 }

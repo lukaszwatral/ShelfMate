@@ -213,35 +213,6 @@
           </div>
         </div>
 
-        <div class="form-input-container shadow-sm">
-          <label for="icon" class="form-label">{{ trans('addEntity.icon') }}: </label>
-          <VueSelect
-            v-model="newEntity.icon"
-            name="icon"
-            :options="iconNamesArray.map((icon) => ({ label: icon, value: icon }))"
-            :placeholder="trans('addEntity.iconPlaceholder')"
-          >
-            <template #value="{ option }">
-              <span class="select-option">
-                <i :class="`bi bi-${option.label}`"></i>
-                <span>{{ option.label }}</span>
-              </span>
-            </template>
-
-            <template #option="{ option }">
-              <span class="select-option">
-                <i :class="`bi bi-${option.label}`"></i>
-                <span>{{ option.label }}</span>
-              </span>
-            </template>
-          </VueSelect>
-        </div>
-
-        <div class="form-input-container shadow-sm">
-          <label for="color" class="form-label">{{ trans('addEntity.color') }}: </label>
-          <input type="color" id="color" class="form-control" v-model="newEntity.color" />
-        </div>
-
         <div class="accordion" id="attributesAccordion">
           <div v-for="(attr, idx) in attributes" :key="attr.id" class="accordion-item">
             <h2 class="accordion-header" :id="'heading' + attr.id">
@@ -360,7 +331,10 @@
         </button>
       </template>
       <button class="btn btn-primary mt-3" type="submit" :disabled="!newEntity.type">
-        {{ trans('addEntity.add') }}
+        <span class="icon-text">
+          <i class="bi bi-plus-circle-fill"></i>
+          <span class="submit-button-text">{{ trans('addEntity.add') }}</span>
+        </span>
       </button>
     </form>
   </div>
