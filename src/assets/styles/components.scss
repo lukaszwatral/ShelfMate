@@ -123,6 +123,11 @@
     }
   }
 
+  .entity-item {
+    width: 100%;
+    min-width: 80%;
+  }
+
   .entity-row {
     display: grid;
     grid-template-columns: 24px auto 24px;
@@ -136,7 +141,6 @@
     display: flex;
     flex-direction: column;
     gap: 0.5em;
-
 
     button {
       width: 24px;
@@ -217,12 +221,12 @@
       color: red;
     }
 
-    .form-input-container{
-      //display: grid;
-      //grid-template-columns: 1fr;
+    .form-input-container {
 
-      .form-control, .form-select {
-        &:focus, &:active {
+      .form-control,
+      .form-select {
+        &:focus,
+        &:active {
           outline: none;
           border: 1px solid $primary-color;
           box-shadow: none;
@@ -296,10 +300,161 @@
 .add-attribute {
   display: flex;
   width: fit-content;
- align-self: flex-end;
+  align-self: flex-end;
 }
 
 .attribute-options-box {
   border-radius: 6px;
   padding: 12px;
+}
+
+.entity-card {
+  position: relative;
+  padding: 1em;
+  margin: 0.5em auto;
+  justify-self: flex-end;
+  width: 100%;
+  list-style: none;
+  background: rgba(255, 255, 255, 0.4);
+  display: grid;
+  grid-template-columns: 24px auto 24px 24px;
+  grid-template-areas: 'icon name colorpicker toggle' 'icon description colorpicker toggle';
+  align-items: center;
+  gap: 1em;
+
+  .pulse-hand {
+    position: absolute;
+    top: 54px;
+    left: 24px;
+    rotate: -25deg;
+    z-index: 2;
+
+    @keyframes pulse {
+      0% {
+        transform: scale(1);
+      }
+      50% {
+        transform: scale(1.3);
+      }
+      100% {
+        transform: scale(1);
+      }
+    }
+    &.pulse-animation {
+      animation: pulse 1s infinite;
+      display: inline-block;
+    }
+    &:not(.pulse-animation) {
+      display: none;
+    }
+  }
+
+  .entity-colorpicker {
+    grid-area: colorpicker;
+    rotate: -25deg;
+    @keyframes pulse {
+      0% {
+        transform: scale(1);
+      }
+      50% {
+        transform: scale(1.3);
+      }
+      100% {
+        transform: scale(1);
+      }
+    }
+    .pulse-animation {
+      animation: pulse 1s infinite;
+
+      display: inline-block;
+    }
+    :not(.pulse-animation) {
+      display: none;
+    }
+  }
+
+  .entity-actions {
+    grid-area: toggle;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5em;
+
+    button {
+      width: 24px;
+      height: 24px;
+      background: none;
+      border: none;
+    }
+
+    .bi-trash-fill {
+      color: $danger;
+    }
+  }
+  .entity-description {
+    font-size: 0.9em;
+    color: $text-color;
+    grid-area: description;
+  }
+
+  .entity-name {
+    font-size: 1.2em;
+    font-weight: bold;
+    grid-area: name;
+    color: $text-color;
+  }
+
+  .entity-icon {
+    grid-area: icon;
+    color: $text-color;
+    position: relative;
+    z-index: 1;
+    display: block;
+    margin: 0 auto;
+  }
+
+  .icon-select {
+    grid-area: icon;
+    width: 100%;
+
+    .control {
+      background: none;
+      border: none;
+      outline: none;
+      height: 24px;
+      width: 24px;
+
+    &.focused {
+      box-shadow: none;
+      border: none;
+    }
+
+    }
+
+    .icon-select-option,
+    .menu-option {
+      width: 24px !important;
+      height: 24px !important;
+      min-width: 24px !important;
+      min-height: 24px !important;
+      max-width: 24px !important;
+      max-height: 24px !important;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 0 !important;
+    }
+
+    .icon-select-option i,
+    .menu-option i {
+      font-size: 22px !important;
+      width: 24px !important;
+      height: 24px !important;
+      line-height: 24px !important;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+
+  }
 }

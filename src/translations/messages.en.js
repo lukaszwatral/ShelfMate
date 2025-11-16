@@ -64,6 +64,9 @@ export default {
       optionPlaceholder: 'Option value',
     },
     color: 'Color',
+    defaultName: 'This will be the name of the entity',
+    defaultDescription: 'This will be the description of the entity',
+    preview: 'Live preview',
   },
   header: {
     searchPlaceholder: 'Search item...',
