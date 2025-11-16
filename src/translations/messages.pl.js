@@ -64,6 +64,9 @@ export default {
       options: 'Opcje',
     },
     color: 'Kolor',
+    defaultName: 'Tu będzie nazwa encji',
+    defaultDescription: 'Tu będzie opis encji',
+    preview: 'Podgląd na żywo',
   },
   header: {
     searchPlaceholder: 'Wyszukaj przedmiot...',

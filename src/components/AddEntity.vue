@@ -1,5 +1,81 @@
 <template>
   <div class="add-entity-container">
+    <h4>
+      <i class="bi bi-broadcast" style="color: red"></i>
+      {{ trans('addEntity.preview') }}
+    </h4>
+    <div
+      class="entity-card shadow-sm"
+      :style="{ background: newEntity.color }"
+      @click="handleColorpickerClick"
+    >
+      <i
+        class="bi bi-hand-index-fill pulse-hand"
+        @click.stop="handleIconClick"
+        :class="{ 'pulse-animation': isIconClicked }"
+      ></i>
+      <i
+        :class="`bi bi-${newEntity.icon || initialIcon || 'question'}`"
+        class="entity-icon"
+        @click.stop="handleIconClick"
+      ></i>
+
+      <VueSelect
+        v-model="newEntity.icon"
+        v-if="showIconSelect"
+        class="icon-select"
+        ref="iconSelect"
+        name="icon"
+        :isClearable="false"
+        :shouldAutofocusOption="false"
+        :isMenuOpen="true"
+        :options="iconOptions"
+        placeholder=""
+        @update:modelValue="this.showIconSelect = false"
+        @click.stop
+      >
+        <template #dropdown></template>
+        <template #value>
+          <span style="visibility: hidden"></span>
+        </template>
+        <template #option="{ option }">
+          <span
+            class="icon-select-option"
+            v-if="option && option.label"
+            @click.stop="selectIcon(option.value)"
+          >
+            <i :class="`bi bi-${option.label}`"></i>
+          </span>
+        </template>
+      </VueSelect>
+
+      <span class="entity-name">
+        {{ newEntity.name || trans('addEntity.defaultName') }}
+      </span>
+
+      <span class="entity-description">
+        {{ newEntity.description || trans('addEntity.defaultDescription') }}
+      </span>
+      <div class="entity-colorpicker" @click.stop>
+        <i
+          class="bi bi-hand-index-fill"
+          :class="{ 'pulse-animation': isColorpickerActive }"
+          @click="handleColorpickerClick"
+        ></i>
+        <input type="color" ref="colorInput" v-model="newEntity.color" style="display: none" />
+      </div>
+      <div class="entity-actions">
+        <button><i class="bi bi-pencil-square icon-small"></i></button>
+        <button>
+          <i class="bi bi-trash-fill icon-small"></i>
+        </button>
+        <button class="toggle-btn" type="button">
+          <span></span>
+          <i class="bi-chevron-down"></i>
+        </button>
+      </div>
+    </div>
+
     <form @submit.prevent="addEntity">
       <div class="form-input-container shadow-sm">
         <label for="type" class="form-label"
@@ -9,9 +85,9 @@
           v-model="newEntity.type"
           name="type"
           :options="[
-            { label: trans('addEntity.category'), value: 'category', icon: 'tag' },
-            { label: trans('addEntity.place'), value: 'place', icon: 'box-seam' },
-            { label: trans('addEntity.item'), value: 'item', icon: 'bag' },
+            { label: trans('addEntity.category'), value: 'category', icon: 'tag-fill' },
+            { label: trans('addEntity.place'), value: 'place', icon: 'box-seam-fill' },
+            { label: trans('addEntity.item'), value: 'item', icon: 'bag-fill' },
           ]"
           :placeholder="trans('addEntity.typeDefault')"
           :isClearable="false"
@@ -137,35 +213,6 @@
           </div>
         </div>
 
-        <div class="form-input-container shadow-sm">
-          <label for="icon" class="form-label">{{ trans('addEntity.icon') }}: </label>
-          <VueSelect
-            v-model="newEntity.icon"
-            name="icon"
-            :options="iconNamesArray.map((icon) => ({ label: icon, value: icon }))"
-            :placeholder="trans('addEntity.iconPlaceholder')"
-          >
-            <template #value="{ option }">
-              <span class="select-option">
-                <i :class="`bi bi-${option.label}`"></i>
-                <span>{{ option.label }}</span>
-              </span>
-            </template>
-
-            <template #option="{ option }">
-              <span class="select-option">
-                <i :class="`bi bi-${option.label}`"></i>
-                <span>{{ option.label }}</span>
-              </span>
-            </template>
-          </VueSelect>
-        </div>
-
-        <div class="form-input-container shadow-sm">
-          <label for="color" class="form-label">{{ trans('addEntity.color') }}: </label>
-          <input type="color" id="color" class="form-control" v-model="newEntity.color" />
-        </div>
-
         <div class="accordion" id="attributesAccordion">
           <div v-for="(attr, idx) in attributes" :key="attr.id" class="accordion-item">
             <h2 class="accordion-header" :id="'heading' + attr.id">
@@ -284,7 +331,10 @@
         </button>
       </template>
       <button class="btn btn-primary mt-3" type="submit" :disabled="!newEntity.type">
-        {{ trans('addEntity.add') }}
+        <span class="icon-text">
+          <i class="bi bi-plus-circle-fill"></i>
+          <span class="submit-button-text">{{ trans('addEntity.add') }}</span>
+        </span>
       </button>
     </form>
   </div>
@@ -300,7 +350,7 @@ import {
   CapacitorBarcodeScannerTypeHint,
 } from '@capacitor/barcode-scanner'
 import 'vue3-select-component/styles'
-import iconsObject from 'bootstrap-icons/font/bootstrap-icons.json'
+import iconsObject from '/src/assets/icons-picker.json'
 export default {
   name: 'AddEntity',
   props: {
@@ -316,6 +366,7 @@ export default {
       allCategories: [],
       attributes: [],
       iconNamesArray: Object.keys(iconsObject),
+      iconOptions: [],
       newEntity: {
         type: null,
         parentId: null,
@@ -329,13 +380,32 @@ export default {
       },
       AttributeTypeDescriptions,
       AttributeTypeEnumValues,
+      isColorpickerActive: true,
+      showIconSelect: false,
+      isIconClicked: true,
+      initialIcon: 'question',
     }
   },
   async mounted() {
     this.newEntity.type = this.initialType
     await this.fetchEntities()
+    document.addEventListener('click', this.handleClickOutside)
+  },
+  beforeUnmount() {
+    document.removeEventListener('click', this.handleClickOutside)
+  },
+  created() {
+    this.iconOptions = this.iconNamesArray.map((icon) => ({ label: icon, value: icon }))
   },
   methods: {
+    handleClickOutside(e) {
+      if (this.showIconSelect) {
+        const select = this.$refs.iconSelect?.$el || this.$refs.iconSelect
+        if (select && !select.contains(e.target)) {
+          this.showIconSelect = false
+        }
+      }
+    },
     AttributeTypeEnumValues() {
       return AttributeTypeEnumValues
     },
@@ -383,6 +453,23 @@ export default {
     async addEntity() {
       // @TODO add entity function
     },
+    handleColorpickerClick() {
+      this.isColorpickerActive = false
+      this.$refs.colorInput && this.$refs.colorInput.click()
+    },
+    handleIconClick() {
+      this.isIconClicked = false
+      this.showIconSelect = true
+      this.$nextTick(() => {
+        if (this.$refs.iconSelect && typeof this.$refs.iconSelect.open === 'function') {
+          this.$refs.iconSelect.open()
+        }
+      })
+    },
+    selectIcon(icon) {
+      this.newEntity.icon = icon
+      this.showIconSelect = false
+    },
   },
   watch: {
     'newEntity.type'(newVal, oldVal) {
@@ -390,7 +477,19 @@ export default {
         this.newEntity.parentId = null
         this.newEntity.categoryId = null
       }
+      switch (newVal) {
+        case 'category':
+          this.initialIcon = 'tag-fill'
+          break
+        case 'place':
+          this.initialIcon = 'box-seam-fill'
+          break
+        case 'item':
+          this.initialIcon = 'bag-fill'
+      }
     },
   },
 }
 </script>
+
+<style scoped></style>
