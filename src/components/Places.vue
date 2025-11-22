@@ -2,9 +2,15 @@
   <div class="content-container entity-container">
     <EntityToggle />
     <router-link :to="{ name: 'addEntity', query: { initialType: 'place' } }">
-      <button class="add-button shadow-sm">
-        <i class="bi bi-plus icon-large"></i> {{ trans('place.addPlace') }}
-      </button>
+      <div class="add-container shadow-sm">
+        <span class="add-label">
+          {{ trans('place.addPlace') }}
+        </span>
+
+        <button class="add-circle-btn">
+          <i class="bi bi-plus icon-large"></i>
+        </button>
+      </div>
     </router-link>
 
     <EntityList

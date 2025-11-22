@@ -77,7 +77,7 @@
     </div>
 
     <form @submit.prevent="addEntity">
-      <div class="form-input-container shadow-sm">
+      <div class="form-input-container">
         <label for="type" class="form-label"
           >{{ trans('addEntity.type') }}: <span class="required-field">*</span></label
         >
@@ -108,7 +108,7 @@
         </VueSelect>
       </div>
       <template v-if="newEntity.type">
-        <div class="form-input-container shadow-sm">
+        <div class="form-input-container">
           <label for="parent" class="form-label">{{ trans('addEntity.parentEntity') }}:</label>
           <VueSelect
             v-model="newEntity.parentId"
@@ -145,7 +145,7 @@
           </VueSelect>
         </div>
 
-        <div class="form-input-container shadow-sm" v-if="newEntity.type !== 'category'">
+        <div class="form-input-container" v-if="newEntity.type !== 'category'">
           <label for="category" class="form-label">{{ trans('addEntity.category') }}:</label>
           <VueSelect
             v-model="newEntity.categoryId"
@@ -171,20 +171,20 @@
           </VueSelect>
         </div>
 
-        <div class="form-input-container shadow-sm">
+        <div class="form-input-container">
           <label for="name" class="form-label"
             >{{ trans('addEntity.name') }}: <span class="required-field">*</span></label
           >
           <input
             id="name"
             type="text"
-            class="form-control"
+            class="form-control input-inset"
             :placeholder="trans('addEntity.namePlaceholder')"
             required
             v-model="newEntity.name"
           />
         </div>
-        <div class="form-input-container shadow-sm">
+        <div class="form-input-container">
           <label for="description" class="form-label">{{ trans('addEntity.description') }}:</label>
           <textarea
             id="description"
@@ -195,7 +195,7 @@
           />
         </div>
 
-        <div class="form-input-container shadow-sm">
+        <div class="form-input-container">
           <label for="code" class="form-label"> {{ trans('addEntity.code') }}: </label>
           <span class="tooltip-container">
             <i class="bi bi-info-circle-fill"></i>
@@ -217,7 +217,7 @@
           <div v-for="(attr, idx) in attributes" :key="attr.id" class="accordion-item">
             <h2 class="accordion-header" :id="'heading' + attr.id">
               <button
-                class="accordion-button shadow-sm"
+                class="accordion-button form-control"
                 type="button"
                 data-bs-toggle="collapse"
                 :data-bs-target="'#collapse' + attr.id"
@@ -330,10 +330,17 @@
           <i class="bi bi-plus icon-small"></i>{{ trans('addEntity.attribute.new') }}
         </button>
       </template>
-      <button class="btn btn-primary mt-3" type="submit" :disabled="!newEntity.type">
-        <span class="icon-text">
-          <i class="bi bi-plus-circle-fill"></i>
-          <span class="submit-button-text">{{ trans('addEntity.add') }}</span>
+      <button
+        class="add-container-right shadow-sm"
+        style="border: none"
+        type="submit"
+        :disabled="!newEntity.type"
+      >
+        <button class="add-circle-btn">
+          <i class="bi bi-plus icon-large"></i>
+        </button>
+        <span class="add-label">
+          {{ trans('home.addEntity') }}
         </span>
       </button>
     </form>

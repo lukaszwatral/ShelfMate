@@ -3,11 +3,11 @@
     <div class="logo-container">
       <div class="logo">
         <img src="@/assets/images/logo.png" alt="logo" />
-        <div class="title">
+        <div class="logo-name">
           <span class="title">ShelfMate</span>
+          <span class="subtitle">{{ trans('home.subtitle') }}</span>
         </div>
       </div>
-      <span class="subtitle">{{ trans('home.subtitle') }}</span>
     </div>
     <div class="content">
       <div class="dashboard shadow-sm" v-if="dashboardData">
@@ -42,9 +42,15 @@
       </div>
 
       <router-link :to="{ name: 'addEntity' }">
-        <button class="add-button shadow-sm">
-          <i class="bi bi-plus icon-large"></i> {{ trans('home.addEntity') }}
-        </button>
+        <div class="add-container shadow-sm">
+          <span class="add-label">
+            {{ trans('home.addEntity') }}
+          </span>
+
+          <button class="add-circle-btn">
+            <i class="bi bi-plus icon-large"></i>
+          </button>
+        </div>
       </router-link>
 
       <div class="collection-slider-container">

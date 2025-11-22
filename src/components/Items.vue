@@ -16,9 +16,15 @@
       </button>
     </div>
     <router-link :to="{ name: 'addEntity', query: { initialType: 'item' } }">
-      <button class="add-button shadow-sm">
-        <i class="bi bi-plus icon-large"></i> {{ trans('item.addItem') }}
-      </button>
+      <div class="add-container shadow-sm">
+        <span class="add-label">
+          {{ trans('item.addItem') }}
+        </span>
+
+        <button class="add-circle-btn">
+          <i class="bi bi-plus icon-large"></i>
+        </button>
+      </div>
     </router-link>
     <EntityList
       :fetch-function="getItems"

@@ -1,26 +1,46 @@
+@import 'variables';
+
 .content-container {
   box-sizing: border-box;
   width: 100%;
-  color: $text-color;
+  color: $textColor;
   height: calc(100vh - 140px - env(safe-area-inset-top));
   padding-top: 10px;
   padding-bottom: 10px;
   overflow-y: auto;
 }
-.add-button {
+.add-container {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin: 0.5em auto;
+
+  width: 100%;
+
+  background: $primaryColor;
+  border-radius: 0 25px 25px 0;
+  padding: 0.3em 0.3em 0.3em 1em;
+
+  color: $textColor;
+  font-weight: bold;
+  font-size: 1.2rem;
+}
+.add-circle-btn {
   display: flex;
   justify-content: center;
   align-items: center;
-  width: 100%;
-  //height: 100%;
-  background: $primary-color;
-  border-radius: 25px;
+  width: 45px;
+  height: 45px;
+  border-radius: 50%;
+  background: $secondaryColor;
   border: none;
-  padding: 0.3em 1em;
-  cursor: pointer;
-  font-size: 1.2rem;
-  font-weight: bold;
-  color: #fff;
+  color: $textColor;
+  flex-shrink: 0;
+
+  i {
+    font-size: 1.5rem;
+    line-height: 1;
+  }
 }
 
 .entity-container {
@@ -45,7 +65,7 @@
         justify-self: flex-end;
         width: 100%;
         list-style: none;
-        background: rgba(255, 255, 255, 0.4);
+        background: rgba(255, 255, 255, 0.5);
       }
     }
   }
@@ -85,11 +105,11 @@
     }
 
     .entity-toggle-option:not(:last-child) {
-      border-right: 1px solid #1a78a5;
+      border-right: 2px solid $primaryColor;
     }
     .entity-toggle-option.active {
-      background: $primary-color;
-      color: #fff;
+      background: $primaryColor;
+      color: $textColor;
       box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
       font-weight: bold;
       transition:
@@ -113,7 +133,7 @@
       height: 100%;
       border: none;
       padding: 20px;
-      background: $action-button;
+      background: $secondaryColor;
       color: white;
       border-radius: 15px;
       display: flex;
@@ -160,7 +180,7 @@
   }
   .entity-description {
     font-size: 0.9em;
-    color: $text-color;
+    color: $textColor;
     grid-area: description;
   }
 
@@ -172,6 +192,7 @@
 
   .entity-icon {
     grid-area: icon;
+    color: $secondaryColor;
   }
 }
 
@@ -212,13 +233,17 @@
     display: flex;
     flex-direction: column;
     gap: 0.5em;
+    background: rgba($primaryColor, 0.2);
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    padding: 0.5em 1em;
+    border-radius: 0 0 0 30px;
 
     .form-label {
       font-weight: bold;
     }
 
     .required-field {
-      color: red;
+      color: $danger;
     }
 
     .form-input-container {
@@ -227,7 +252,7 @@
         &:focus,
         &:active {
           outline: none;
-          border: 1px solid $primary-color;
+          border: 1px solid $primaryColor;
           box-shadow: none;
         }
       }
@@ -235,10 +260,11 @@
       .input-with-icon {
         display: grid;
         grid-template-columns: auto 32px;
-        background: $input-bg;
-        padding-left: 0;
+        //background: $backgroundColor;
+        padding: 0;
 
-        .form-control {
+        input.form-control {
+          box-shadow: none;
           background: none;
           border: none;
           outline: none;
@@ -247,6 +273,7 @@
         i {
           justify-self: center;
           align-self: center;
+          padding-right: 1em;
         }
       }
     }
@@ -326,7 +353,7 @@
   justify-self: flex-end;
   width: 100%;
   list-style: none;
-  background: rgba(255, 255, 255, 0.4);
+  background: rgba(255, 255, 255, 0.5);
   display: grid;
   grid-template-columns: 24px auto 24px 24px;
   grid-template-areas: 'icon name colorpicker toggle' 'icon description colorpicker toggle';
@@ -339,6 +366,7 @@
     left: 24px;
     rotate: -25deg;
     z-index: 2;
+    color: $primaryColor;
 
     @keyframes pulse {
       0% {
@@ -363,6 +391,8 @@
   .entity-colorpicker {
     grid-area: colorpicker;
     rotate: -25deg;
+    color: $primaryColor;
+
     @keyframes pulse {
       0% {
         transform: scale(1);
@@ -403,7 +433,7 @@
   }
   .entity-description {
     font-size: 0.9em;
-    color: $text-color;
+    color: $textColor;
     grid-area: description;
   }
 
@@ -411,12 +441,12 @@
     font-size: 1.2em;
     font-weight: bold;
     grid-area: name;
-    color: $text-color;
+    color: $textColor;
   }
 
   .entity-icon {
+    color: $secondaryColor;
     grid-area: icon;
-    color: $text-color;
     position: relative;
     z-index: 1;
     display: block;
@@ -465,4 +495,78 @@
       justify-content: center;
     }
   }
+}
+.form-control, .form-select {
+  padding: 12px 20px;
+  border-radius: 30px;
+
+  background: $backgroundColor;
+  color: $textColor;
+  box-shadow:
+    inset 2px 2px 5px darken($backgroundColor, 15%),
+    inset -2px -2px 5px lighten($backgroundColor, 15%);
+
+  &:focus,
+  &:active,
+  &:hover, {
+    background: $backgroundColor;
+    border: none;
+    outline: none;
+    box-shadow:
+      inset 2px 2px 5px darken($backgroundColor, 15%),
+      inset -2px -2px 5px lighten($backgroundColor, 15%);
+  }
+}
+
+.btn-primary {
+  background: $primaryColor;
+}
+
+.add-container-right {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin: 0.5em auto;
+
+  width: 100%;
+
+  background: $primaryColor;
+  border-radius: 25px 0 0 25px;
+  padding: 0.3em 1em 0.3em 0.3em;
+
+  color: $textColor;
+  font-weight: bold;
+  font-size: 1.2rem;
+
+  &:disabled {
+    opacity: 0.5;
+  }
+}
+.add-circle-btn {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 45px;
+  height: 45px;
+  border-radius: 50%;
+  background: $secondaryColor;
+  border: none;
+  color: $textColor;
+  flex-shrink: 0;
+
+  i {
+    font-size: 1.5rem;
+    line-height: 1;
+  }
+}
+
+.vue-select .control {
+  padding: 6px 10px !important;
+  border-radius: 30px !important;
+
+  background: $backgroundColor !important;
+  color: $textColor !important;
+  box-shadow:
+    inset 2px 2px 5px darken($backgroundColor, 15%),
+    inset -2px -2px 5px lighten($backgroundColor, 15%) !important;
 }
