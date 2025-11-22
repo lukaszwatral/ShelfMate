@@ -6,7 +6,7 @@
     </div>
     <i class="bi bi-upc-scan" @click="scanBarcode"></i>
     <router-link :to="{ name: 'addEntity' }">
-      <i class="bi bi-plus icon-large"></i>
+      <i class="bi bi-plus icon-large" :class="{ active: route.name === 'addEntity' }"></i>
     </router-link>
   </div>
 </template>
@@ -32,6 +32,11 @@ export default {
         hint: CapacitorBarcodeScannerTypeHint.ALL,
       })
       this.barcode = result.ScanResult
+    },
+  },
+  computed: {
+    route() {
+      return this.$route
     },
   },
 }
