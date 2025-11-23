@@ -6,5 +6,12 @@
   "server": {
     "url": "http://192.168.1.17:5173",
     "cleartext": true
+  },
+  "plugins": {
+    "CapacitorSQLite": {
+      "iosDatabaseLocation": "Library/CapacitorDatabase",
+      "iosIsEncryption": false,
+      "androidIsEncryption": false
+    }
   }
 }
