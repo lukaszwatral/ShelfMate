@@ -48,9 +48,9 @@
   </transition>
 </template>
 <script>
-import { trans } from '@/translations/translator.js'
-import { Dialog } from '@capacitor/dialog'
-import { removeEntity } from '@/services/entityService.js'
+import { trans } from '@/translations/translator.js';
+import { Dialog } from '@capacitor/dialog';
+import { entityRepository } from '@/db/index.js';
 
 export default {
   name: 'EntityTree',
@@ -68,25 +68,26 @@ export default {
   data() {
     return {
       expanded: false,
-    }
+    };
   },
   methods: {
     trans,
     toggle() {
-      this.expanded = !this.expanded
+      this.expanded = !this.expanded;
     },
     async toggleRemoveAction(entity) {
+      const i18n = this.$.appContext.provides.i18n;
       const { value } = await Dialog.confirm({
-        title: trans('removeEntity.alertTitle', { entity: entity.name }),
-        message: trans('removeEntity.alertMessage', { entity: entity.name }),
-      })
+        title: trans('removeEntity.alertTitle', { entity: entity.name }, i18n),
+        message: trans('removeEntity.alertMessage', { entity: entity.name }, i18n),
+      });
       if (value) {
-        await removeEntity(entity)
-        this.$emit('removeEntity')
+        await entityRepository.remove(entity);
+        this.$emit('removeEntity');
       }
     },
   },
-}
+};
 </script>
 
 <style scoped>

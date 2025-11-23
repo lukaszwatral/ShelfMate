@@ -23,19 +23,21 @@
 </template>
 
 <script>
-import { getCategories } from '@/services/entityService.js'
-import EntityList from '@/components/EntityList.vue'
-import EntityToggle from '@/components/EntityToggle.vue'
-import { trans } from '@/translations/translator.js'
+import EntityList from '@/components/EntityList.vue';
+import EntityToggle from '@/components/EntityToggle.vue';
+import { trans } from '@/translations/translator.js';
+import { entityRepository } from '@/db/index.js';
 
 export default {
   name: 'Categories',
   components: { EntityToggle, EntityList },
   methods: {
     trans,
-    getCategories,
+    getCategories() {
+      return entityRepository.findBy({ type: 'category' });
+    },
   },
-}
+};
 </script>
 
 <style scoped></style>

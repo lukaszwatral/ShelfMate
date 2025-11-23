@@ -22,19 +22,21 @@
 </template>
 
 <script>
-import { getPlaces } from '@/services/entityService.js'
-import EntityList from '@/components/EntityList.vue'
-import EntityToggle from '@/components/EntityToggle.vue'
-import { trans } from '@/translations/translator.js'
+import EntityList from '@/components/EntityList.vue';
+import EntityToggle from '@/components/EntityToggle.vue';
+import { trans } from '@/translations/translator.js';
+import { entityRepository } from '@/db/index.js';
 
 export default {
   name: 'Places',
   components: { EntityToggle, EntityList },
   methods: {
     trans,
-    getPlaces,
+    getPlaces() {
+      return entityRepository.findBy({ type: 'place' });
+    },
   },
-}
+};
 </script>
 
 <style scoped></style>

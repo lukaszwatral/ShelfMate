@@ -11,7 +11,9 @@ const AttributeTypeEnum = Object.freeze({
   IMAGE: 'image',
   COLOR: 'color',
   URL: 'url',
-})
+  BOOLEAN: 'boolean',
+  EMAIL: 'email',
+});
 
 const AttributeTypeDescriptions = Object.freeze({
   text: 'attributeTypeDescriptions.text',
@@ -26,18 +28,20 @@ const AttributeTypeDescriptions = Object.freeze({
   image: 'attributeTypeDescriptions.image',
   color: 'attributeTypeDescriptions.color',
   url: 'attributeTypeDescriptions.url',
-})
+  boolean: 'attributeTypeDescriptions.boolean',
+  email: 'attributeTypeDescriptions.email',
+});
 
-const AttributeTypeEnumValues = Object.values(AttributeTypeEnum)
+const AttributeTypeEnumValues = Object.values(AttributeTypeEnum);
 
 export function getAttributeTypeDescription(type) {
-  return AttributeTypeDescriptions[type] || ''
+  return AttributeTypeDescriptions[type] || '';
 }
 
-export { AttributeTypeEnumValues }
+export { AttributeTypeEnumValues };
 export function isEntityType(value) {
-  return AttributeTypeEnumValues.includes(value)
+  return AttributeTypeEnumValues.includes(value);
 }
 
-export default AttributeTypeEnum
-export { AttributeTypeDescriptions }
+export default AttributeTypeEnum;
+export { AttributeTypeDescriptions };

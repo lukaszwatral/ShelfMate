@@ -6,6 +6,7 @@
       <div class="form-input-container shadow-sm">
         <VueSelect
           name="language"
+          v-if="isInitialized"
           :options="
             availableLocales.map((locale) => ({
               label: locale.name,
@@ -42,11 +43,11 @@
 </template>
 
 <script>
-import VueSelect from 'vue3-select-component'
-import { trans } from '@/translations/translator.js'
-import { setLocale, getLocale, getAvailableLocales } from '@/services/settings.js'
-import { closeDbConnection } from '@/services/database.js'
-import { flagSrc } from '@/Enum/FlagMapEnum.js'
+import VueSelect from 'vue3-select-component';
+import { trans } from '@/translations/translator.js';
+import { flagSrc } from '@/Enum/FlagMapEnum.js';
+import { Setting, settingRepository } from '@/db/index.js';
+import { localeRepository } from '@/db/repositories/LocaleRepository.js';
 
 export default {
   name: 'Settings',
@@ -56,22 +57,32 @@ export default {
       currentLocale: '',
       availableLocales: [],
       isInitialized: false,
-    }
+    };
   },
   async mounted() {
-    this.currentLocale = await getLocale()
-    this.availableLocales = await getAvailableLocales()
-    this.isInitialized = true
+    const localeCode = await settingRepository.getValue('locale');
+    this.availableLocales = await localeRepository.findAll();
+    this.currentLocale =
+      this.availableLocales.find((l) => l.code === localeCode) || this.availableLocales[0];
+    this.isInitialized = true;
   },
+
   methods: {
     flagSrc,
     trans,
     async changeLocale(code) {
-      await setLocale(code)
-      closeDbConnection()
-      window.location.reload()
+      const newSetting = new Setting({ key: 'locale', value: code });
+      await settingRepository.save(newSetting);
+      // Dynamiczna zmiana języka bez reloadu
+      const i18n = this.$.appContext.provides.i18n;
+      if (i18n) {
+        i18n.global.locale.value = code;
+        this.currentLocale = this.availableLocales.find((l) => l.code === code);
+      } else {
+        console.warn('Nie znaleziono instancji i18n');
+      }
     },
   },
-}
+};
 </script>
 <style scoped></style>

@@ -86,8 +86,9 @@
 </template>
 
 <script>
-import { trans } from '@/translations/translator.js'
-import { getDashboardData } from '@/services/entityService.js'
+import { trans } from '@/translations/translator.js';
+import { entityRepository } from '@/db/index.js';
+
 export default {
   name: 'HomePage',
   data() {
@@ -97,15 +98,28 @@ export default {
         categories: [],
         places: [],
       },
-    }
+    };
   },
-  mounted() {
+  async mounted() {
     try {
-      getDashboardData().then((data) => {
-        this.dashboardData = data
-      })
+      const data = await entityRepository.findAll();
+      const entities = data ? Object.values(data) : [];
+      this.dashboardData = entities.reduce(
+        (acc, entity) => {
+          if (!entity || !entity.type) return acc;
+          if (entity.type === 'item') {
+            acc.items.push(entity);
+          } else if (entity.type === 'category') {
+            acc.categories.push(entity);
+          } else if (entity.type === 'place') {
+            acc.places.push(entity);
+          }
+          return acc;
+        },
+        { items: [], categories: [], places: [] },
+      );
     } catch (error) {
-      this.dashboardData = { items: [], categories: [], places: [] }
+      this.dashboardData = { items: [], categories: [], places: [] };
     }
   },
   methods: {
@@ -113,16 +127,16 @@ export default {
   },
   computed: {
     itemsCount() {
-      return this.dashboardData?.items?.length ?? 0
+      return this.dashboardData?.items?.length ?? 0;
     },
     categoriesCount() {
-      return this.dashboardData?.categories?.length ?? 0
+      return this.dashboardData?.categories?.length ?? 0;
     },
     placesCount() {
-      return this.dashboardData?.places?.length ?? 0
+      return this.dashboardData?.places?.length ?? 0;
     },
   },
-}
+};
 </script>
 
 <style scoped></style>
