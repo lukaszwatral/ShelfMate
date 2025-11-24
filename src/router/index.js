@@ -1,5 +1,6 @@
-import { createRouter, createWebHistory } from 'vue-router'
-import HomeView from '../views/HomeView.vue'
+import { createRouter, createWebHistory } from 'vue-router';
+import HomeView from '../views/HomeView.vue';
+import NfcScanner from '@/components/NfcScanner.vue';
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -38,7 +39,15 @@ const router = createRouter({
       component: () => import('@/views/AddEntityView.vue'),
       props: (route) => ({ initialType: route.query.initialType || null }),
     },
+    {
+      // Zmieniamy ścieżkę, aby przyjmowała opcjonalny parametr ID
+      // Znak zapytania '?' oznacza, że parametr nie jest obowiązkowy (można wejść bez taga)
+      path: '/scanner/:tagId?',
+      name: 'NfcScanner',
+      component: () => import('../components/NfcScanner.vue'),
+      props: true, // To ważne! Dzięki temu tagId trafi do propsów komponentu
+    },
   ],
-})
+});
 
-export default router
+export default router;
