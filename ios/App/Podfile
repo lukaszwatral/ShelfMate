@@ -14,6 +14,7 @@ def capacitor_pods
   pod 'CapacitorCommunitySqlite', :path => '../../node_modules/@capacitor-community/sqlite'
   pod 'CapacitorBarcodeScanner', :path => '../../node_modules/@capacitor/barcode-scanner'
   pod 'CapacitorDialog', :path => '../../node_modules/@capacitor/dialog'
+  pod 'CapgoCapacitorNfc', :path => '../../node_modules/@capgo/capacitor-nfc'
 end
 
 target 'App' do

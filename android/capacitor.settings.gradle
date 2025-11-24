@@ -10,3 +10,6 @@ project(':capacitor-barcode-scanner').projectDir = new File('../node_modules/@ca
 
 include ':capacitor-dialog'
 project(':capacitor-dialog').projectDir = new File('../node_modules/@capacitor/dialog/android')
+
+include ':capgo-capacitor-nfc'
+project(':capgo-capacitor-nfc').projectDir = new File('../node_modules/@capgo/capacitor-nfc/android')
