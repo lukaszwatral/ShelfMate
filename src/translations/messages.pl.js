@@ -88,5 +88,7 @@ export default {
     image: 'Obraz',
     color: 'Wybór koloru',
     url: 'Adres URL',
+    boolean: 'Wartość logiczna (Tak/Nie)',
+    email: 'Adres e-mail',
   },
-}
+};

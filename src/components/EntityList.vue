@@ -32,8 +32,8 @@
 </template>
 
 <script>
-import EntityTree from '@/components/EntityTree.vue'
-import { trans } from '@/translations/translator.js'
+import EntityTree from '@/components/EntityTree.vue';
+import { trans } from '@/translations/translator.js';
 
 export default {
   name: 'EntityList',
@@ -57,43 +57,43 @@ export default {
       rows: [],
       isLoading: true,
       error: null,
-    }
+    };
   },
   mounted() {
-    this.loadRows()
+    this.loadRows();
   },
   methods: {
     trans,
     buildTree(entities) {
-      const map = new Map()
-      entities.forEach((e) => map.set(e.id, { ...e, children: [] }))
-      const roots = []
+      const map = new Map();
+      entities.forEach((e) => map.set(e.id, { ...e, children: [] }));
+      const roots = [];
       entities.forEach((e) => {
-        const node = map.get(e.id)
-        const parentId = e.parent_id
+        const node = map.get(e.id);
+        const parentId = e.parentId;
         if (parentId == null || parentId === 0) {
-          roots.push(node)
+          roots.push(node);
         } else {
-          const parent = map.get(parentId)
-          if (parent) parent.children.push(node)
-          else roots.push(node)
+          const parent = map.get(parentId);
+          if (parent) parent.children.push(node);
+          else roots.push(node);
         }
-      })
-      return roots
+      });
+      return roots;
     },
     async loadRows() {
       try {
-        this.isLoading = true
-        this.error = null
-        const flat = await this.fetchFunction()
-        this.rows = this.buildTree(flat)
+        this.isLoading = true;
+        this.error = null;
+        const flat = await this.fetchFunction();
+        this.rows = this.buildTree(flat);
       } catch (error) {
-        console.error('Error fetching entities:', error)
-        this.error = error
+        console.error('Error fetching entities:', error);
+        this.error = error;
       } finally {
-        this.isLoading = false
+        this.isLoading = false;
       }
     },
   },
-}
+};
 </script>

@@ -348,16 +348,16 @@
 </template>
 
 <script>
-import { trans } from '@/translations/translator.js'
-import VueSelect from 'vue3-select-component'
-import { createEntity, getEntities } from '@/services/entityService.js'
-import { AttributeTypeDescriptions, AttributeTypeEnumValues } from '@/Enum/AttributeTypeEnum.js'
+import { trans } from '@/translations/translator.js';
+import VueSelect from 'vue3-select-component';
+import { AttributeTypeDescriptions, AttributeTypeEnumValues } from '@/Enum/AttributeTypeEnum.js';
 import {
   CapacitorBarcodeScanner,
   CapacitorBarcodeScannerTypeHint,
-} from '@capacitor/barcode-scanner'
-import 'vue3-select-component/styles'
-import iconsObject from '/src/assets/icons-picker.json'
+} from '@capacitor/barcode-scanner';
+import 'vue3-select-component/styles';
+import iconsObject from '/src/assets/icons-picker.json';
+import { entityRepository } from '@/db/index.js';
 export default {
   name: 'AddEntity',
   props: {
@@ -391,30 +391,30 @@ export default {
       showIconSelect: false,
       isIconClicked: true,
       initialIcon: 'question',
-    }
+    };
   },
   async mounted() {
-    this.newEntity.type = this.initialType
-    await this.fetchEntities()
-    document.addEventListener('click', this.handleClickOutside)
+    this.newEntity.type = this.initialType;
+    await this.fetchEntities();
+    document.addEventListener('click', this.handleClickOutside);
   },
   beforeUnmount() {
-    document.removeEventListener('click', this.handleClickOutside)
+    document.removeEventListener('click', this.handleClickOutside);
   },
   created() {
-    this.iconOptions = this.iconNamesArray.map((icon) => ({ label: icon, value: icon }))
+    this.iconOptions = this.iconNamesArray.map((icon) => ({ label: icon, value: icon }));
   },
   methods: {
     handleClickOutside(e) {
       if (this.showIconSelect) {
-        const select = this.$refs.iconSelect?.$el || this.$refs.iconSelect
+        const select = this.$refs.iconSelect?.$el || this.$refs.iconSelect;
         if (select && !select.contains(e.target)) {
-          this.showIconSelect = false
+          this.showIconSelect = false;
         }
       }
     },
     AttributeTypeEnumValues() {
-      return AttributeTypeEnumValues
+      return AttributeTypeEnumValues;
     },
     trans,
     addAttribute() {
@@ -425,78 +425,78 @@ export default {
         id: Date.now() + Math.random(),
         required: false,
         options: [],
-      })
+      });
     },
     removeAttribute(idx) {
-      this.attributes.splice(idx, 1)
+      this.attributes.splice(idx, 1);
     },
     updateAttribute(idx, key, val) {
-      this.attributes[idx][key] = val
+      this.attributes[idx][key] = val;
       if (key === 'type' && ['radio', 'checkbox', 'select'].includes(val)) {
         if (!this.attributes[idx].options || this.attributes[idx].options.length <= 0) {
-          this.attributes[idx].options = ['']
+          this.attributes[idx].options = [''];
         }
-        this.attributes[idx].value = ''
+        this.attributes[idx].value = '';
       }
       if (key === 'type' && !['radio', 'checkbox', 'select'].includes(val)) {
-        this.attributes[idx].options = []
+        this.attributes[idx].options = [];
       }
     },
     async fetchEntities() {
       try {
-        const entities = await getEntities()
-        this.allEntities = entities.filter((ent) => ent.type !== 'category')
-        this.allCategories = entities.filter((ent) => ent.type === 'category')
+        const entities = await entityRepository.findAll();
+        this.allEntities = entities.filter((ent) => ent.type !== 'category');
+        this.allCategories = entities.filter((ent) => ent.type === 'category');
       } catch (error) {
-        console.error('Error fetching entities:', error)
+        console.error('Error fetching entities:', error);
       }
     },
     async scanBarcode() {
       const result = await CapacitorBarcodeScanner.scanBarcode({
         hint: CapacitorBarcodeScannerTypeHint.ALL,
-      })
-      this.newEntity.code = result.ScanResult
+      });
+      this.newEntity.code = result.ScanResult;
     },
     async addEntity() {
       // @TODO add entity function
     },
     handleColorpickerClick() {
-      this.isColorpickerActive = false
-      this.$refs.colorInput && this.$refs.colorInput.click()
+      this.isColorpickerActive = false;
+      this.$refs.colorInput && this.$refs.colorInput.click();
     },
     handleIconClick() {
-      this.isIconClicked = false
-      this.showIconSelect = true
+      this.isIconClicked = false;
+      this.showIconSelect = true;
       this.$nextTick(() => {
         if (this.$refs.iconSelect && typeof this.$refs.iconSelect.open === 'function') {
-          this.$refs.iconSelect.open()
+          this.$refs.iconSelect.open();
         }
-      })
+      });
     },
     selectIcon(icon) {
-      this.newEntity.icon = icon
-      this.showIconSelect = false
+      this.newEntity.icon = icon;
+      this.showIconSelect = false;
     },
   },
   watch: {
     'newEntity.type'(newVal, oldVal) {
       if (newVal !== oldVal) {
-        this.newEntity.parentId = null
-        this.newEntity.categoryId = null
+        this.newEntity.parentId = null;
+        this.newEntity.categoryId = null;
       }
       switch (newVal) {
         case 'category':
-          this.initialIcon = 'tag-fill'
-          break
+          this.initialIcon = 'tag-fill';
+          break;
         case 'place':
-          this.initialIcon = 'box-seam-fill'
-          break
+          this.initialIcon = 'box-seam-fill';
+          break;
         case 'item':
-          this.initialIcon = 'bag-fill'
+          this.initialIcon = 'bag-fill';
       }
     },
   },
-}
+};
 </script>
 
 <style scoped></style>
