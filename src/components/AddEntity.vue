@@ -322,8 +322,36 @@
                     </button>
                   </div>
                 </template>
+                <template v-if="attr.type === 'image'">
+                  <input
+                    type="file"
+                    accept="image/*"
+                    multiple
+                    @change="onImagesChange($event, idx)"
+                  />
+                  <div v-if="attr.value && attr.value.length">
+                    <div v-for="(img, i) in attr.value" :key="i" style="margin-bottom: 12px">
+                      <img
+                        :src="img.preview"
+                        style="max-width: 100px; margin-top: 8px"
+                        :alt="attr.name"
+                      />
+                      <div class="d-flex align-items-center gap-2 mt-1">
+                        <input
+                          type="radio"
+                          :name="'isPrimary-' + idx"
+                          :checked="img.isPrimary"
+                          @change="setPrimaryImage(idx, i)"
+                        />
+                        <label>Główne zdjęcie</label>
+                      </div>
+                    </div>
+                  </div>
+                </template>
                 <div
-                  v-if="!['radio', 'checkbox', 'select'].includes(attr.type)"
+                  v-if="
+                    !['radio', 'checkbox', 'select'].includes(attr.type) && attr.type !== 'image'
+                  "
                   class="d-flex align-items-center gap-2"
                 >
                   <label class="form-label mb-0">{{ trans('addEntity.attribute.value') }}:</label>
@@ -408,7 +436,10 @@ import {
   customFieldValueRepository,
   Entity,
   entityRepository,
+  File,
+  fileRepository,
 } from '@/db/index.js';
+import { Filesystem, Directory } from '@capacitor/filesystem';
 
 const animationDuration = 5000;
 export default {
@@ -515,17 +546,36 @@ export default {
       });
       this.code = result.ScanResult;
     },
+    async saveImageToDevice(file) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = async (event) => {
+          const base64 = event.target.result.split(',')[1];
+          const fileName = Date.now() + '_' + file.name;
+          try {
+            const result = await Filesystem.writeFile({
+              path: fileName,
+              data: base64,
+              directory: Directory.Data,
+            });
+            resolve(result.uri);
+          } catch (err) {
+            reject(err);
+          }
+        };
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+      });
+    },
     async addEntity() {
       try {
         const addedEntity = await entityRepository.save(this.newEntity);
-
         if (this.code) {
           const code = new Code();
           code.setCodeValue(this.code);
           code.setEntityId(addedEntity);
           await codeRepository.save(code);
         }
-
         if (this.attributes.length > 0) {
           for (const [idx, attr] of this.attributes.entries()) {
             const field = new CustomField();
@@ -538,12 +588,31 @@ export default {
               .setIsRequired(attr.required)
               .setSortOrder(idx);
             const insertedField = await customFieldRepository.save(field);
-
-            value
-              .setEntityId(addedEntity)
-              .setCustomFieldId(insertedField)
-              .setFieldValue(JSON.stringify(attr.value) || '');
-            await customFieldValueRepository.save(value);
+            if (attr.type === 'image' && attr.value && attr.value.length) {
+              const fileIds = [];
+              for (const imgObj of attr.value) {
+                const filePath = await this.saveImageToDevice(imgObj.file);
+                const file = new File();
+                file.setEntityId(addedEntity);
+                file.setFileName(imgObj.file.name);
+                file.setMimeType(imgObj.file.type);
+                file.setFilePath(filePath);
+                file.setIsPrimary(imgObj.isPrimary);
+                const addedFile = await fileRepository.save(file);
+                fileIds.push(addedFile);
+              }
+              value
+                .setEntityId(addedEntity)
+                .setCustomFieldId(insertedField)
+                .setFieldValue(JSON.stringify(fileIds));
+              await customFieldValueRepository.save(value);
+            } else {
+              value
+                .setEntityId(addedEntity)
+                .setCustomFieldId(insertedField)
+                .setFieldValue(JSON.stringify(attr.value) || '');
+              await customFieldValueRepository.save(value);
+            }
           }
         }
         this.newEntity = new Entity();
@@ -570,6 +639,29 @@ export default {
     selectIcon(icon) {
       this.newEntity.icon = icon;
       this.showIconSelect = false;
+    },
+    onImageChange(event, idx) {
+      const files = Array.from(event.target.files);
+      this.attributes[idx].value = files.map((file) => ({
+        file,
+        preview: URL.createObjectURL(file),
+      }));
+    },
+    onImagesChange(event, idx) {
+      const files = Array.from(event.target.files);
+      this.attributes[idx].value = files.map((file) => ({
+        file,
+        preview: URL.createObjectURL(file),
+      }));
+    },
+    setPrimaryImage(attrIdx, imgIdx) {
+      const attr = this.attributes[attrIdx];
+      if (attr.value && attr.value.length > imgIdx) {
+        for (const img of attr.value) {
+          img.isPrimary = false;
+        }
+        attr.value[imgIdx].isPrimary = true;
+      }
     },
   },
   watch: {
