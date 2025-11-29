@@ -54,14 +54,13 @@ export class LocaleRepository {
       .insertInto('Locale')
       .values(data)
       .onConflict((oc) => oc.column('code').doUpdateSet({ name: data.name }))
-      .returningAll()
       .executeTakeFirst();
 
-    return new Locale(result);
+    return result.insertId;
   }
 
   async remove(locale) {
-    await db.deleteFrom('Locale').where('code', '=', locale.getLocale()).execute();
+    await db.deleteFrom('Locale').where('code', '=', locale.getCode()).execute();
   }
 
   /**

@@ -34,14 +34,13 @@ export class CodeRepository {
         .updateTable('Code')
         .set(data)
         .where('id', '=', code.getId())
-        .returningAll()
         .executeTakeFirst();
 
-      return new Code(result);
+      return code.getId();
     } else {
-      const result = await db.insertInto('Code').values(data).returningAll().executeTakeFirst();
+      const result = await db.insertInto('Code').values(data).executeTakeFirst();
 
-      return new Code(result);
+      return result.insertId;
     }
   }
 

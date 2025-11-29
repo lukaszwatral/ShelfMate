@@ -51,10 +51,9 @@ export class CustomFieldValueRepository {
         .updateTable('CustomFieldValue')
         .set(data)
         .where('id', '=', customFieldValue.getId())
-        .returningAll()
         .executeTakeFirst();
 
-      return new CustomFieldValue(result);
+      return customFieldValue.getId();
     } else {
       // Insert lub Update (upsert) - bo mamy UNIQUE constraint
       const result = await db
@@ -65,10 +64,9 @@ export class CustomFieldValueRepository {
             .columns(['entity_id', 'custom_field_id'])
             .doUpdateSet({ field_value: data.field_value }),
         )
-        .returningAll()
         .executeTakeFirst();
 
-      return new CustomFieldValue(result);
+      return result.insertId;
     }
   }
 

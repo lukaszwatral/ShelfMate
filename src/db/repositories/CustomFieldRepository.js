@@ -50,18 +50,13 @@ export class CustomFieldRepository {
         .updateTable('CustomField')
         .set(data)
         .where('id', '=', customField.getId())
-        .returningAll()
         .executeTakeFirst();
 
-      return new CustomField(result);
+      return customField.getId();
     } else {
-      const result = await db
-        .insertInto('CustomField')
-        .values(data)
-        .returningAll()
-        .executeTakeFirst();
+      const result = await db.insertInto('CustomField').values(data).executeTakeFirst();
 
-      return new CustomField(result);
+      return result.insertId;
     }
   }
 

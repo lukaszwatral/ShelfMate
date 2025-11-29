@@ -33,14 +33,13 @@ export class FileRepository {
         .updateTable('File')
         .set(data)
         .where('id', '=', file.getId())
-        .returningAll()
         .executeTakeFirst();
 
-      return new File(result);
+      return file.getId();
     } else {
-      const result = await db.insertInto('File').values(data).returningAll().executeTakeFirst();
+      const result = await db.insertInto('File').values(data).executeTakeFirst();
 
-      return new File(result);
+      return result.insertId;
     }
   }
 

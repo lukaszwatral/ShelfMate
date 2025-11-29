@@ -44,14 +44,13 @@ export class TagRepository {
         .updateTable('Tag')
         .set(data)
         .where('id', '=', tag.getId())
-        .returningAll()
         .executeTakeFirst();
 
-      return new Tag(result);
+      return tag.getId();
     } else {
-      const result = await db.insertInto('Tag').values(data).returningAll().executeTakeFirst();
+      const result = await db.insertInto('Tag').values(data).executeTakeFirst();
 
-      return new Tag(result);
+      return result.insertId;
     }
   }
 
