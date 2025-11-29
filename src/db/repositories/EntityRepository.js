@@ -82,15 +82,14 @@ export class EntityRepository {
         .updateTable('Entity')
         .set(data)
         .where('id', '=', entity.getId())
-        .returningAll()
         .executeTakeFirst();
 
-      return new Entity(result);
+      return entity.getId();
     } else {
       // Insert
-      const result = await db.insertInto('Entity').values(data).returningAll().executeTakeFirst();
+      const result = await db.insertInto('Entity').values(data).executeTakeFirst();
 
-      return new Entity(result);
+      return result.insertId;
     }
   }
 
