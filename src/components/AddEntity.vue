@@ -202,13 +202,7 @@
             <span class="tooltip-text">{{ trans('addEntity.codeTooltip') }}</span>
           </span>
           <div class="input-with-icon form-control">
-            <input
-              id="code"
-              type="text"
-              class="form-control"
-              placeholder=""
-              v-model="newEntity.code"
-            />
+            <input id="code" type="text" class="form-control" placeholder="" v-model="code" />
             <i class="bi bi-upc-scan" @click="scanBarcode"></i>
           </div>
         </div>
@@ -257,11 +251,51 @@
                   />
                 </div>
                 <template v-if="['radio', 'checkbox', 'select'].includes(attr.type)">
+                  <div class="d-flex align-items-center gap-2">
+                    <label class="form-label mb-0">{{ trans('addEntity.attribute.value') }}:</label>
+                    <template v-if="['radio', 'checkbox'].includes(attr.type)">
+                      <div class="attribute-options-grid">
+                        <div v-for="(opt, optIdx) in attr.options" :key="optIdx" class="form-check">
+                          <input
+                            v-if="attr.type === 'checkbox'"
+                            type="checkbox"
+                            class="form-check-input"
+                            :id="`attr-${attr.id}-opt-${optIdx}`"
+                            :value="opt"
+                            v-model="attr.value"
+                          />
+                          <input
+                            v-else
+                            type="radio"
+                            class="form-check-input"
+                            :id="`attr-${attr.id}-opt-${optIdx}`"
+                            :name="`attr-${attr.id}`"
+                            :value="opt"
+                            v-model="attr.value"
+                            :required="attr.required"
+                          />
+                          <label
+                            class="form-check-label ms-2"
+                            :for="`attr-${attr.id}-opt-${optIdx}`"
+                          >
+                            {{ opt }}
+                          </label>
+                        </div>
+                      </div>
+                    </template>
+                    <template v-else-if="attr.type === 'select'">
+                      <select class="form-select" v-model="attr.value" :required="attr.required">
+                        <option v-for="(opt, optIdx) in attr.options" :key="optIdx" :value="opt">
+                          {{ opt }}
+                        </option>
+                      </select>
+                    </template>
+                  </div>
                   <label class="form-label mb-0">{{ trans('addEntity.attribute.options') }}:</label>
                   <div class="mb-2 attribute-options-box shadow-sm">
                     <div
                       v-for="(opt, optIdx) in attr.options"
-                      :key="optIdx"
+                      :key="'edit-' + optIdx"
                       class="d-flex gap-2 mb-1"
                     >
                       <input
@@ -276,7 +310,7 @@
                         class="btn btn-danger btn-sm"
                         @click="attr.options.splice(optIdx, 1)"
                       >
-                        {{ trans('addEntity.attribute.remove') }}
+                        <i class="bi bi-x icon-small"></i>
                       </button>
                     </div>
                     <button
@@ -293,13 +327,21 @@
                   class="d-flex align-items-center gap-2"
                 >
                   <label class="form-label mb-0">{{ trans('addEntity.attribute.value') }}:</label>
-                  <component
-                    :is="attr.type === 'textarea' ? 'textarea' : 'input'"
-                    :type="attr.type !== 'textarea' ? attr.type : undefined"
+                  <textarea
+                    v-if="attr.type === 'textarea'"
                     class="form-control"
-                    v-model="attr.value"
+                    :value="attr.value"
+                    @input="attr.value = $event.target.value"
                     :required="attr.required"
-                    @input="updateAttribute(idx, 'value', attr.value)"
+                    :placeholder="trans('addEntity.attribute.valuePlaceholder')"
+                  />
+                  <input
+                    v-else
+                    :type="attr.type"
+                    class="form-control"
+                    :value="attr.value"
+                    @input="attr.value = $event.target.value"
+                    :required="attr.required"
                     :placeholder="trans('addEntity.attribute.valuePlaceholder')"
                   />
                 </div>
@@ -357,7 +399,18 @@ import {
 } from '@capacitor/barcode-scanner';
 import 'vue3-select-component/styles';
 import iconsObject from '/src/assets/icons-picker.json';
-import { entityRepository } from '@/db/index.js';
+import {
+  Code,
+  codeRepository,
+  CustomField,
+  customFieldRepository,
+  CustomFieldValue,
+  customFieldValueRepository,
+  Entity,
+  entityRepository,
+} from '@/db/index.js';
+
+const animationDuration = 5000;
 export default {
   name: 'AddEntity',
   props: {
@@ -372,19 +425,11 @@ export default {
       allEntities: [],
       allCategories: [],
       attributes: [],
+      entities: [],
       iconNamesArray: Object.keys(iconsObject),
       iconOptions: [],
-      newEntity: {
-        type: null,
-        parentId: null,
-        categoryId: null,
-        name: '',
-        description: '',
-        code: '',
-        icon: '',
-        color: '',
-        attributes: [],
-      },
+      newEntity: new Entity(),
+      code: null,
       AttributeTypeDescriptions,
       AttributeTypeEnumValues,
       isColorpickerActive: true,
@@ -397,6 +442,14 @@ export default {
     this.newEntity.type = this.initialType;
     await this.fetchEntities();
     document.addEventListener('click', this.handleClickOutside);
+
+    setTimeout(() => {
+      this.isIconClicked = false;
+    }, animationDuration);
+
+    setTimeout(() => {
+      this.isColorpickerActive = false;
+    }, animationDuration);
   },
   beforeUnmount() {
     document.removeEventListener('click', this.handleClickOutside);
@@ -418,11 +471,11 @@ export default {
     },
     trans,
     addAttribute() {
+      const type = 'text';
       this.attributes.push({
         name: '',
-        type: AttributeTypeEnumValues[0],
-        value: '',
-        id: Date.now() + Math.random(),
+        type,
+        value: ['radio', 'select'].includes(type) ? null : type === 'checkbox' ? [] : '',
         required: false,
         options: [],
       });
@@ -436,7 +489,11 @@ export default {
         if (!this.attributes[idx].options || this.attributes[idx].options.length <= 0) {
           this.attributes[idx].options = [''];
         }
-        this.attributes[idx].value = '';
+        if (val === 'checkbox') {
+          this.attributes[idx].value = [];
+        } else if (['radio', 'select'].includes(val)) {
+          this.attributes[idx].value = null;
+        }
       }
       if (key === 'type' && !['radio', 'checkbox', 'select'].includes(val)) {
         this.attributes[idx].options = [];
@@ -445,6 +502,7 @@ export default {
     async fetchEntities() {
       try {
         const entities = await entityRepository.findAll();
+        this.entities = entities;
         this.allEntities = entities.filter((ent) => ent.type !== 'category');
         this.allCategories = entities.filter((ent) => ent.type === 'category');
       } catch (error) {
@@ -455,10 +513,46 @@ export default {
       const result = await CapacitorBarcodeScanner.scanBarcode({
         hint: CapacitorBarcodeScannerTypeHint.ALL,
       });
-      this.newEntity.code = result.ScanResult;
+      this.code = result.ScanResult;
     },
     async addEntity() {
-      // @TODO add entity function
+      try {
+        const addedEntity = await entityRepository.save(this.newEntity);
+
+        if (this.code) {
+          const code = new Code();
+          code.setCodeValue(this.code);
+          code.setEntityId(addedEntity);
+          await codeRepository.save(code);
+        }
+
+        if (this.attributes.length > 0) {
+          for (const [idx, attr] of this.attributes.entries()) {
+            const field = new CustomField();
+            const value = new CustomFieldValue();
+            field
+              .setEntityId(addedEntity)
+              .setFieldName(attr.name)
+              .setFieldType(attr.type)
+              .setOptions(JSON.stringify(attr.options) || '')
+              .setIsRequired(attr.required)
+              .setSortOrder(idx);
+            const insertedField = await customFieldRepository.save(field);
+
+            value
+              .setEntityId(addedEntity)
+              .setCustomFieldId(insertedField)
+              .setFieldValue(JSON.stringify(attr.value) || '');
+            await customFieldValueRepository.save(value);
+          }
+        }
+        this.newEntity = new Entity();
+        this.attributes = [];
+        this.code = null;
+        await this.fetchEntities();
+      } catch (error) {
+        console.error('Error adding entity:', error);
+      }
     },
     handleColorpickerClick() {
       this.isColorpickerActive = false;
