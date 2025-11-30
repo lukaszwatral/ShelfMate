@@ -348,9 +348,34 @@
                     </div>
                   </div>
                 </template>
+                <template v-if="attr.type === 'file'">
+                  <input type="file" multiple @change="onFilesChange($event, idx)" />
+                  <div v-if="attr.value && attr.value.length" class="mt-2">
+                    <div
+                      v-for="(file, i) in attr.value"
+                      :key="i"
+                      class="d-flex align-items-center gap-2 mb-2 p-2 border rounded"
+                    >
+                      <i class="bi bi-file-earmark" style="font-size: 1.5rem"></i>
+                      <div class="flex-grow-1">
+                        <div>{{ file.file.name }}</div>
+                        <small class="text-muted">{{ formatFileSize(file.file.size) }}</small>
+                      </div>
+                      <button
+                        type="button"
+                        class="btn btn-danger btn-sm"
+                        @click="removeFile(idx, i)"
+                      >
+                        <i class="bi bi-x icon-small"></i>
+                      </button>
+                    </div>
+                  </div>
+                </template>
                 <div
                   v-if="
-                    !['radio', 'checkbox', 'select'].includes(attr.type) && attr.type !== 'image'
+                    !['radio', 'checkbox', 'select'].includes(attr.type) &&
+                    attr.type !== 'image' &&
+                    attr.type !== 'file'
                   "
                   class="d-flex align-items-center gap-2"
                 >
@@ -546,7 +571,7 @@ export default {
       });
       this.code = result.ScanResult;
     },
-    async saveImageToDevice(file) {
+    async saveFileToDevice(file) {
       return new Promise((resolve, reject) => {
         const reader = new FileReader();
         reader.onload = async (event) => {
@@ -588,16 +613,20 @@ export default {
               .setIsRequired(attr.required)
               .setSortOrder(idx);
             const insertedField = await customFieldRepository.save(field);
-            if (attr.type === 'image' && attr.value && attr.value.length) {
+            if (
+              (attr.type === 'image' || attr.type === 'file') &&
+              attr.value &&
+              attr.value.length
+            ) {
               const fileIds = [];
-              for (const imgObj of attr.value) {
-                const filePath = await this.saveImageToDevice(imgObj.file);
+              for (const fileObj of attr.value) {
+                const filePath = await this.saveFileToDevice(fileObj.file);
                 const file = new File();
                 file.setEntityId(addedEntity);
-                file.setFileName(imgObj.file.name);
-                file.setMimeType(imgObj.file.type);
+                file.setFileName(fileObj.file.name);
+                file.setMimeType(fileObj.file.type);
                 file.setFilePath(filePath);
-                file.setIsPrimary(imgObj.isPrimary);
+                file.setIsPrimary(fileObj.isPrimary || false);
                 const addedFile = await fileRepository.save(file);
                 fileIds.push(addedFile);
               }
@@ -653,6 +682,22 @@ export default {
         file,
         preview: URL.createObjectURL(file),
       }));
+    },
+    onFilesChange(event, idx) {
+      const files = Array.from(event.target.files);
+      this.attributes[idx].value = files.map((file) => ({
+        file,
+      }));
+    },
+    removeFile(attrIdx, fileIdx) {
+      this.attributes[attrIdx].value.splice(fileIdx, 1);
+    },
+    formatFileSize(bytes) {
+      if (bytes === 0) return '0 Bytes';
+      const k = 1024;
+      const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+      const i = Math.floor(Math.log(bytes) / Math.log(k));
+      return Math.round((bytes / Math.pow(k, i)) * 100) / 100 + ' ' + sizes[i];
     },
     setPrimaryImage(attrIdx, imgIdx) {
       const attr = this.attributes[attrIdx];
