@@ -207,6 +207,24 @@
           </div>
         </div>
 
+        <div
+          class="form-input-container"
+          v-for="templateCustomField in sortedTemplateCustomFields"
+          :key="templateCustomField.id"
+        >
+          <label :for="templateCustomField.id" class="form-label"
+            >{{ templateCustomField.fieldName }}:
+            <span v-if="templateCustomField.isRequired" class="required-field">*</span></label
+          >
+          <input
+            :type="templateCustomField.fieldType"
+            class="form-control"
+            :id="templateCustomField.id"
+            :required="templateCustomField.isRequired"
+            v-model="templateCustomFieldsValues[templateCustomField.id]"
+          />
+        </div>
+
         <div class="accordion" id="attributesAccordion">
           <div v-for="(attr, idx) in attributes" :key="attr.id" class="accordion-item">
             <h2 class="accordion-header" :id="'heading' + attr.id">
@@ -492,6 +510,8 @@ export default {
       showIconSelect: false,
       isIconClicked: true,
       initialIcon: 'question',
+      templateCustomFields: [],
+      templateCustomFieldsValues: {},
     };
   },
   async mounted() {
@@ -601,6 +621,16 @@ export default {
           code.setEntityId(addedEntity);
           await codeRepository.save(code);
         }
+        if (Object.keys(this.templateCustomFieldsValues).length > 0) {
+          for (const id of Object.keys(this.templateCustomFieldsValues)) {
+            const valueObj = new CustomFieldValue();
+            valueObj
+              .setEntityId(addedEntity)
+              .setCustomFieldId(id)
+              .setFieldValue(JSON.stringify(this.templateCustomFieldsValues[id]));
+            await customFieldValueRepository.save(valueObj);
+          }
+        }
         if (this.attributes.length > 0) {
           for (const [idx, attr] of this.attributes.entries()) {
             const field = new CustomField();
@@ -612,6 +642,9 @@ export default {
               .setOptions(JSON.stringify(attr.options) || '')
               .setIsRequired(attr.required)
               .setSortOrder(idx);
+            if (this.newEntity.type === 'category') {
+              field.setCategoryTemplateId(addedEntity);
+            }
             const insertedField = await customFieldRepository.save(field);
             if (
               (attr.type === 'image' || attr.type === 'file') &&
@@ -708,6 +741,10 @@ export default {
         attr.value[imgIdx].isPrimary = true;
       }
     },
+    async fetchTemplateCustomFields() {
+      const result = await customFieldRepository.findByCategoryTemplate(this.newEntity.categoryId);
+      this.templateCustomFields = result;
+    },
   },
   watch: {
     'newEntity.type'(newVal, oldVal) {
@@ -725,6 +762,14 @@ export default {
         case 'item':
           this.initialIcon = 'bag-fill';
       }
+    },
+    'newEntity.categoryId'(newVal) {
+      this.fetchTemplateCustomFields();
+    },
+  },
+  computed: {
+    sortedTemplateCustomFields() {
+      return [...this.templateCustomFields].sort((a, b) => a.sort_order - b.sort_order);
     },
   },
 };
