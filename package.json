@@ -21,6 +21,7 @@
     "@capacitor/cli": "^7.4.3",
     "@capacitor/core": "^7.4.3",
     "@capacitor/dialog": "^7.0.2",
+    "@capacitor/filesystem": "^7.1.5",
     "@capacitor/ios": "^7.4.3",
     "@capgo/capacitor-nfc": "^7.0.9",
     "@popperjs/core": "^2.11.8",
