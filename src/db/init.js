@@ -3,10 +3,8 @@ import { sql } from 'kysely';
 
 export async function initializeDatabase() {
   try {
-    // Włącz foreign keys
     await sql`PRAGMA foreign_keys = ON`.execute(db);
 
-    // Tworzenie tabel - po jednej na raz
     await sql`
       CREATE TABLE IF NOT EXISTS Entity (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -137,7 +135,42 @@ export async function initializeDatabase() {
       )
     `.execute(db);
 
-    // Triggery
+    await sql`
+      CREATE VIRTUAL TABLE IF NOT EXISTS EntitySearch USING fts5(
+        entity_id UNINDEXED,
+        name,
+        description
+      )
+    `.execute(db);
+
+    await sql`CREATE INDEX IF NOT EXISTS idx_entity_parent ON Entity(parent_id)`.execute(db);
+    await sql`CREATE INDEX IF NOT EXISTS idx_entity_category ON Entity(category_id)`.execute(db);
+    await sql`CREATE INDEX IF NOT EXISTS idx_entity_list_view ON Entity(type, deleted_at, name)`.execute(
+      db,
+    );
+    await sql`CREATE INDEX IF NOT EXISTS idx_entity_recent ON Entity(created_at DESC)`.execute(db);
+    await sql`CREATE INDEX IF NOT EXISTS idx_entity_active_name ON Entity(name) WHERE deleted_at IS NULL`.execute(
+      db,
+    );
+
+    await sql`CREATE INDEX IF NOT EXISTS idx_entity_tag_entity ON EntityTag(entity_id)`.execute(db);
+    await sql`CREATE INDEX IF NOT EXISTS idx_entity_tag_tag ON EntityTag(tag_id)`.execute(db);
+
+    await sql`CREATE INDEX IF NOT EXISTS idx_file_entity ON File(entity_id)`.execute(db);
+
+    await sql`CREATE INDEX IF NOT EXISTS idx_code_entity ON Code(entity_id)`.execute(db);
+    await sql`CREATE INDEX IF NOT EXISTS idx_code_value ON Code(code_value)`.execute(db);
+
+    await sql`CREATE INDEX IF NOT EXISTS idx_cf_template ON CustomField(category_template_id)`.execute(
+      db,
+    );
+    await sql`CREATE INDEX IF NOT EXISTS idx_cf_entity ON CustomField(entity_id)`.execute(db);
+
+    await sql`CREATE INDEX IF NOT EXISTS idx_cfv_entity ON CustomFieldValue(entity_id)`.execute(db);
+    await sql`CREATE INDEX IF NOT EXISTS idx_cfv_lookup ON CustomFieldValue(custom_field_id, field_value)`.execute(
+      db,
+    );
+
     await sql
       .raw(
         `
@@ -194,7 +227,41 @@ export async function initializeDatabase() {
       )
       .execute(db);
 
-    // Dane startowe - sprawdź czy już istnieją
+    await sql
+      .raw(
+        `
+      CREATE TRIGGER IF NOT EXISTS EntitySearchInsert
+      AFTER INSERT ON Entity BEGIN
+        INSERT INTO EntitySearch(entity_id, name, description)
+        VALUES (new.id, new.name, new.description);
+      END;
+    `,
+      )
+      .execute(db);
+
+    await sql
+      .raw(
+        `
+      CREATE TRIGGER IF NOT EXISTS EntitySearchUpdate
+      AFTER UPDATE ON Entity BEGIN
+        UPDATE EntitySearch SET name = new.name, description = new.description
+        WHERE entity_id = old.id;
+      END;
+    `,
+      )
+      .execute(db);
+
+    await sql
+      .raw(
+        `
+      CREATE TRIGGER IF NOT EXISTS EntitySearchDelete
+      AFTER DELETE ON Entity BEGIN
+        DELETE FROM EntitySearch WHERE entity_id = old.id;
+      END;
+    `,
+      )
+      .execute(db);
+
     const existingPlaces = await db
       .selectFrom('Entity')
       .where('type', '=', 'place')
@@ -202,7 +269,6 @@ export async function initializeDatabase() {
       .execute();
 
     if (existingPlaces.length === 0) {
-      // Miejsca
       await db
         .insertInto('Entity')
         .values([
@@ -236,7 +302,6 @@ export async function initializeDatabase() {
           .execute();
       }
 
-      // Kategorie
       await db
         .insertInto('Entity')
         .values([
@@ -296,7 +361,6 @@ export async function initializeDatabase() {
           .execute();
       }
 
-      // Locale i Setting
       await db
         .insertInto('Locale')
         .values([
