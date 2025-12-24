@@ -32,6 +32,23 @@ export default {
   settings: {
     title: 'Settings',
     chooseLanguage: 'Choose language',
+    importExport: 'Import/Export data',
+    importExportInfo:
+      'Export your data to a JSON file to transfer it to another device or to back it up against data loss.',
+    export: 'Export backup',
+    import: 'Import backup',
+    clearData: 'Clear data',
+    clearDataInfo:
+      'This operation will <strong>permanently delete</strong> all your data. Default settings will be restored.\n <br /> <strong>This process cannot be undone!</strong>',
+    clearDataButton: 'Clear data',
+    clearDataConfirm:
+      'ARE YOU SURE? \n\nThis operation will delete your entire database. All data will be lost permanently.',
+    error: 'Error',
+    exportSuccess: 'Backup exported successfully.',
+    importConfirm:
+      'This operation will overwrite the current database. Current data will be lost permanently. \n\nAre you sure you want to proceed?',
+    importNotification: 'Action completed successfully. Reloading the app...',
+    clearDataNotification: 'App has been cleared. Reloading the app...',
   },
   addEntity: {
     type: 'Type',

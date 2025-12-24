@@ -32,6 +32,23 @@ export default {
   settings: {
     title: 'Ustawienia',
     chooseLanguage: 'Wybierz język',
+    importExport: 'Import/Eksport danych',
+    importExportInfo:
+      'Wyeksportuj swoje dane do pliku JSON, aby przenieść je na inne urządzenie lub zabezpieczyć przed utratą.',
+    export: 'Zapisz kopię zapasową',
+    import: 'Wczytaj kopię zapasową',
+    clearData: 'Wyzerowanie danych',
+    clearDataInfo:
+      'Ta operacja <strong>trwale usunie</strong> wszystkie Twoje dane. Zostaną przywrócone domyślne ustawienia.\n <br /> <strong>Tego procesu nie można cofnąć!</strong>',
+    clearDataButton: 'Wyzeruj dane',
+    clearDataConfirm:
+      'CZY NA PEWNO? \n\nTa operacja usunie całą Twoją bazę danych. Wszystkie dane zostaną bezpowrotnie utracone.',
+    error: 'Błąd',
+    exportSuccess: 'Kopia zapasowa została pomyślnie zapisana.',
+    importConfirm:
+      'Ta operacja nadpisze obecną bazę danych. Obecne dane zostaną utracone bezpowrotnie. \n\nCzy na pewno chcesz kontynuować?',
+    importNotification: 'Akcja wykonana pomyślnie. Przeładowuję aplikację...',
+    clearDataNotification: 'Aplikacja została wyzerowana. Przeładowuję aplikację...',
   },
   addEntity: {
     type: 'Typ',
