@@ -1,6 +1,12 @@
 <template>
   <div class="app-container">
-    <AppHeader />
+    <AppHeader @search="performSearch" @scan="handleScannedCode" />
+
+    <SearchResults
+      :results="searchResults"
+      :is-visible="isSearchActive"
+      @select="handleSelection"
+    />
 
     <router-view v-slot="{ Component }">
       <transition name="fade" mode="out-in">
@@ -13,25 +19,50 @@
 </template>
 
 <script>
-// Importy
 import { CapacitorNfc } from '@capgo/capacitor-nfc';
 import AppHeader from '@/components/Header.vue';
 import AppFooter from '@/components/Footer.vue';
+import SearchResults from '@/components/SearchResults.vue';
+import { entityRepository } from '@/db/repositories/EntityRepository';
 
 export default {
   name: 'App',
-  // W Options API musimy ręcznie zarejestrować komponenty
-  components: {
-    AppHeader,
-    AppFooter,
-  },
+  components: { AppHeader, AppFooter, SearchResults },
   data() {
     return {
-      nfcListener: null, // Miejsce na uchwyt do listenera
+      nfcListener: null,
+      searchResults: [],
+      isSearchActive: false,
     };
   },
+  watch: {
+    $route() {
+      this.isSearchActive = false;
+      this.searchResults = [];
+      if (document.activeElement && document.activeElement.blur) {
+        document.activeElement.blur();
+      }
+    },
+  },
   methods: {
-    // Funkcja pomocnicza: Hex Converter
+    async handleScannedCode(codeValue) {
+      const entity = await entityRepository.findByCode(codeValue);
+
+      if (entity) {
+        if (entity.type === 'item') {
+          this.$router.push({ name: 'itemDetails', params: { id: entity.id } });
+        } else {
+          this.$router.push({ name: 'folderView', params: { parentId: entity.id } });
+        }
+      } else {
+        this.$router.push({
+          name: 'NfcScanner',
+          params: { tagId: codeValue },
+        });
+      }
+
+      this.isSearchActive = false;
+    },
     convertBytesToHex(byteArray) {
       if (!byteArray) return '';
       return byteArray
@@ -40,68 +71,54 @@ export default {
         .toUpperCase();
     },
 
-    // Główna funkcja inicjalizująca NFC
     async initGlobalNfc() {
       try {
-        // 1. Czyścimy stare listenery
         await CapacitorNfc.removeAllListeners();
-
-        // 2. Ustawiamy listenera
-        // Zapisujemy go do 'this.nfcListener', żeby móc go potem usunąć
         this.nfcListener = await CapacitorNfc.addListener('nfcEvent', (event) => {
-          console.log('Global NFC Event:', event);
-
           if (event.tag && event.tag.id) {
             const scannedId = this.convertBytesToHex(event.tag.id);
-            console.log('Złapano tag:', scannedId);
-
-            // 3. Przekierowanie
-            // W Options API używamy 'this.$router'
-            this.$router.push({
-              name: 'NfcScanner',
-              params: { tagId: scannedId },
-            });
+            this.handleScannedCode(scannedId);
           }
         });
-
-        // 4. Startujemy skanowanie
-        await CapacitorNfc.startScanning({
-          invalidateAfterFirstRead: false,
-          alertMessage: 'Przyłóż tag do skanowania',
-        });
+        await CapacitorNfc.startScanning({ invalidateAfterFirstRead: false });
       } catch (err) {
-        console.warn('Błąd inicjalizacji NFC:', err);
+        console.warn('NFC Error:', err);
+      }
+    },
+
+    async performSearch(query) {
+      if (!query || query.length < 2) {
+        this.searchResults = [];
+        this.isSearchActive = false;
+        return;
+      }
+      this.isSearchActive = true;
+      this.searchResults = await entityRepository.search(query);
+    },
+
+    handleSelection(entity) {
+      if (document.activeElement && document.activeElement.blur) {
+        document.activeElement.blur();
+      }
+
+      this.isSearchActive = false;
+      this.searchResults = [];
+
+      if (entity.type === 'item') {
+        this.$router.push({ name: 'itemDetails', params: { id: entity.id } });
+      } else {
+        this.$router.push({ name: 'folderView', params: { parentId: entity.id } });
       }
     },
   },
-  // Cykl życia: Start aplikacji
   mounted() {
     this.initGlobalNfc();
   },
-  // Cykl życia: Zamknięcie aplikacji (sprzątanie)
   async beforeUnmount() {
-    if (this.nfcListener) {
-      await this.nfcListener.remove();
-    }
+    if (this.nfcListener) await this.nfcListener.remove();
     try {
       await CapacitorNfc.stopScanning();
-      await CapacitorNfc.removeAllListeners();
-    } catch (e) {
-      // Ignorujemy błędy przy zamykaniu
-    }
+    } catch (e) {}
   },
 };
 </script>
-
-<style>
-/* Twoje style globalne */
-.fade-enter-active,
-.fade-leave-active {
-  transition: opacity 0.3s ease;
-}
-
-.fade-enter-from,
-.fade-leave-to {
-  opacity: 0;
-}
-</style>

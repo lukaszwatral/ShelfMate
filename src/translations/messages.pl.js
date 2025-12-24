@@ -70,6 +70,7 @@ export default {
   },
   header: {
     searchPlaceholder: 'Wyszukaj przedmiot...',
+    searchNotFound: 'Nie znaleziono pasujących elementów.',
   },
   removeEntity: {
     alertTitle: 'Usuń {entity}',
