@@ -36,9 +36,9 @@ export default {
   methods: {
     trans,
     getDefaultIcon(type) {
-      if (type === 'place') return 'bi-bag-fill';
+      if (type === 'place') return 'bi-box-seam-fill';
       if (type === 'category') return 'bi-tag-fill';
-      return 'bi-box-seam-fill';
+      return 'bi-bag-fill';
     },
     getTypeName(type) {
       if (type === 'place') return trans('place.title');

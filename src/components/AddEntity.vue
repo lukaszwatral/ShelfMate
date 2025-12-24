@@ -119,12 +119,12 @@
                 ? allCategories.map((cat) => ({
                     label: `${cat.name} (${trans('addEntity.' + cat.type)})`,
                     value: cat.id,
-                    icon: cat.icon,
+                    icon: cat.icon || 'tag-fill',
                   }))
                 : allEntities.map((ent) => ({
                     label: `${ent.name} (${trans('addEntity.' + ent.type)})`,
                     value: ent.id,
-                    icon: ent.icon,
+                    icon: ent.icon || (ent.type === 'item' ? 'bag-fill' : 'box-seam-fill'),
                   }))),
             ]"
             :placeholder="trans('addEntity.null')"
