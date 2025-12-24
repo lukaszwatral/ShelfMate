@@ -5,6 +5,10 @@ export async function initializeDatabase() {
   try {
     await sql`PRAGMA foreign_keys = ON`.execute(db);
 
+    // ==========================================
+    // 1. DEFINICJE TABEL (Struktura)
+    // ==========================================
+
     await sql`
       CREATE TABLE IF NOT EXISTS Entity (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -135,14 +139,20 @@ export async function initializeDatabase() {
       )
     `.execute(db);
 
+    // --- TABELA WYSZUKIWANIA (FTS) ---
+    // Tutaj jest kluczowa zmiana: custom_values
     await sql`
       CREATE VIRTUAL TABLE IF NOT EXISTS EntitySearch USING fts5(
         entity_id UNINDEXED,
         name,
-        description
+        description,
+        custom_values
       )
     `.execute(db);
 
+    // ==========================================
+    // 2. INDEKSY
+    // ==========================================
     await sql`CREATE INDEX IF NOT EXISTS idx_entity_parent ON Entity(parent_id)`.execute(db);
     await sql`CREATE INDEX IF NOT EXISTS idx_entity_category ON Entity(category_id)`.execute(db);
     await sql`CREATE INDEX IF NOT EXISTS idx_entity_list_view ON Entity(type, deleted_at, name)`.execute(
@@ -152,25 +162,23 @@ export async function initializeDatabase() {
     await sql`CREATE INDEX IF NOT EXISTS idx_entity_active_name ON Entity(name) WHERE deleted_at IS NULL`.execute(
       db,
     );
-
     await sql`CREATE INDEX IF NOT EXISTS idx_entity_tag_entity ON EntityTag(entity_id)`.execute(db);
     await sql`CREATE INDEX IF NOT EXISTS idx_entity_tag_tag ON EntityTag(tag_id)`.execute(db);
-
     await sql`CREATE INDEX IF NOT EXISTS idx_file_entity ON File(entity_id)`.execute(db);
-
     await sql`CREATE INDEX IF NOT EXISTS idx_code_entity ON Code(entity_id)`.execute(db);
     await sql`CREATE INDEX IF NOT EXISTS idx_code_value ON Code(code_value)`.execute(db);
-
     await sql`CREATE INDEX IF NOT EXISTS idx_cf_template ON CustomField(category_template_id)`.execute(
       db,
     );
     await sql`CREATE INDEX IF NOT EXISTS idx_cf_entity ON CustomField(entity_id)`.execute(db);
-
     await sql`CREATE INDEX IF NOT EXISTS idx_cfv_entity ON CustomFieldValue(entity_id)`.execute(db);
     await sql`CREATE INDEX IF NOT EXISTS idx_cfv_lookup ON CustomFieldValue(custom_field_id, field_value)`.execute(
       db,
     );
 
+    // ==========================================
+    // 3. TRIGGERY SYSTEMOWE (updated_at)
+    // ==========================================
     await sql
       .raw(
         `
@@ -227,13 +235,18 @@ export async function initializeDatabase() {
       )
       .execute(db);
 
+    // ==========================================
+    // 4. TRIGGERY WYSZUKIWANIA (Entity -> FTS)
+    // ==========================================
+
+    // Dodano '' (pusty string) do kolumny custom_values przy insercie encji
     await sql
       .raw(
         `
       CREATE TRIGGER IF NOT EXISTS EntitySearchInsert
       AFTER INSERT ON Entity BEGIN
-        INSERT INTO EntitySearch(entity_id, name, description)
-        VALUES (new.id, new.name, new.description);
+        INSERT INTO EntitySearch(entity_id, name, description, custom_values)
+        VALUES (new.id, new.name, new.description, '');
       END;
     `,
       )
@@ -262,6 +275,69 @@ export async function initializeDatabase() {
       )
       .execute(db);
 
+    // ==========================================
+    // 5. TRIGGERY WYSZUKIWANIA (CustomFields -> FTS)
+    // ==========================================
+    // To jest sekcja odpowiedzialna za "Dupa" :)
+
+    // INSERT: Gdy dodasz wartość pola, aktualizujemy EntitySearch
+    await sql
+      .raw(
+        `
+      CREATE TRIGGER IF NOT EXISTS CFV_Search_Insert
+      AFTER INSERT ON CustomFieldValue BEGIN
+        UPDATE EntitySearch
+        SET custom_values = (
+          SELECT GROUP_CONCAT(field_value, ' ')
+          FROM CustomFieldValue
+          WHERE entity_id = new.entity_id
+        )
+        WHERE entity_id = new.entity_id;
+      END;
+    `,
+      )
+      .execute(db);
+
+    // UPDATE: Gdy zmienisz wartość pola
+    await sql
+      .raw(
+        `
+      CREATE TRIGGER IF NOT EXISTS CFV_Search_Update
+      AFTER UPDATE ON CustomFieldValue BEGIN
+        UPDATE EntitySearch
+        SET custom_values = (
+          SELECT GROUP_CONCAT(field_value, ' ')
+          FROM CustomFieldValue
+          WHERE entity_id = new.entity_id
+        )
+        WHERE entity_id = new.entity_id;
+      END;
+    `,
+      )
+      .execute(db);
+
+    // DELETE: Gdy usuniesz wartość pola
+    await sql
+      .raw(
+        `
+      CREATE TRIGGER IF NOT EXISTS CFV_Search_Delete
+      AFTER DELETE ON CustomFieldValue BEGIN
+        UPDATE EntitySearch
+        SET custom_values = (
+          SELECT GROUP_CONCAT(field_value, ' ')
+          FROM CustomFieldValue
+          WHERE entity_id = old.entity_id
+        )
+        WHERE entity_id = old.entity_id;
+      END;
+    `,
+      )
+      .execute(db);
+
+    // ==========================================
+    // 6. SEEDING (Dane startowe)
+    // ==========================================
+
     const existingPlaces = await db
       .selectFrom('Entity')
       .where('type', '=', 'place')
@@ -285,10 +361,8 @@ export async function initializeDatabase() {
       const dom = await db
         .selectFrom('Entity')
         .where('name', '=', 'Dom')
-        .where('type', '=', 'place')
         .select('id')
         .executeTakeFirst();
-
       if (dom) {
         await db
           .insertInto('Entity')
@@ -343,10 +417,8 @@ export async function initializeDatabase() {
       const elektronika = await db
         .selectFrom('Entity')
         .where('name', '=', 'Elektronika')
-        .where('type', '=', 'category')
         .select('id')
         .executeTakeFirst();
-
       if (elektronika) {
         await db
           .insertInto('Entity')
@@ -368,14 +440,7 @@ export async function initializeDatabase() {
           { code: 'en', name: 'English' },
         ])
         .execute();
-
-      await db
-        .insertInto('Setting')
-        .values({
-          key: 'locale',
-          value: 'pl',
-        })
-        .execute();
+      await db.insertInto('Setting').values({ key: 'locale', value: 'pl' }).execute();
     }
 
     console.log('Baza danych ShelfMate zainicjalizowana!');
