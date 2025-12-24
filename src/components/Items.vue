@@ -1,20 +1,6 @@
 <template>
   <div class="content-container entity-container">
     <EntityToggle />
-    <div class="buttons-container">
-      <button class="action-button">
-        <i class="bi bi-funnel"></i>
-      </button>
-
-      <span></span>
-      <button class="action-button">
-        <i class="bi bi-list"></i>
-      </button>
-
-      <button class="action-button">
-        <i class="bi bi-grid"></i>
-      </button>
-    </div>
     <router-link :to="{ name: 'addEntity', query: { initialType: 'item' } }">
       <div class="add-container shadow-sm">
         <span class="add-label">

@@ -15,7 +15,6 @@
 
     <EntityList
       :fetch-function="getCategories"
-      :add-label="'category.addCategory'"
       :empty-label="'category.noCategories'"
       :loading-label="'category.loading'"
     />

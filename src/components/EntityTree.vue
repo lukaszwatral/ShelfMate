@@ -1,15 +1,15 @@
 <template>
   <li
-    class="entity-item shadow-sm"
-    :class="{ active: entity.active, nested: depth > 0 }"
+    class="entity-item"
+    :class="{ active: entity.active, nested: depth > 0, 'shadow-sm': this.view === 'list' }"
     :style="{ width: 100 - depth * 2 + '%', minWidth: 80 + '%', backgroundColor: entity.color }"
   >
-    <div class="entity-row">
+    <div :class="{ 'entity-row': view === 'list', 'entity-row-folder': view === 'folder' }">
       <slot name="entity" :entity="entity" :depth="depth">
-        <i v-if="entity.icon" :class="`bi-bi-${entity.icon} entity-icon`"></i>
+        <i v-if="entity.icon" :class="`bi bi-${entity.icon} entity-icon`"></i>
         <i v-else-if="entity.type === 'category'" class="bi bi-tag-fill entity-icon"></i>
-        <i v-else-if="entity.type === 'place'" class="bi-box-seam-fill entity-icon"></i>
-        <i v-else-if="entity.type === 'item'" class="bi-bag-fill entity-icon"></i>
+        <i v-else-if="entity.type === 'place'" class="bi bi-box-seam-fill entity-icon"></i>
+        <i v-else-if="entity.type === 'item'" class="bi bi-bag-fill entity-icon"></i>
         <span class="entity-name">{{ entity.name }}</span>
         <span class="entity-description">{{ entity.description }}</span>
       </slot>
@@ -22,12 +22,17 @@
           v-if="entity.children && entity.children.length"
           class="toggle-btn"
           type="button"
-          @click="toggle"
-          aria-label="toggle children"
+          :aria-label="view === 'list' ? 'toggle children' : 'enter folder'"
+          @click="view === 'list' ? toggle() : $emit('enter', entity)"
         >
           <span></span>
-          <i v-if="expanded" class="bi-chevron-up"></i>
-          <i v-else class="bi-chevron-down"></i>
+          <template v-if="view === 'list'">
+            <i v-if="expanded" class="bi-chevron-up"></i>
+            <i v-else class="bi-chevron-down"></i>
+          </template>
+          <template v-else>
+            <i class="bi-chevron-right icon-small"></i>
+          </template>
         </button>
       </div>
     </div>
@@ -39,6 +44,8 @@
         :key="child.id"
         :entity="child"
         :depth="depth + 1"
+        :view="view"
+        @removeEntity="$emit('removeEntity')"
       >
         <template #entity="slotProps">
           <slot name="entity" v-bind="slotProps" />
@@ -47,6 +54,7 @@
     </ul>
   </transition>
 </template>
+
 <script>
 import { trans } from '@/translations/translator.js';
 import { Dialog } from '@capacitor/dialog';
@@ -54,16 +62,11 @@ import { entityRepository } from '@/db/index.js';
 
 export default {
   name: 'EntityTree',
-  emits: ['removeEntity'],
+  emits: ['removeEntity', 'edit', 'enter'],
   props: {
-    entity: {
-      type: Object,
-      required: true,
-    },
-    depth: {
-      type: Number,
-      default: 0,
-    },
+    entity: { type: Object, required: true },
+    depth: { type: Number, default: 0 },
+    view: { type: String, default: 'list' },
   },
   data() {
     return {
@@ -95,7 +98,6 @@ export default {
   padding-left: 20px;
   list-style: none;
 }
-
 .nested {
   margin: 0 !important;
 }
