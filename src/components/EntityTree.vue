@@ -2,7 +2,7 @@
   <li
     class="entity-item shadow-sm"
     :class="{ active: entity.active, nested: depth > 0 }"
-    :style="{ width: 100 - depth * 2 + '%', minWidth: 80 + '%' }"
+    :style="{ width: 100 - depth * 2 + '%', minWidth: 80 + '%', backgroundColor: entity.color }"
   >
     <div class="entity-row">
       <slot name="entity" :entity="entity" :depth="depth">
