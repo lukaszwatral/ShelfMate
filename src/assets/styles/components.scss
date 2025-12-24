@@ -70,6 +70,28 @@
     }
   }
 
+  .entity-list-folder {
+    ul {
+      margin: 0;
+      padding: 0;
+      width: 100%;
+    }
+    li {
+      padding: 0.5em;
+      justify-self: flex-end;
+      width: 100%;
+      list-style: none;
+      background: rgba(255, 255, 255, 0.5);
+      border-bottom: 1px solid rgba(0, 0, 0, 0.12);
+      box-shadow: 0 1px 0 0 rgba(0,0,0,0.04);
+
+      &:last-child {
+        border-bottom: none;
+        box-shadow: none;
+      }
+    }
+  }
+
   .entity-toggle {
     background: rgba(255, 255, 255, 0.5);
     display: grid;
@@ -154,25 +176,50 @@
     grid-template-areas: 'icon name toggle' 'icon description toggle';
     align-items: center;
     gap: 1em;
+
+    .entity-actions {
+      grid-area: toggle;
+      display: flex;
+      flex-direction: column;
+      gap: 0.5em;
+
+      button {
+        width: 24px;
+        height: 24px;
+        background: none;
+        border: none;
+      }
+
+      .bi-trash-fill {
+        color: $danger;
+      }
+    }
   }
 
-  .entity-actions {
-    grid-area: toggle;
-    display: flex;
-    flex-direction: column;
-    gap: 0.5em;
+  .entity-row-folder {
+    display: grid;
+    grid-template-columns: 24px auto 64px;
+    grid-template-areas: 'icon name toggle' 'icon description toggle';
+    align-items: center;
+    gap: 1em;
 
-    button {
-      width: 24px;
-      height: 24px;
-      background: none;
-      border: none;
-    }
+    .entity-actions {
+        grid-area: toggle;
+      display: flex;
+      gap: 0.5em;
+      button {
+        width: 24px;
+        height: 24px;
+        background: none;
+        border: none;
+      }
 
-    .bi-trash-fill {
-      color: $danger;
+      .bi-trash-fill {
+        color: $danger;
+      }
     }
   }
+
   .children-list {
     padding-left: 16px;
     margin: 6px 0 0 0;
