@@ -13,7 +13,10 @@ dependencies {
     implementation project(':capacitor-barcode-scanner')
     implementation project(':capacitor-dialog')
     implementation project(':capacitor-filesystem')
+    implementation project(':capacitor-share')
+    implementation project(':capacitor-toast')
     implementation project(':capgo-capacitor-nfc')
+    implementation project(':capgo-capacitor-zip')
 
 }
 
