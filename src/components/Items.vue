@@ -14,6 +14,7 @@
     </router-link>
     <EntityList
       :fetch-function="getItems"
+      root-type="item"
       :empty-label="'item.noItems'"
       :loading-label="'item.loading'"
     />
@@ -32,7 +33,10 @@ export default {
   methods: {
     trans,
     getItems() {
-      return entityRepository.findBy({ type: 'item' });
+      return Promise.all([
+        entityRepository.findBy({ type: 'item' }),
+        entityRepository.findBy({ type: 'place' }),
+      ]).then(([items, places]) => [...items, ...places]);
     },
   },
 };

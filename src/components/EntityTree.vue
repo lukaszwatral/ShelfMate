@@ -27,7 +27,7 @@
           class="toggle-btn"
           type="button"
           :aria-label="view === 'list' ? 'toggle children' : 'enter folder'"
-          @click="view === 'list' ? toggle() : $emit('enter', entity)"
+          @click.stop.prevent="view === 'list' ? toggle() : $emit('enter', entity)"
         >
           <span></span>
           <template v-if="view === 'list'">

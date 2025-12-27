@@ -117,6 +117,11 @@ export default {
       type: Function,
       required: true,
     },
+    rootType: {
+      type: String,
+      required: false,
+      default: null,
+    },
     loadingLabel: {
       type: String,
       required: true,
@@ -154,17 +159,48 @@ export default {
     buildTree(entities) {
       const map = new Map();
       entities.forEach((e) => map.set(e.id, { ...e, children: [] }));
+
+      const hasAncestorOfType = (entity, type) => {
+        let currentParentId = entity.parentId;
+        while (currentParentId != null && currentParentId !== 0) {
+          const parent = map.get(currentParentId);
+          if (!parent) return false;
+          if (parent.type === type) return true;
+          currentParentId = parent.parentId;
+        }
+        return false;
+      };
+
       const roots = [];
       entities.forEach((e) => {
         const node = map.get(e.id);
         const parentId = e.parentId;
+
         if (parentId == null || parentId === 0) {
-          roots.push(node);
-        } else {
-          const parent = map.get(parentId);
-          if (parent) parent.children.push(node);
-          else roots.push(node);
+          if (!this.rootType || e.type === this.rootType) {
+            roots.push(node);
+          }
+          return;
         }
+
+        const parent = map.get(parentId);
+
+        if (!parent) {
+          if (!this.rootType || e.type === this.rootType) {
+            roots.push(node);
+          }
+          return;
+        }
+
+        if (this.rootType && e.type === this.rootType) {
+          const hasRootTypeAncestor = hasAncestorOfType(e, this.rootType);
+          if (!hasRootTypeAncestor) {
+            roots.push(node);
+            return;
+          }
+        }
+
+        parent.children.push(node);
       });
       return roots;
     },
