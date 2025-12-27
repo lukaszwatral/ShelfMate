@@ -17,6 +17,7 @@
   "dependencies": {
     "@capacitor-community/sqlite": "^7.0.2",
     "@capacitor/android": "^7.4.3",
+    "@capacitor/app": "^7.1.1",
     "@capacitor/barcode-scanner": "^2.2.0",
     "@capacitor/cli": "^7.4.3",
     "@capacitor/core": "^7.4.3",
