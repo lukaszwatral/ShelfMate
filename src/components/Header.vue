@@ -26,6 +26,7 @@ import {
   CapacitorBarcodeScanner,
   CapacitorBarcodeScannerTypeHint,
 } from '@capacitor/barcode-scanner';
+import { codeRepository } from '@/db/index.js';
 
 export default {
   name: 'Header',

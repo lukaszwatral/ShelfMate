@@ -91,6 +91,7 @@ export default {
   header: {
     searchPlaceholder: 'Wyszukaj przedmiot...',
     searchNotFound: 'Nie znaleziono pasujących elementów.',
+    scannedNotFound: 'Nie znaleziono powiązanej encji.',
   },
   removeEntity: {
     alertTitle: 'Usuń {entity}',
