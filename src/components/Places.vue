@@ -15,6 +15,7 @@
 
     <EntityList
       :fetch-function="getPlaces"
+      root-type="place"
       :empty-label="'place.noPlaces'"
       :loading-label="'place.loading'"
     />
@@ -33,7 +34,10 @@ export default {
   methods: {
     trans,
     getPlaces() {
-      return entityRepository.findBy({ type: 'place' });
+      return Promise.all([
+        entityRepository.findBy({ type: 'place' }),
+        entityRepository.findBy({ type: 'item' }),
+      ]).then(([places, items]) => [...places, ...items]);
     },
   },
 };
