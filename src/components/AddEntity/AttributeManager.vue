@@ -5,13 +5,20 @@
         <h2 class="accordion-header" :id="'heading' + idx">
           <button
             class="accordion-button form-control"
+            :class="{ 'text-danger': errors[idx] && Object.keys(errors[idx]).length > 0 }"
             type="button"
             data-bs-toggle="collapse"
             :data-bs-target="'#collapse' + idx"
-            aria-expanded="false"
+            aria-expanded="true"
             :aria-controls="'collapse' + idx"
           >
-            <span>{{ attr.name || trans('addEntity.attribute.defaultName') }}</span>
+            <span>
+              {{ attr.name || trans('addEntity.attribute.defaultName') }}
+              <i
+                v-if="errors[idx] && Object.keys(errors[idx]).length > 0"
+                class="bi bi-exclamation-circle-fill text-danger ms-2"
+              ></i>
+            </span>
           </button>
         </h2>
         <div
@@ -30,16 +37,22 @@
               </select>
             </div>
 
-            <div class="d-flex align-items-center gap-2">
-              <label class="form-label mb-0">{{ trans('addEntity.attribute.name') }}: </label>
-              <input
-                type="text"
-                class="form-control"
-                v-model="attr.name"
-                :placeholder="trans('addEntity.attribute.namePlaceholder')"
-                required
-                autocomplete="off"
-              />
+            <div class="d-flex flex-column gap-1">
+              <div class="d-flex align-items-center gap-2">
+                <label class="form-label mb-0">{{ trans('addEntity.attribute.name') }}: </label>
+                <input
+                  type="text"
+                  class="form-control"
+                  :class="{ 'is-invalid': errors[idx]?.name }"
+                  v-model="attr.name"
+                  :placeholder="trans('addEntity.attribute.namePlaceholder')"
+                  @input="clearError(idx, 'name')"
+                  autocomplete="off"
+                />
+              </div>
+              <div v-if="errors[idx]?.name" class="invalid-feedback d-block text-end">
+                {{ errors[idx].name }}
+              </div>
             </div>
 
             <template v-if="['radio', 'checkbox', 'select'].includes(attr.type)">
@@ -53,19 +66,22 @@
                         v-if="attr.type === 'checkbox'"
                         type="checkbox"
                         class="form-check-input"
+                        :class="{ 'is-invalid': errors[idx]?.value }"
                         :id="`attr-${idx}-opt-${optIdx}`"
                         :value="opt"
                         v-model="attr.value"
+                        @change="clearError(idx, 'value')"
                       />
                       <input
                         v-else
                         type="radio"
                         class="form-check-input"
+                        :class="{ 'is-invalid': errors[idx]?.value }"
                         :id="`attr-${idx}-opt-${optIdx}`"
                         :name="`attr-${idx}`"
                         :value="opt"
                         v-model="attr.value"
-                        :required="attr.required"
+                        @change="clearError(idx, 'value')"
                       />
                       <label class="form-check-label ms-2" :for="`attr-${idx}-opt-${optIdx}`">
                         {{ opt }}
@@ -74,16 +90,27 @@
                   </div>
                 </template>
                 <template v-else-if="attr.type === 'select'">
-                  <select class="form-select" v-model="attr.value" :required="attr.required">
+                  <select
+                    class="form-select"
+                    :class="{ 'is-invalid': errors[idx]?.value }"
+                    v-model="attr.value"
+                    @change="clearError(idx, 'value')"
+                  >
                     <option v-for="(opt, optIdx) in attr.options" :key="optIdx" :value="opt">
                       {{ opt }}
                     </option>
                   </select>
                 </template>
               </div>
+              <div v-if="errors[idx]?.value" class="invalid-feedback d-block text-end">
+                {{ errors[idx].value }}
+              </div>
 
               <label class="form-label mb-0">{{ trans('addEntity.attribute.options') }}:</label>
               <div class="mb-2 attribute-options-box shadow-sm">
+                <div v-if="errors[idx]?.options" class="text-danger small mb-2">
+                  {{ errors[idx].options }}
+                </div>
                 <div
                   v-for="(opt, optIdx) in attr.options"
                   :key="'edit-' + optIdx"
@@ -94,7 +121,6 @@
                     class="form-control"
                     v-model="attr.options[optIdx]"
                     :placeholder="trans('addEntity.attribute.optionPlaceholder')"
-                    required
                     autocomplete="off"
                   />
                   <button
@@ -117,6 +143,9 @@
 
             <template v-if="attr.type === 'image'">
               <input type="file" accept="image/*" multiple @change="onImagesChange($event, idx)" />
+              <div v-if="errors[idx]?.value" class="text-danger small mt-1">
+                {{ errors[idx].value }}
+              </div>
               <div v-if="attr.value && attr.value.length">
                 <div v-for="(img, i) in attr.value" :key="i" style="margin-bottom: 12px">
                   <img
@@ -139,6 +168,9 @@
 
             <template v-if="attr.type === 'file'">
               <input type="file" multiple @change="onFilesChange($event, idx)" />
+              <div v-if="errors[idx]?.value" class="text-danger small mt-1">
+                {{ errors[idx].value }}
+              </div>
               <div v-if="attr.value && attr.value.length" class="mt-2">
                 <div
                   v-for="(file, i) in attr.value"
@@ -159,26 +191,33 @@
 
             <div
               v-if="!['radio', 'checkbox', 'select', 'image', 'file'].includes(attr.type)"
-              class="d-flex align-items-center gap-2"
+              class="d-flex flex-column gap-1"
             >
-              <label class="form-label mb-0">{{ trans('addEntity.attribute.value') }}:</label>
-              <textarea
-                v-if="attr.type === 'textarea'"
-                class="form-control"
-                v-model="attr.value"
-                :required="attr.required"
-                :placeholder="trans('addEntity.attribute.valuePlaceholder')"
-                autocomplete="off"
-              />
-              <input
-                v-else
-                :type="attr.type"
-                class="form-control"
-                v-model="attr.value"
-                :required="attr.required"
-                :placeholder="trans('addEntity.attribute.valuePlaceholder')"
-                autocomplete="off"
-              />
+              <div class="d-flex align-items-center gap-2">
+                <label class="form-label mb-0">{{ trans('addEntity.attribute.value') }}:</label>
+                <textarea
+                  v-if="attr.type === 'textarea'"
+                  class="form-control"
+                  :class="{ 'is-invalid': errors[idx]?.value }"
+                  v-model="attr.value"
+                  @input="clearError(idx, 'value')"
+                  :placeholder="trans('addEntity.attribute.valuePlaceholder')"
+                  autocomplete="off"
+                />
+                <input
+                  v-else
+                  :type="attr.type"
+                  class="form-control"
+                  :class="{ 'is-invalid': errors[idx]?.value }"
+                  v-model="attr.value"
+                  @input="clearError(idx, 'value')"
+                  :placeholder="trans('addEntity.attribute.valuePlaceholder')"
+                  autocomplete="off"
+                />
+              </div>
+              <div v-if="errors[idx]?.value" class="invalid-feedback d-block text-end">
+                {{ errors[idx].value }}
+              </div>
             </div>
 
             <div class="form-check">
@@ -228,6 +267,7 @@ export default {
     return {
       AttributeTypeDescriptions,
       AttributeTypeEnumValues,
+      errors: {},
     };
   },
   computed: {
@@ -242,6 +282,79 @@ export default {
   },
   methods: {
     trans,
+    validateAttributes() {
+      this.errors = {};
+      let isValid = true;
+
+      this.localAttributes.forEach((attr, idx) => {
+        const attrErrors = {};
+
+        if (!attr.name || attr.name.trim() === '') {
+          attrErrors.name = trans('validation.required', {}, this.$.appContext.provides.i18n);
+          isValid = false;
+        }
+
+        if (['radio', 'select', 'checkbox'].includes(attr.type)) {
+          if (!attr.options || attr.options.length === 0) {
+            attrErrors.options = trans(
+              'validation.optionsRequired',
+              {},
+              this.$.appContext.provides.i18n,
+            );
+            isValid = false;
+          } else if (attr.options.some((opt) => !opt || opt.trim() === '')) {
+            attrErrors.options = trans(
+              'validation.emptyOptions',
+              {},
+              this.$.appContext.provides.i18n,
+            );
+            isValid = false;
+          }
+        }
+
+        if (attr.required) {
+          if (attr.type === 'checkbox') {
+            if (!attr.value || attr.value.length === 0) {
+              attrErrors.value = trans(
+                'validation.requiredField',
+                {},
+                this.$.appContext.provides.i18n,
+              );
+              isValid = false;
+            }
+          } else if (attr.type === 'image' || attr.type === 'file') {
+            if (!attr.value || attr.value.length === 0) {
+              attrErrors.value = trans(
+                'validation.fileRequired',
+                {},
+                this.$.appContext.provides.i18n,
+              );
+              isValid = false;
+            }
+          } else {
+            if (!attr.value || String(attr.value).trim() === '') {
+              attrErrors.value = trans(
+                'validation.requiredField',
+                {},
+                this.$.appContext.provides.i18n,
+              );
+              isValid = false;
+            }
+          }
+        }
+
+        if (Object.keys(attrErrors).length > 0) {
+          this.errors[idx] = attrErrors;
+        }
+      });
+
+      return isValid;
+    },
+    clearError(idx, field) {
+      if (this.errors[idx] && this.errors[idx][field]) {
+        delete this.errors[idx][field];
+      }
+    },
     addAttribute() {
       const type = 'text';
       const newAttributes = [
@@ -260,8 +373,10 @@ export default {
       const newAttributes = [...this.localAttributes];
       newAttributes.splice(idx, 1);
       this.localAttributes = newAttributes;
+      delete this.errors[idx];
     },
     onTypeChange(idx) {
+      if (this.errors[idx]) delete this.errors[idx];
       const attr = this.localAttributes[idx];
       if (['radio', 'checkbox', 'select'].includes(attr.type)) {
         if (!attr.options || attr.options.length <= 0) {
@@ -277,10 +392,10 @@ export default {
         attr.options = [];
         attr.value = '';
       }
-      // Aktualizacja przez przypisanie
       this.localAttributes = [...this.localAttributes];
     },
     onImagesChange(event, idx) {
+      this.clearError(idx, 'value');
       const files = Array.from(event.target.files);
       this.localAttributes[idx].value = files.map((file) => ({
         file,
@@ -289,6 +404,7 @@ export default {
       }));
     },
     onFilesChange(event, idx) {
+      this.clearError(idx, 'value');
       const files = Array.from(event.target.files);
       this.localAttributes[idx].value = files.map((file) => ({
         file,
@@ -318,7 +434,6 @@ export default {
 </script>
 
 <style scoped>
-/* Style specyficzne dla menedżera atrybutów */
 .attribute-options-box {
   background: #f8f9fa;
   padding: 10px;
