@@ -40,6 +40,18 @@ const router = createRouter({
       props: (route) => ({ initialType: route.query.initialType || null }),
     },
     {
+      path: '/entity/:id/view',
+      name: 'viewEntity',
+      component: () => import('@/views/AddEntityView.vue'),
+      props: (route) => ({ mode: 'view', entityId: route.params.id }),
+    },
+    {
+      path: '/entity/:id/edit',
+      name: 'editEntity',
+      component: () => import('@/views/AddEntityView.vue'),
+      props: (route) => ({ mode: 'edit', entityId: route.params.id }),
+    },
+    {
       // Zmieniamy ścieżkę, aby przyjmowała opcjonalny parametr ID
       // Znak zapytania '?' oznacza, że parametr nie jest obowiązkowy (można wejść bez taga)
       path: '/scanner/:tagId?',

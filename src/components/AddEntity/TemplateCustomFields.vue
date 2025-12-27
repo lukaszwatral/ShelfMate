@@ -14,6 +14,7 @@
         :value="modelValue[field.id]"
         @input="updateValue(field.id, $event.target.value)"
         autocomplete="off"
+        :readonly="readonly"
       />
 
       <input
@@ -25,6 +26,7 @@
         :value="modelValue[field.id]"
         @input="updateValue(field.id, $event.target.value)"
         autocomplete="off"
+        :readonly="readonly"
       />
     </div>
   </div>
@@ -45,12 +47,16 @@ export default {
       required: true,
       default: () => ({}),
     },
+    readonly: {
+      type: Boolean,
+      default: false,
+    },
   },
   emits: ['update:modelValue'],
   computed: {
     sortedFields() {
       // Sortowanie bez mutowania propsa
-      return [...this.fields].sort((a, b) => a.sort_order - b.sort_order);
+      return [...this.fields].sort((a, b) => (a.sortOrder || 0) - (b.sortOrder || 0));
     },
   },
   methods: {

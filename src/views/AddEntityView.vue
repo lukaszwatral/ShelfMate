@@ -1,5 +1,6 @@
 <template>
-  <AddEntity :initialType="initialType" />
+  <AddEntity :initialType="initialType" :mode="mode" :entityId="entityId" />
+
 </template>
 
 <script>
@@ -10,6 +11,14 @@ export default {
   props: {
     initialType: {
       type: String,
+      default: null,
+    },
+    mode: {
+      type: String,
+      default: 'add',
+    },
+    entityId: {
+      type: [Number, String],
       default: null,
     },
   },
