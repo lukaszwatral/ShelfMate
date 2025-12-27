@@ -2,33 +2,39 @@
   <div class="add-entity-container">
     <EntityPreview :new-entity="newEntity" :initial-icon="initialIcon" v-if="mode !== 'view'" />
 
-    <form @submit.prevent="onSubmit" autocomplete="off">
+    <form @submit.prevent="onSubmit" autocomplete="off" novalidate>
       <div class="form-input-container">
         <label for="type" class="form-label">
           {{ trans('addEntity.type') }}: <span class="required-field">*</span>
         </label>
-        <VueSelect
-          v-model="newEntity.type"
-          name="type"
-          :options="typeOptions"
-          :placeholder="trans('addEntity.typeDefault')"
-          :isClearable="false"
-          :isSearchable="false"
-          :isDisabled="isView"
-        >
-          <template #option="{ option }">
-            <span class="select-option">
-              <i v-if="option.icon" :class="`bi bi-${option.icon}`"></i>
-              <span>{{ option.label }}</span>
-            </span>
-          </template>
-          <template #value="{ option }">
-            <span class="select-option">
-              <i v-if="option.icon" :class="`bi bi-${option.icon}`"></i>
-              <span>{{ option.label }}</span>
-            </span>
-          </template>
-        </VueSelect>
+        <div :class="{ 'is-invalid-select': errors.type }">
+          <VueSelect
+            v-model="newEntity.type"
+            name="type"
+            :options="typeOptions"
+            :placeholder="trans('addEntity.typeDefault')"
+            :isClearable="false"
+            :isSearchable="false"
+            :isDisabled="isView"
+            @option-selected="clearError('type')"
+          >
+            <template #option="{ option }">
+              <span class="select-option">
+                <i v-if="option.icon" :class="`bi bi-${option.icon}`"></i>
+                <span>{{ option.label }}</span>
+              </span>
+            </template>
+            <template #value="{ option }">
+              <span class="select-option">
+                <i v-if="option.icon" :class="`bi bi-${option.icon}`"></i>
+                <span>{{ option.label }}</span>
+              </span>
+            </template>
+          </VueSelect>
+        </div>
+        <div v-if="errors.type" class="text-danger small mt-1">
+          {{ errors.type }}
+        </div>
       </div>
 
       <template v-if="newEntity.type">
@@ -88,12 +94,16 @@
             id="name"
             type="text"
             class="form-control input-inset"
+            :class="{ 'is-invalid': errors.name }"
             :placeholder="trans('addEntity.namePlaceholder')"
-            required
             v-model="newEntity.name"
+            @input="clearError('name')"
             autocomplete="off"
             :readonly="isView"
           />
+          <div v-if="errors.name" class="invalid-feedback">
+            {{ errors.name }}
+          </div>
         </div>
 
         <div class="form-input-container">
@@ -129,13 +139,14 @@
         </div>
 
         <TemplateCustomFields
+          ref="templateFieldsRef"
           v-if="templateCustomFields.length > 0"
           :fields="templateCustomFields"
           v-model="templateCustomFieldsValues"
           :readonly="isView"
         />
 
-        <AttributeManager v-if="isAdd || isEdit" v-model="attributes" />
+        <AttributeManager ref="attributeManagerRef" v-if="isAdd || isEdit" v-model="attributes" />
       </template>
 
       <button
@@ -143,7 +154,6 @@
         class="add-container-right shadow-sm"
         style="border: none"
         type="submit"
-        :disabled="!newEntity.type"
       >
         <button class="add-circle-btn">
           <i v-if="isAdd" class="bi bi-plus icon-large"></i>
@@ -178,12 +188,9 @@ import {
   CapacitorBarcodeScanner,
   CapacitorBarcodeScannerTypeHint,
 } from '@capacitor/barcode-scanner';
-
-// Importy nowych komponentów
 import EntityPreview from '@/components/AddEntity/EntityPreview.vue';
 import TemplateCustomFields from '@/components/AddEntity/TemplateCustomFields.vue';
 import AttributeManager from '@/components/AddEntity/AttributeManager.vue';
-import toast from 'bootstrap/js/src/toast.js';
 import { Toast } from '@capacitor/toast';
 
 export default {
@@ -195,7 +202,7 @@ export default {
     },
     mode: {
       type: String,
-      default: 'add', // 'add' | 'view' | 'edit'
+      default: 'add',
       validator: (v) => ['add', 'view', 'edit'].includes(v),
     },
     entityId: {
@@ -217,11 +224,10 @@ export default {
       code: null,
       initialIcon: 'question',
       loadingEntity: false,
-
-      // Dane dla komponentów potomnych
       templateCustomFields: [],
-      templateCustomFieldsValues: {}, // Obiekt klucz-wartość
-      attributes: [], // Lista dynamicznych atrybutów
+      templateCustomFieldsValues: {},
+      attributes: [],
+      errors: {},
     };
   },
   async mounted() {
@@ -313,10 +319,7 @@ export default {
       });
     },
     async fetchTemplateCustomFields() {
-      // Zbierz pola z szablonu kategorii (jeśli wybrana) oraz pola przypięte bezpośrednio do encji (atrybuty)
       const fields = [];
-
-      // 1) Pola z kategorii (szablon)
       if (this.newEntity.categoryId) {
         try {
           const templateFields = await customFieldRepository.findByCategoryTemplate(
@@ -327,14 +330,11 @@ export default {
           console.error('Error fetching template fields:', e);
         }
       }
-
-      // 2) Pola przypięte bezpośrednio do encji (atrybuty) – tylko w trybach view/edit i dla istniejącej encji
       try {
         const isExisting = this.isEdit || this.isView;
         const entityId = this.newEntity?.getId ? this.newEntity.getId() : this.newEntity?.id;
         if (isExisting && entityId) {
           const entityFields = await customFieldRepository.findByEntity(Number(entityId));
-          // TemplateCustomFields obsługuje textarea oraz input type dla prostych typów.
           const allowedTypes = new Set([
             'text',
             'number',
@@ -351,22 +351,55 @@ export default {
       } catch (e) {
         console.error('Error fetching entity fields:', e);
       }
-
-      // Ustaw zebrane pola (kolejność wg sort_order – już sortowane w repozytoriach)
       this.templateCustomFields = fields;
-      // Reset wartości pól przy zmianie zestawu pól (np. zmiana kategorii)
       if (!this.loadingEntity) {
         this.templateCustomFieldsValues = {};
       }
     },
+    validateForm() {
+      this.errors = {};
+      let isValid = true;
 
-    // --- GŁÓWNA METODA ZAPISU ---
+      if (!this.newEntity.type) {
+        this.errors.type = trans('validation.required', {}, this.$.appContext.provides.i18n);
+        isValid = false;
+      }
+
+      if (
+        !this.newEntity.name ||
+        this.newEntity.name.trim().length < 3 ||
+        this.newEntity.name.trim().length > 255
+      ) {
+        this.errors.name = trans('validation.nameLength', {}, this.$.appContext.provides.i18n);
+        isValid = false;
+      }
+
+      if (this.$refs.templateFieldsRef) {
+        const isTemplateValid = this.$refs.templateFieldsRef.validateFields();
+        if (!isTemplateValid) isValid = false;
+      }
+
+      if (this.$refs.attributeManagerRef) {
+        const isAttributesValid = this.$refs.attributeManagerRef.validateAttributes();
+        if (!isAttributesValid) isValid = false;
+      }
+
+      if (!isValid) {
+        Toast.show({
+          text: trans('validation.fixErrors', {}, this.$.appContext.provides.i18n),
+          duration: 'short',
+        });
+      }
+
+      return isValid;
+    },
+    clearError(field) {
+      if (this.errors[field]) delete this.errors[field];
+    },
     async addEntity() {
       try {
-        // 1. Zapis Encji
         const addedEntity = await entityRepository.save(this.newEntity);
 
-        // 2. Zapis Kodu
         if (this.code) {
           const code = new Code();
           code.setCodeValue(this.code);
@@ -374,7 +407,6 @@ export default {
           await codeRepository.save(code);
         }
 
-        // 3. Zapis Pól Szablonowych
         if (Object.keys(this.templateCustomFieldsValues).length > 0) {
           for (const [fieldId, value] of Object.entries(this.templateCustomFieldsValues)) {
             const valueObj = new CustomFieldValue();
@@ -386,10 +418,8 @@ export default {
           }
         }
 
-        // 4. Zapis Dynamicznych Atrybutów (z komponentu AttributeManager)
         if (this.attributes.length > 0) {
           for (const [idx, attr] of this.attributes.entries()) {
-            // Tworzenie definicji pola
             const field = new CustomField();
             field
               .setEntityId(addedEntity)
@@ -407,7 +437,6 @@ export default {
             const valueObj = new CustomFieldValue();
             valueObj.setEntityId(addedEntity).setCustomFieldId(insertedField);
 
-            // Obsługa plików i obrazów
             if (
               (attr.type === 'image' || attr.type === 'file') &&
               attr.value &&
@@ -415,10 +444,7 @@ export default {
             ) {
               const fileIds = [];
               for (const fileObj of attr.value) {
-                // Zapisz fizycznie na urządzeniu
                 const filePath = await this.saveFileToDevice(fileObj.file);
-
-                // Zapisz wpis w tabeli plików
                 const file = new File();
                 file.setEntityId(addedEntity);
                 file.setFileName(fileObj.file.name);
@@ -432,7 +458,6 @@ export default {
             } else {
               valueObj.setFieldValue(JSON.stringify(attr.value) || '');
             }
-
             await customFieldValueRepository.save(valueObj);
           }
         }
@@ -458,12 +483,8 @@ export default {
         this.loadingEntity = true;
         const entity = await entityRepository.find(Number(id));
         if (!entity) return;
-        // Ustaw encję w formularzu
         this.newEntity = entity;
-        // Czyścimy listę nowych atrybutów (w trybie edycji służy do dodawania nowych)
         this.attributes = [];
-
-        // Ikona początkowa
         switch (entity.type) {
           case 'category':
             this.initialIcon = 'tag-fill';
@@ -475,19 +496,13 @@ export default {
             this.initialIcon = 'bag-fill';
             break;
         }
-
-        // Kod
         const codes = await codeRepository.findBy({ entityId: entity.getId() });
         if (codes && codes.length > 0) {
           this.code = codes[0].getCodeValue();
         } else {
           this.code = null;
         }
-
-        // Pola szablonu dla kategorii encji + pola przypięte do encji (atrybuty)
         await this.fetchTemplateCustomFields();
-
-        // Załaduj wartości pól i przypisz do pól szablonowych
         const values = await customFieldValueRepository.findByEntityWithFields(entity.getId());
         const fieldIds = new Set(this.templateCustomFields.map((f) => f.id));
         const mapped = {};
@@ -509,10 +524,7 @@ export default {
     },
     async updateEntity() {
       try {
-        // Aktualizacja encji
         const id = await entityRepository.save(this.newEntity);
-
-        // Aktualizacja/Usunięcie/Zapis kodu
         const existingCodes = await codeRepository.findBy({ entityId: id });
         const existing = existingCodes && existingCodes.length > 0 ? existingCodes[0] : null;
 
@@ -526,11 +538,9 @@ export default {
             await codeRepository.save(c);
           }
         } else if (existing) {
-          // Usunięcie kodu jeśli wyczyszczono
           await codeRepository.remove(existing);
         }
 
-        // Zapis wartości pól szablonowych
         if (Object.keys(this.templateCustomFieldsValues).length > 0) {
           for (const [fieldId, value] of Object.entries(this.templateCustomFieldsValues)) {
             await customFieldValueRepository.setFieldValue(
@@ -541,10 +551,8 @@ export default {
           }
         }
 
-        // Zapis nowych dynamicznych atrybutów dodanych w trybie edycji
         if (this.attributes.length > 0) {
           for (const [idx, attr] of this.attributes.entries()) {
-            // Tworzenie definicji pola
             const field = new CustomField();
             field
               .setEntityId(id)
@@ -562,7 +570,6 @@ export default {
             const valueObj = new CustomFieldValue();
             valueObj.setEntityId(id).setCustomFieldId(insertedField);
 
-            // Obsługa plików i obrazów
             if (
               (attr.type === 'image' || attr.type === 'file') &&
               attr.value &&
@@ -570,10 +577,7 @@ export default {
             ) {
               const fileIds = [];
               for (const fileObj of attr.value) {
-                // Zapisz fizycznie na urządzeniu
                 const filePath = await this.saveFileToDevice(fileObj.file);
-
-                // Zapisz wpis w tabeli plików
                 const file = new File();
                 file.setEntityId(id);
                 file.setFileName(fileObj.file.name);
@@ -587,14 +591,10 @@ export default {
             } else {
               valueObj.setFieldValue(JSON.stringify(attr.value) || '');
             }
-
             await customFieldValueRepository.save(valueObj);
           }
 
-          // Wyczyść listę dodawanych atrybutów po zapisie
           this.attributes = [];
-
-          // Odśwież dostępne pola i ich wartości, aby nowe atrybuty były widoczne bez przeładowania
           await this.fetchTemplateCustomFields();
           const values = await customFieldValueRepository.findByEntityWithFields(id);
           const fieldIds = new Set(this.templateCustomFields.map((f) => f.id));
@@ -623,14 +623,19 @@ export default {
     },
     onSubmit() {
       if (this.isView) return;
+
+      if (!this.validateForm()) {
+        return;
+      }
+
       if (this.isEdit) return this.updateEntity();
       return this.addEntity();
     },
   },
   watch: {
     'newEntity.type'(newVal, oldVal) {
+      if (newVal) this.clearError('type');
       if (!this.loadingEntity && newVal !== oldVal) {
-        // Reset powiązań tylko podczas realnej zmiany przez użytkownika
         this.newEntity.parentId = null;
         this.newEntity.categoryId = null;
       }
@@ -656,5 +661,8 @@ export default {
 <style scoped>
 .required-field {
   color: red;
+}
+.is-invalid-select :deep(.v-select) {
+  border-color: #dc3545;
 }
 </style>

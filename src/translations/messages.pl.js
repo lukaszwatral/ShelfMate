@@ -113,4 +113,16 @@ export default {
     boolean: 'Wartość logiczna (Tak/Nie)',
     email: 'Adres e-mail',
   },
+  validation: {
+    required: 'To pole jest wymagane',
+    optionsRequired: 'Wymagana jest przynajmniej jedna opcja',
+    emptyOptions: 'Nazwy opcji nie mogą być puste',
+    requiredField: 'Wartość jest wymagana',
+    fileRequired: 'Wymagane jest dodanie pliku lub zdjęcia',
+    email: 'Nieprawidłowy format adresu e-mail',
+    url: 'Nieprawidłowy adres URL',
+    number: 'Wartość musi być liczbą',
+    nameLength: 'Nazwa musi mieć od 3 do 255 znaków',
+    fixErrors: 'Proszę poprawić błędy w formularzu.',
+  },
 };

@@ -113,4 +113,16 @@ export default {
     boolean: 'Boolean (Yes/No)',
     email: 'Email address',
   },
+  validation: {
+    required: 'This field is required',
+    optionsRequired: 'At least one option is required',
+    emptyOptions: 'Options cannot be empty',
+    requiredField: 'This field is required',
+    fileRequired: 'File/Image is required',
+    email: 'Invalid email format',
+    url: 'Invalid URL',
+    number: 'Must be a number',
+    nameLength: 'Name must be between 3 and 255 characters',
+    fixErrors: 'Please fix validation errors.',
+  },
 };
