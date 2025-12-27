@@ -84,6 +84,7 @@ export default {
     defaultName: 'Tu będzie nazwa encji',
     defaultDescription: 'Tu będzie opis encji',
     preview: 'Podgląd na żywo',
+    entityAdded: 'Pomyślnie dodano!',
   },
   header: {
     searchPlaceholder: 'Wyszukaj przedmiot...',
