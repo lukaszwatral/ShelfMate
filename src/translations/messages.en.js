@@ -84,6 +84,7 @@ export default {
     defaultName: 'This will be the name of the entity',
     defaultDescription: 'This will be the description of the entity',
     preview: 'Live preview',
+    entityAdded: 'Successfully added!',
   },
   header: {
     searchPlaceholder: 'Search item...',
