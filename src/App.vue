@@ -20,6 +20,7 @@
 
 <script>
 import { CapacitorNfc } from '@capgo/capacitor-nfc';
+import { App } from '@capacitor/app';
 import AppHeader from '@/components/Header.vue';
 import AppFooter from '@/components/Footer.vue';
 import SearchResults from '@/components/SearchResults.vue';
@@ -113,12 +114,35 @@ export default {
   },
   mounted() {
     this.initGlobalNfc();
+
+    App.addListener('backButton', ({ canGoBack }) => {
+      if (this.isSearchActive) {
+        this.isSearchActive = false;
+        this.searchResults = [];
+        return;
+      }
+
+      const openModal = document.querySelector('.modal.show');
+      if (openModal) {
+        const closeBtn = openModal.querySelector('[data-bs-dismiss="modal"]');
+        if (closeBtn) closeBtn.click();
+        else openModal.classList.remove('show'); // Fallback
+        return;
+      }
+
+      if (this.$route.path !== '/' && this.$route.name !== 'home') {
+        this.$router.back();
+      } else {
+        App.exitApp();
+      }
+    });
   },
   async beforeUnmount() {
     if (this.nfcListener) await this.nfcListener.remove();
     try {
       await CapacitorNfc.stopScanning();
     } catch (e) {}
+    App.removeAllListeners();
   },
 };
 </script>
