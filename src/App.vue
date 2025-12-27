@@ -24,6 +24,8 @@ import AppHeader from '@/components/Header.vue';
 import AppFooter from '@/components/Footer.vue';
 import SearchResults from '@/components/SearchResults.vue';
 import { entityRepository } from '@/db/repositories/EntityRepository';
+import { Toast } from '@capacitor/toast';
+import { trans } from '@/translations/translator.js';
 
 export default {
   name: 'App',
@@ -49,16 +51,14 @@ export default {
       const entity = await entityRepository.findByCode(codeValue);
 
       if (entity) {
-        if (entity.type === 'item') {
-          this.$router.push({ name: 'itemDetails', params: { id: entity.id } });
-        } else {
-          this.$router.push({ name: 'folderView', params: { parentId: entity.id } });
-        }
+        this.$router.push({ name: 'viewEntity', params: { id: entity.id } });
       } else {
-        this.$router.push({
-          name: 'NfcScanner',
-          params: { tagId: codeValue },
-        });
+        setTimeout(async () => {
+          await Toast.show({
+            text: trans('header.scannedNotFound', {}, this.$.appContext.provides.i18n),
+            duration: 'short',
+          });
+        }, 500);
       }
 
       this.isSearchActive = false;

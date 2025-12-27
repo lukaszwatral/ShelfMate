@@ -91,6 +91,7 @@ export default {
   header: {
     searchPlaceholder: 'Search item...',
     searchNotFound: 'No matching items found.',
+    scannedNotFound: 'No associated entity found.',
   },
   removeEntity: {
     alertTitle: 'Remove {entity}',
