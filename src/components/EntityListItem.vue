@@ -13,7 +13,7 @@
     <div class="flex-grow-1 overflow-hidden">
       <div class="d-flex justify-content-between">
         <h6 class="mb-0 text-truncate">{{ entity.name }}</h6>
-        <span class="badge bg-light text-dark border" v-if="entity.type !== 'item'">
+        <span class="badge bg-light text-dark border">
           {{ getTypeName(entity.type) }}
         </span>
       </div>
@@ -43,7 +43,7 @@ export default {
     getTypeName(type) {
       if (type === 'place') return trans('place.title');
       if (type === 'category') return trans('category.title');
-      return '';
+      return trans('item.title');
     },
   },
 };
