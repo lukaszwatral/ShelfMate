@@ -105,11 +105,7 @@ export default {
       this.isSearchActive = false;
       this.searchResults = [];
 
-      if (entity.type === 'item') {
-        this.$router.push({ name: 'itemDetails', params: { id: entity.id } });
-      } else {
-        this.$router.push({ name: 'folderView', params: { parentId: entity.id } });
-      }
+      this.$router.push({ name: 'viewEntity', params: { id: entity.id } });
     },
   },
   mounted() {
