@@ -1,8 +1,8 @@
 <template>
   <div class="add-entity-container">
-    <EntityPreview :new-entity="newEntity" :initial-icon="initialIcon" />
+    <EntityPreview :new-entity="newEntity" :initial-icon="initialIcon" v-if="mode !== 'view'" />
 
-    <form @submit.prevent="addEntity" autocomplete="off">
+    <form @submit.prevent="onSubmit" autocomplete="off">
       <div class="form-input-container">
         <label for="type" class="form-label">
           {{ trans('addEntity.type') }}: <span class="required-field">*</span>
@@ -14,6 +14,7 @@
           :placeholder="trans('addEntity.typeDefault')"
           :isClearable="false"
           :isSearchable="false"
+          :isDisabled="isView"
         >
           <template #option="{ option }">
             <span class="select-option">
@@ -38,6 +39,7 @@
             name="parent"
             :options="parentOptions"
             :placeholder="trans('addEntity.null')"
+            :isDisabled="isView"
           >
             <template #option="{ option }">
               <span class="select-option">
@@ -61,6 +63,7 @@
             name="category"
             :options="categoryOptions"
             :placeholder="trans('addEntity.null')"
+            :isDisabled="isView"
           >
             <template #option="{ option }">
               <span class="select-option">
@@ -89,6 +92,7 @@
             required
             v-model="newEntity.name"
             autocomplete="off"
+            :readonly="isView"
           />
         </div>
 
@@ -100,6 +104,7 @@
             :placeholder="trans('addEntity.descriptionPlaceholder')"
             v-model="newEntity.description"
             autocomplete="off"
+            :readonly="isView"
           />
         </div>
 
@@ -117,8 +122,9 @@
               placeholder=""
               v-model="code"
               autocomplete="off"
+              :readonly="isView"
             />
-            <i class="bi bi-upc-scan" @click="scanBarcode"></i>
+            <i v-if="!isView" class="bi bi-upc-scan" @click="scanBarcode"></i>
           </div>
         </div>
 
@@ -126,22 +132,25 @@
           v-if="templateCustomFields.length > 0"
           :fields="templateCustomFields"
           v-model="templateCustomFieldsValues"
+          :readonly="isView"
         />
 
-        <AttributeManager v-model="attributes" />
+        <AttributeManager v-if="isAdd || isEdit" v-model="attributes" />
       </template>
 
       <button
+        v-if="!isView"
         class="add-container-right shadow-sm"
         style="border: none"
         type="submit"
         :disabled="!newEntity.type"
       >
         <button class="add-circle-btn">
-          <i class="bi bi-plus icon-large"></i>
+          <i v-if="isAdd" class="bi bi-plus icon-large"></i>
+          <i v-else class="bi bi-save icon-large"></i>
         </button>
         <span class="add-label">
-          {{ trans('home.addEntity') }}
+          {{ isAdd ? trans('home.addEntity') : trans('addEntity.saveChanges') }}
         </span>
       </button>
     </form>
@@ -184,6 +193,15 @@ export default {
       type: String,
       default: null,
     },
+    mode: {
+      type: String,
+      default: 'add', // 'add' | 'view' | 'edit'
+      validator: (v) => ['add', 'view', 'edit'].includes(v),
+    },
+    entityId: {
+      type: [Number, String],
+      default: null,
+    },
   },
   components: {
     VueSelect,
@@ -198,6 +216,7 @@ export default {
       newEntity: new Entity(),
       code: null,
       initialIcon: 'question',
+      loadingEntity: false,
 
       // Dane dla komponentów potomnych
       templateCustomFields: [],
@@ -206,10 +225,24 @@ export default {
     };
   },
   async mounted() {
-    this.newEntity.type = this.initialType;
+    if (this.mode === 'add') {
+      this.newEntity.type = this.initialType;
+    }
     await this.fetchEntities();
+    if ((this.isEdit || this.isView) && this.entityId) {
+      await this.loadEntity(this.entityId);
+    }
   },
   computed: {
+    isAdd() {
+      return this.mode === 'add';
+    },
+    isEdit() {
+      return this.mode === 'edit';
+    },
+    isView() {
+      return this.mode === 'view';
+    },
     typeOptions() {
       return [
         { label: trans('addEntity.category'), value: 'category', icon: 'tag-fill' },
@@ -280,14 +313,51 @@ export default {
       });
     },
     async fetchTemplateCustomFields() {
-      if (!this.newEntity.categoryId) {
-        this.templateCustomFields = [];
-        return;
+      // Zbierz pola z szablonu kategorii (jeśli wybrana) oraz pola przypięte bezpośrednio do encji (atrybuty)
+      const fields = [];
+
+      // 1) Pola z kategorii (szablon)
+      if (this.newEntity.categoryId) {
+        try {
+          const templateFields = await customFieldRepository.findByCategoryTemplate(
+            this.newEntity.categoryId,
+          );
+          fields.push(...templateFields);
+        } catch (e) {
+          console.error('Error fetching template fields:', e);
+        }
       }
-      const result = await customFieldRepository.findByCategoryTemplate(this.newEntity.categoryId);
-      this.templateCustomFields = result;
-      // Reset wartości pól przy zmianie kategorii
-      this.templateCustomFieldsValues = {};
+
+      // 2) Pola przypięte bezpośrednio do encji (atrybuty) – tylko w trybach view/edit i dla istniejącej encji
+      try {
+        const isExisting = this.isEdit || this.isView;
+        const entityId = this.newEntity?.getId ? this.newEntity.getId() : this.newEntity?.id;
+        if (isExisting && entityId) {
+          const entityFields = await customFieldRepository.findByEntity(Number(entityId));
+          // TemplateCustomFields obsługuje textarea oraz input type dla prostych typów.
+          const allowedTypes = new Set([
+            'text',
+            'number',
+            'date',
+            'datetime',
+            'textarea',
+            'color',
+            'url',
+            'email',
+          ]);
+          const filtered = entityFields.filter((f) => allowedTypes.has(f.fieldType));
+          fields.push(...filtered);
+        }
+      } catch (e) {
+        console.error('Error fetching entity fields:', e);
+      }
+
+      // Ustaw zebrane pola (kolejność wg sort_order – już sortowane w repozytoriach)
+      this.templateCustomFields = fields;
+      // Reset wartości pól przy zmianie zestawu pól (np. zmiana kategorii)
+      if (!this.loadingEntity) {
+        this.templateCustomFieldsValues = {};
+      }
     },
 
     // --- GŁÓWNA METODA ZAPISU ---
@@ -383,10 +453,184 @@ export default {
         console.error('Error adding entity:', error);
       }
     },
+    async loadEntity(id) {
+      try {
+        this.loadingEntity = true;
+        const entity = await entityRepository.find(Number(id));
+        if (!entity) return;
+        // Ustaw encję w formularzu
+        this.newEntity = entity;
+        // Czyścimy listę nowych atrybutów (w trybie edycji służy do dodawania nowych)
+        this.attributes = [];
+
+        // Ikona początkowa
+        switch (entity.type) {
+          case 'category':
+            this.initialIcon = 'tag-fill';
+            break;
+          case 'place':
+            this.initialIcon = 'box-seam-fill';
+            break;
+          case 'item':
+            this.initialIcon = 'bag-fill';
+            break;
+        }
+
+        // Kod
+        const codes = await codeRepository.findBy({ entityId: entity.getId() });
+        if (codes && codes.length > 0) {
+          this.code = codes[0].getCodeValue();
+        } else {
+          this.code = null;
+        }
+
+        // Pola szablonu dla kategorii encji + pola przypięte do encji (atrybuty)
+        await this.fetchTemplateCustomFields();
+
+        // Załaduj wartości pól i przypisz do pól szablonowych
+        const values = await customFieldValueRepository.findByEntityWithFields(entity.getId());
+        const fieldIds = new Set(this.templateCustomFields.map((f) => f.id));
+        const mapped = {};
+        for (const v of values) {
+          if (fieldIds.has(v.customFieldId)) {
+            try {
+              mapped[v.customFieldId] = v.fieldValue ? JSON.parse(v.fieldValue) : '';
+            } catch (e) {
+              mapped[v.customFieldId] = v.fieldValue;
+            }
+          }
+        }
+        this.templateCustomFieldsValues = mapped;
+      } catch (e) {
+        console.error('Error loading entity:', e);
+      } finally {
+        this.loadingEntity = false;
+      }
+    },
+    async updateEntity() {
+      try {
+        // Aktualizacja encji
+        const id = await entityRepository.save(this.newEntity);
+
+        // Aktualizacja/Usunięcie/Zapis kodu
+        const existingCodes = await codeRepository.findBy({ entityId: id });
+        const existing = existingCodes && existingCodes.length > 0 ? existingCodes[0] : null;
+
+        if (this.code && this.code.toString().length > 0) {
+          if (existing) {
+            existing.setCodeValue(this.code);
+            await codeRepository.save(existing);
+          } else {
+            const c = new Code();
+            c.setEntityId(id).setCodeValue(this.code);
+            await codeRepository.save(c);
+          }
+        } else if (existing) {
+          // Usunięcie kodu jeśli wyczyszczono
+          await codeRepository.remove(existing);
+        }
+
+        // Zapis wartości pól szablonowych
+        if (Object.keys(this.templateCustomFieldsValues).length > 0) {
+          for (const [fieldId, value] of Object.entries(this.templateCustomFieldsValues)) {
+            await customFieldValueRepository.setFieldValue(
+              id,
+              Number(fieldId),
+              JSON.stringify(value),
+            );
+          }
+        }
+
+        // Zapis nowych dynamicznych atrybutów dodanych w trybie edycji
+        if (this.attributes.length > 0) {
+          for (const [idx, attr] of this.attributes.entries()) {
+            // Tworzenie definicji pola
+            const field = new CustomField();
+            field
+              .setEntityId(id)
+              .setFieldName(attr.name)
+              .setFieldType(attr.type)
+              .setOptions(JSON.stringify(attr.options) || '')
+              .setIsRequired(attr.required)
+              .setSortOrder(idx);
+
+            if (this.newEntity.type === 'category') {
+              field.setCategoryTemplateId(id);
+            }
+
+            const insertedField = await customFieldRepository.save(field);
+            const valueObj = new CustomFieldValue();
+            valueObj.setEntityId(id).setCustomFieldId(insertedField);
+
+            // Obsługa plików i obrazów
+            if (
+              (attr.type === 'image' || attr.type === 'file') &&
+              attr.value &&
+              attr.value.length
+            ) {
+              const fileIds = [];
+              for (const fileObj of attr.value) {
+                // Zapisz fizycznie na urządzeniu
+                const filePath = await this.saveFileToDevice(fileObj.file);
+
+                // Zapisz wpis w tabeli plików
+                const file = new File();
+                file.setEntityId(id);
+                file.setFileName(fileObj.file.name);
+                file.setMimeType(fileObj.file.type);
+                file.setFilePath(filePath);
+                file.setIsPrimary(fileObj.isPrimary || false);
+                const addedFile = await fileRepository.save(file);
+                fileIds.push(addedFile);
+              }
+              valueObj.setFieldValue(JSON.stringify(fileIds));
+            } else {
+              valueObj.setFieldValue(JSON.stringify(attr.value) || '');
+            }
+
+            await customFieldValueRepository.save(valueObj);
+          }
+
+          // Wyczyść listę dodawanych atrybutów po zapisie
+          this.attributes = [];
+
+          // Odśwież dostępne pola i ich wartości, aby nowe atrybuty były widoczne bez przeładowania
+          await this.fetchTemplateCustomFields();
+          const values = await customFieldValueRepository.findByEntityWithFields(id);
+          const fieldIds = new Set(this.templateCustomFields.map((f) => f.id));
+          const mapped = {};
+          for (const v of values) {
+            if (fieldIds.has(v.customFieldId)) {
+              try {
+                mapped[v.customFieldId] = v.fieldValue ? JSON.parse(v.fieldValue) : '';
+              } catch (e) {
+                mapped[v.customFieldId] = v.fieldValue;
+              }
+            }
+          }
+          this.templateCustomFieldsValues = mapped;
+        }
+
+        setTimeout(async () => {
+          await Toast.show({
+            text: trans('addEntity.entityUpdated', {}, this.$.appContext.provides.i18n),
+            duration: 'short',
+          });
+        }, 300);
+      } catch (e) {
+        console.error('Error updating entity:', e);
+      }
+    },
+    onSubmit() {
+      if (this.isView) return;
+      if (this.isEdit) return this.updateEntity();
+      return this.addEntity();
+    },
   },
   watch: {
     'newEntity.type'(newVal, oldVal) {
-      if (newVal !== oldVal) {
+      if (!this.loadingEntity && newVal !== oldVal) {
+        // Reset powiązań tylko podczas realnej zmiany przez użytkownika
         this.newEntity.parentId = null;
         this.newEntity.categoryId = null;
       }

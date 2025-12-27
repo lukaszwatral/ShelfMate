@@ -85,6 +85,8 @@ export default {
     defaultDescription: 'Tu będzie opis encji',
     preview: 'Podgląd na żywo',
     entityAdded: 'Pomyślnie dodano!',
+    saveChanges: 'Zapisz zmiany',
+    entityUpdated: 'Zapisano zmiany!',
   },
   header: {
     searchPlaceholder: 'Wyszukaj przedmiot...',

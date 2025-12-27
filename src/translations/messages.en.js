@@ -85,6 +85,8 @@ export default {
     defaultDescription: 'This will be the description of the entity',
     preview: 'Live preview',
     entityAdded: 'Successfully added!',
+    saveChanges: 'Save changes',
+    entityUpdated: 'Changes saved!',
   },
   header: {
     searchPlaceholder: 'Search item...',
