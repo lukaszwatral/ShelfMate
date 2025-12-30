@@ -6,6 +6,7 @@
         :placeholder="trans('header.searchPlaceholder')"
         v-model="inputValue"
         @input="handleInput"
+        ref="searchInput"
       />
 
       <i v-if="inputValue" class="bi bi-x-lg icon-small" @click="clearSearch"></i>
@@ -26,7 +27,6 @@ import {
   CapacitorBarcodeScanner,
   CapacitorBarcodeScannerTypeHint,
 } from '@capacitor/barcode-scanner';
-import { codeRepository } from '@/db/index.js';
 
 export default {
   name: 'Header',
@@ -58,19 +58,23 @@ export default {
     },
 
     async scanBarcode() {
+      if (document.activeElement && document.activeElement.blur) {
+        document.activeElement.blur();
+      }
+
       try {
         const result = await CapacitorBarcodeScanner.scanBarcode({
           hint: CapacitorBarcodeScannerTypeHint.ALL,
         });
 
         if (result.ScanResult) {
-          this.$emit('scan', result.ScanResult);
+          this.$emit('scan', result);
 
           this.inputValue = '';
           this.$emit('search', '');
         }
       } catch (e) {
-        console.error('Błąd skanera:', e);
+        console.error('Error:', e);
       }
     },
   },

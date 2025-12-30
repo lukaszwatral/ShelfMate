@@ -87,6 +87,16 @@ export default {
     entityAdded: 'Successfully added!',
     saveChanges: 'Save changes',
     entityUpdated: 'Changes saved!',
+    nfc: {
+      empty: 'Tap to assign.',
+      valid: 'Assigned successfully',
+      error: 'Tag already in use! Try another.',
+      scanning: 'Scanning NFC',
+      scanningInfo: 'Move tag to the bottom of the phone...',
+      cancel: 'Cancel',
+      nfcError: 'NFC error',
+      nfcCodeExists: 'This tag NFC already assigned!',
+    },
   },
   header: {
     searchPlaceholder: 'Search item...',

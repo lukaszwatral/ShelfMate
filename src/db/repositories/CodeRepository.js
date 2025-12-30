@@ -61,6 +61,16 @@ export class CodeRepository {
 
     return entityResult ? new Entity(entityResult) : null;
   }
+  async findEntityByValueOnly(codeValue) {
+    const result = await db
+      .selectFrom('Code')
+      .innerJoin('Entity', 'Entity.id', 'Code.entity_id')
+      .where('Code.code_value', '=', codeValue)
+      .selectAll('Entity')
+      .executeTakeFirst();
+
+    return result ? new Entity(result) : null;
+  }
 }
 
 export const codeRepository = new CodeRepository();
