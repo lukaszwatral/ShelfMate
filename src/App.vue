@@ -27,6 +27,8 @@ import SearchResults from '@/components/SearchResults.vue';
 import { entityRepository } from '@/db/repositories/EntityRepository';
 import { Toast } from '@capacitor/toast';
 import { trans } from '@/translations/translator.js';
+import { codeRepository } from '@/db/index.js';
+import { CapacitorBarcodeScannerTypeHint } from '@capacitor/barcode-scanner';
 
 export default {
   name: 'App',
@@ -48,22 +50,40 @@ export default {
     },
   },
   methods: {
-    async handleScannedCode(codeValue) {
-      const entity = await entityRepository.findByCode(codeValue);
+    async handleScannedCode(scanResult) {
+      const scannedValue = scanResult.ScanResult;
+      const scannedType = scanResult.format
+        ? CapacitorBarcodeScannerTypeHint[scanResult.format]
+        : 'manual';
+
+      await this.processCodeSearch(scannedType, scannedValue);
+    },
+
+    async handleNfcTag(tag) {
+      if (!tag.id) return;
+      const scannedValue = this.convertBytesToHex(tag.id);
+
+      await this.processCodeSearch('nfc', scannedValue);
+    },
+
+    async processCodeSearch(type, value) {
+      let entity = await codeRepository.findEntityByCode(type, value);
+
+      if (!entity) {
+        entity = await codeRepository.findEntityByValueOnly(value);
+      }
 
       if (entity) {
         this.$router.push({ name: 'viewEntity', params: { id: entity.id } });
       } else {
-        setTimeout(async () => {
-          await Toast.show({
-            text: trans('header.scannedNotFound', {}, this.$.appContext.provides.i18n),
-            duration: 'short',
-          });
-        }, 500);
+        await Toast.show({
+          text: trans('header.scannedNotFound', {}, this.$.appContext.provides.i18n),
+          duration: 'short',
+        });
       }
-
       this.isSearchActive = false;
     },
+
     convertBytesToHex(byteArray) {
       if (!byteArray) return '';
       return byteArray
@@ -75,15 +95,15 @@ export default {
     async initGlobalNfc() {
       try {
         await CapacitorNfc.removeAllListeners();
+
         this.nfcListener = await CapacitorNfc.addListener('nfcEvent', (event) => {
-          if (event.tag && event.tag.id) {
-            const scannedId = this.convertBytesToHex(event.tag.id);
-            this.handleScannedCode(scannedId);
-          }
+          const tag = event.tag || event;
+          this.handleNfcTag(tag);
         });
+
         await CapacitorNfc.startScanning({ invalidateAfterFirstRead: false });
       } catch (err) {
-        console.warn('NFC Error:', err);
+        console.warn('NFC Init Warning:', err);
       }
     },
 
@@ -101,17 +121,25 @@ export default {
       if (document.activeElement && document.activeElement.blur) {
         document.activeElement.blur();
       }
-
       this.isSearchActive = false;
       this.searchResults = [];
-
       this.$router.push({ name: 'viewEntity', params: { id: entity.id } });
     },
   },
-  mounted() {
-    this.initGlobalNfc();
+  async mounted() {
+    await this.initGlobalNfc();
 
-    App.addListener('backButton', ({ canGoBack }) => {
+    window.addEventListener('restart-global-nfc', () => {
+      CapacitorNfc.stopScanning()
+        .then(() => {
+          this.initGlobalNfc();
+        })
+        .catch(() => {
+          this.initGlobalNfc();
+        });
+    });
+
+    App.addListener('backButton', () => {
       if (this.isSearchActive) {
         this.isSearchActive = false;
         this.searchResults = [];
@@ -122,7 +150,7 @@ export default {
       if (openModal) {
         const closeBtn = openModal.querySelector('[data-bs-dismiss="modal"]');
         if (closeBtn) closeBtn.click();
-        else openModal.classList.remove('show'); // Fallback
+        else openModal.classList.remove('show');
         return;
       }
 
@@ -134,11 +162,12 @@ export default {
     });
   },
   async beforeUnmount() {
+    window.removeEventListener('restart-global-nfc', this.initGlobalNfc);
     if (this.nfcListener) await this.nfcListener.remove();
     try {
       await CapacitorNfc.stopScanning();
     } catch (e) {}
-    App.removeAllListeners();
+    await App.removeAllListeners();
   },
 };
 </script>

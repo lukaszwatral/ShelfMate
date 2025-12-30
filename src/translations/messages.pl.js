@@ -87,6 +87,16 @@ export default {
     entityAdded: 'Pomyślnie dodano!',
     saveChanges: 'Zapisz zmiany',
     entityUpdated: 'Zapisano zmiany!',
+    nfc: {
+      empty: 'Kliknij, aby przypisać.',
+      valid: 'Przypisano poprawnie',
+      error: 'Tag zajęty! Spróbuj inny.',
+      scanning: 'Skanowanie NFC',
+      scanningInfo: 'Zbliż tag do tylnej części telefonu...',
+      cancel: 'Anuluj',
+      nfcError: 'Błąd NFC',
+      nfcCodeExists: 'Ten tag NFC jest już przypisany!',
+    },
   },
   header: {
     searchPlaceholder: 'Wyszukaj przedmiot...',
