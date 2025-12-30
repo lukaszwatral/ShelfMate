@@ -26,7 +26,6 @@
  * @property {boolean} isArchived
  * @property {string} createdAt
  * @property {string|null} updatedAt
- * @property {string|null} deletedAt
  */
 
 /**
@@ -79,7 +78,6 @@
  * @property {string|null} options
  * @property {number|null} sortOrder
  * @property {boolean} isArchived
- * @property {string|null} deletedAt
  * @property {string} createdAt
  * @property {string|null} updatedAt
  */

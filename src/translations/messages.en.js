@@ -123,6 +123,7 @@ export default {
     url: 'Invalid URL',
     number: 'Must be a number',
     nameLength: 'Name must be between 3 and 255 characters',
+    codeExists: 'This code already exists',
     fixErrors: 'Please fix validation errors.',
   },
 };

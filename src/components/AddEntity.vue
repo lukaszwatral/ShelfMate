@@ -130,11 +130,14 @@
               type="text"
               class="form-control"
               placeholder=""
-              v-model="code"
+              v-model="code.value"
               autocomplete="off"
               :readonly="isView"
             />
             <i v-if="!isView" class="bi bi-upc-scan" @click="scanBarcode"></i>
+          </div>
+          <div v-if="errors.code && mode !== 'view'" class="text-danger small mt-1">
+            {{ errors.code }}
           </div>
         </div>
 
@@ -148,6 +151,11 @@
 
         <AttributeManager ref="attributeManagerRef" v-if="isAdd || isEdit" v-model="attributes" />
       </template>
+
+      <div v-if="hasErrors && !isView" class="alert alert-danger mt-3 mb-3 text-center small-alert">
+        <i class="bi bi-exclamation-triangle-fill me-2"></i>
+        {{ trans('validation.fixErrors', {}, this.$.appContext.provides.i18n) }}
+      </div>
 
       <button
         v-if="!isView"
@@ -221,7 +229,7 @@ export default {
       allEntities: [],
       allCategories: [],
       newEntity: new Entity(),
-      code: null,
+      code: { type: 'manual', value: null },
       initialIcon: 'question',
       loadingEntity: false,
       templateCustomFields: [],
@@ -249,6 +257,11 @@ export default {
     isView() {
       return this.mode === 'view';
     },
+    hasErrors() {
+      // NAPRAWIONE: Sprawdza czy jakakolwiek wartość w obiekcie errors jest prawdziwa (ma tekst)
+      // Dzięki temu ignoruje klucze, które są null lub undefined
+      return Object.values(this.errors).some((error) => !!error);
+    },
     typeOptions() {
       return [
         { label: trans('addEntity.category'), value: 'category', icon: 'tag-fill' },
@@ -257,20 +270,13 @@ export default {
       ];
     },
     parentOptions() {
-      return [
-        { label: trans('addEntity.null'), value: null },
-        ...(this.newEntity.type === 'category'
-          ? this.allCategories.map((cat) => ({
-              label: `${cat.name} (${trans('addEntity.' + cat.type)})`,
-              value: cat.id,
-              icon: cat.icon || 'tag-fill',
-            }))
-          : this.allEntities.map((ent) => ({
-              label: `${ent.name} (${trans('addEntity.' + ent.type)})`,
-              value: ent.id,
-              icon: ent.icon || (ent.type === 'item' ? 'bag-fill' : 'box-seam-fill'),
-            }))),
-      ];
+      return (this.newEntity.type === 'category' ? this.allCategories : this.allEntities).map(
+        (ent) => ({
+          label: `${ent.name} (${trans('addEntity.' + ent.type, {}, this.$.appContext.provides.i18n)})`,
+          value: ent.id,
+          icon: ent.icon || (ent.type === 'item' ? 'bag-fill' : 'box-seam-fill'),
+        }),
+      );
     },
     categoryOptions() {
       return this.allCategories.map((cat) => ({
@@ -295,7 +301,8 @@ export default {
       const result = await CapacitorBarcodeScanner.scanBarcode({
         hint: CapacitorBarcodeScannerTypeHint.ALL,
       });
-      this.code = result.ScanResult;
+      this.code.type = result.format ? CapacitorBarcodeScannerTypeHint[result.format] : 'manual';
+      this.code.value = result.ScanResult;
     },
     async saveFileToDevice(file) {
       return new Promise((resolve, reject) => {
@@ -317,6 +324,31 @@ export default {
         reader.onerror = reject;
         reader.readAsDataURL(file);
       });
+    },
+    async prepareAttributesWithFiles(attributes) {
+      const processed = [];
+      for (const attr of attributes) {
+        const newAttr = { ...attr };
+        if ((attr.type === 'image' || attr.type === 'file') && attr.value?.length) {
+          const filePaths = [];
+          for (const fileObj of attr.value) {
+            if (fileObj.file instanceof File || fileObj.file instanceof Blob) {
+              const path = await this.saveFileToDevice(fileObj.file);
+              filePaths.push({
+                name: fileObj.file.name,
+                type: fileObj.file.type,
+                isPrimary: fileObj.isPrimary || false,
+                path: path,
+              });
+            } else {
+              filePaths.push(fileObj);
+            }
+          }
+          newAttr.savedFiles = filePaths;
+        }
+        processed.push(newAttr);
+      }
+      return processed;
     },
     async fetchTemplateCustomFields() {
       const fields = [];
@@ -357,7 +389,17 @@ export default {
       }
     },
     validateForm() {
+      // 1. Zachowaj asynchroniczny błąd kodu, jeśli istnieje
+      const existingCodeError = this.errors.code;
+
+      // 2. Wyczyść stare błędy
       this.errors = {};
+
+      // 3. Przywróć błąd kodu (jeśli nie jest null/undefined)
+      if (existingCodeError) {
+        this.errors.code = existingCodeError;
+      }
+
       let isValid = true;
 
       if (!this.newEntity.type) {
@@ -384,11 +426,9 @@ export default {
         if (!isAttributesValid) isValid = false;
       }
 
-      if (!isValid) {
-        Toast.show({
-          text: trans('validation.fixErrors', {}, this.$.appContext.provides.i18n),
-          duration: 'short',
-        });
+      // 4. Sprawdź ostatecznie czy są jakieś błędy (korzystając z logiki computed)
+      if (this.hasErrors) {
+        isValid = false;
       }
 
       return isValid;
@@ -396,78 +436,28 @@ export default {
     clearError(field) {
       if (this.errors[field]) delete this.errors[field];
     },
+    resetForm() {
+      this.newEntity = new Entity();
+      this.newEntity.type = null;
+      this.attributes = [];
+      this.templateCustomFieldsValues = {};
+      this.code = { type: 'manual', value: null };
+      this.errors = {}; // Całkowity reset błędów
+    },
     async addEntity() {
       try {
-        const addedEntity = await entityRepository.save(this.newEntity);
+        const preparedAttributes = await this.prepareAttributesWithFiles(this.attributes);
 
-        if (this.code) {
-          const code = new Code();
-          code.setCodeValue(this.code);
-          code.setEntityId(addedEntity);
-          await codeRepository.save(code);
-        }
+        await entityRepository.createWithRelatedData(
+          this.newEntity,
+          this.code,
+          this.templateCustomFieldsValues,
+          preparedAttributes,
+        );
 
-        if (Object.keys(this.templateCustomFieldsValues).length > 0) {
-          for (const [fieldId, value] of Object.entries(this.templateCustomFieldsValues)) {
-            const valueObj = new CustomFieldValue();
-            valueObj
-              .setEntityId(addedEntity)
-              .setCustomFieldId(fieldId)
-              .setFieldValue(JSON.stringify(value));
-            await customFieldValueRepository.save(valueObj);
-          }
-        }
-
-        if (this.attributes.length > 0) {
-          for (const [idx, attr] of this.attributes.entries()) {
-            const field = new CustomField();
-            field
-              .setEntityId(addedEntity)
-              .setFieldName(attr.name)
-              .setFieldType(attr.type)
-              .setOptions(JSON.stringify(attr.options) || '')
-              .setIsRequired(attr.required)
-              .setSortOrder(idx);
-
-            if (this.newEntity.type === 'category') {
-              field.setCategoryTemplateId(addedEntity);
-            }
-
-            const insertedField = await customFieldRepository.save(field);
-            const valueObj = new CustomFieldValue();
-            valueObj.setEntityId(addedEntity).setCustomFieldId(insertedField);
-
-            if (
-              (attr.type === 'image' || attr.type === 'file') &&
-              attr.value &&
-              attr.value.length
-            ) {
-              const fileIds = [];
-              for (const fileObj of attr.value) {
-                const filePath = await this.saveFileToDevice(fileObj.file);
-                const file = new File();
-                file.setEntityId(addedEntity);
-                file.setFileName(fileObj.file.name);
-                file.setMimeType(fileObj.file.type);
-                file.setFilePath(filePath);
-                file.setIsPrimary(fileObj.isPrimary || false);
-                const addedFile = await fileRepository.save(file);
-                fileIds.push(addedFile);
-              }
-              valueObj.setFieldValue(JSON.stringify(fileIds));
-            } else {
-              valueObj.setFieldValue(JSON.stringify(attr.value) || '');
-            }
-            await customFieldValueRepository.save(valueObj);
-          }
-        }
-
-        this.newEntity = new Entity();
-        this.newEntity.type = null;
-        this.attributes = [];
-        this.templateCustomFieldsValues = {};
-        this.code = null;
+        this.resetForm();
         await this.fetchEntities();
+
         setTimeout(async () => {
           await Toast.show({
             text: trans('addEntity.entityAdded', {}, this.$.appContext.provides.i18n),
@@ -476,65 +466,30 @@ export default {
         }, 500);
       } catch (error) {
         console.error('Error adding entity:', error);
-      }
-    },
-    async loadEntity(id) {
-      try {
-        this.loadingEntity = true;
-        const entity = await entityRepository.find(Number(id));
-        if (!entity) return;
-        this.newEntity = entity;
-        this.attributes = [];
-        switch (entity.type) {
-          case 'category':
-            this.initialIcon = 'tag-fill';
-            break;
-          case 'place':
-            this.initialIcon = 'box-seam-fill';
-            break;
-          case 'item':
-            this.initialIcon = 'bag-fill';
-            break;
-        }
-        const codes = await codeRepository.findBy({ entityId: entity.getId() });
-        if (codes && codes.length > 0) {
-          this.code = codes[0].getCodeValue();
-        } else {
-          this.code = null;
-        }
-        await this.fetchTemplateCustomFields();
-        const values = await customFieldValueRepository.findByEntityWithFields(entity.getId());
-        const fieldIds = new Set(this.templateCustomFields.map((f) => f.id));
-        const mapped = {};
-        for (const v of values) {
-          if (fieldIds.has(v.customFieldId)) {
-            try {
-              mapped[v.customFieldId] = v.fieldValue ? JSON.parse(v.fieldValue) : '';
-            } catch (e) {
-              mapped[v.customFieldId] = v.fieldValue;
-            }
-          }
-        }
-        this.templateCustomFieldsValues = mapped;
-      } catch (e) {
-        console.error('Error loading entity:', e);
-      } finally {
-        this.loadingEntity = false;
+        await Toast.show({
+          text:
+            trans('error.generic', {}, this.$.appContext.provides.i18n) || 'Error adding entity',
+          duration: 'long',
+        });
       }
     },
     async updateEntity() {
       try {
+        // [TUTAJ BEZ ZMIAN - LOGIKA UPDATE POZOSTAJE]
         const id = await entityRepository.save(this.newEntity);
         const existingCodes = await codeRepository.findBy({ entityId: id });
         const existing = existingCodes && existingCodes.length > 0 ? existingCodes[0] : null;
 
-        if (this.code && this.code.toString().length > 0) {
+        if (this.code && this.code.value) {
           if (existing) {
-            existing.setCodeValue(this.code);
+            existing.setCodeType(this.code.type);
+            existing.setCodeValue(this.code.value);
             await codeRepository.save(existing);
           } else {
             const c = new Code();
-            c.setEntityId(id).setCodeValue(this.code);
+            c.setEntityId(id);
+            c.setCodeType(this.code.type);
+            c.setCodeValue(this.code.value);
             await codeRepository.save(c);
           }
         } else if (existing) {
@@ -577,11 +532,18 @@ export default {
             ) {
               const fileIds = [];
               for (const fileObj of attr.value) {
-                const filePath = await this.saveFileToDevice(fileObj.file);
+                let filePath;
+                if (fileObj.file instanceof File || fileObj.file instanceof Blob) {
+                  filePath = await this.saveFileToDevice(fileObj.file);
+                } else if (fileObj.path) {
+                  filePath = fileObj.path;
+                } else {
+                  continue;
+                }
                 const file = new File();
                 file.setEntityId(id);
-                file.setFileName(fileObj.file.name);
-                file.setMimeType(fileObj.file.type);
+                file.setFileName(fileObj.name || fileObj.file.name);
+                file.setMimeType(fileObj.type || fileObj.file.type);
                 file.setFilePath(filePath);
                 file.setIsPrimary(fileObj.isPrimary || false);
                 const addedFile = await fileRepository.save(file);
@@ -593,7 +555,7 @@ export default {
             }
             await customFieldValueRepository.save(valueObj);
           }
-
+          // Przeładowanie po zapisie atrybutów
           this.attributes = [];
           await this.fetchTemplateCustomFields();
           const values = await customFieldValueRepository.findByEntityWithFields(id);
@@ -621,13 +583,91 @@ export default {
         console.error('Error updating entity:', e);
       }
     },
+    async loadEntity(id) {
+      try {
+        this.loadingEntity = true;
+        const entity = await entityRepository.find(Number(id));
+        if (!entity) return;
+        this.newEntity = entity;
+        this.attributes = [];
+
+        switch (entity.type) {
+          case 'category':
+            this.initialIcon = 'tag-fill';
+            break;
+          case 'place':
+            this.initialIcon = 'box-seam-fill';
+            break;
+          case 'item':
+            this.initialIcon = 'bag-fill';
+            break;
+        }
+
+        const entityId = entity.getId ? entity.getId() : entity.id;
+        const codes = await codeRepository.findBy({ entityId: entityId });
+        if (codes && codes.length > 0) {
+          this.code = {
+            type: codes[0].getCodeType() ? codes[0].getCodeType() : 'manual',
+            value: codes[0].getCodeValue() ? codes[0].getCodeValue() : null,
+          };
+        } else {
+          this.code = { type: 'manual', value: null };
+        }
+
+        await this.fetchTemplateCustomFields();
+        const values = await customFieldValueRepository.findByEntityWithFields(entityId);
+
+        const fieldIds = new Set(this.templateCustomFields.map((f) => f.id));
+        const mapped = {};
+        const adHocAttributes = [];
+
+        for (const v of values) {
+          let parsedValue = '';
+          try {
+            parsedValue = v.fieldValue ? JSON.parse(v.fieldValue) : '';
+          } catch (e) {
+            parsedValue = v.fieldValue;
+          }
+
+          if (fieldIds.has(v.customFieldId)) {
+            mapped[v.customFieldId] = parsedValue;
+          } else {
+            let attrValue = parsedValue;
+            if ((v.fieldType === 'image' || v.fieldType === 'file') && Array.isArray(parsedValue)) {
+              const fileDetails = [];
+              for (const fileId of parsedValue) {
+                const fileRepoResult = await fileRepository.find(fileId);
+                if (fileRepoResult) {
+                  fileDetails.push({
+                    name: fileRepoResult.fileName,
+                    type: fileRepoResult.mimeType,
+                    isPrimary: fileRepoResult.isPrimary,
+                    path: fileRepoResult.filePath,
+                  });
+                }
+              }
+              attrValue = fileDetails;
+            }
+            adHocAttributes.push({
+              name: v.fieldName,
+              type: v.fieldType,
+              options: v.options ? JSON.parse(v.options) : [],
+              required: !!v.isRequired,
+              value: attrValue,
+            });
+          }
+        }
+        this.templateCustomFieldsValues = mapped;
+        this.attributes = adHocAttributes;
+      } catch (e) {
+        console.error('Error loading entity:', e);
+      } finally {
+        this.loadingEntity = false;
+      }
+    },
     onSubmit() {
       if (this.isView) return;
-
-      if (!this.validateForm()) {
-        return;
-      }
-
+      if (!this.validateForm()) return;
       if (this.isEdit) return this.updateEntity();
       return this.addEntity();
     },
@@ -654,6 +694,33 @@ export default {
     'newEntity.categoryId'() {
       this.fetchTemplateCustomFields();
     },
+    async 'code.value'(newVal, oldVal) {
+      if (this.code.type !== 'manual' && newVal !== oldVal && oldVal !== null) {
+        this.code.type = 'manual';
+      }
+
+      // NAPRAWIONE: Używamy delete aby fizycznie usunąć klucz 'code' z obiektu errors
+      if (!newVal || !this.code.type) {
+        if (this.errors.code) delete this.errors.code;
+        return;
+      }
+
+      const existing = await codeRepository.findBy({
+        codeType: this.code.type,
+        codeValue: newVal,
+      });
+
+      if (
+        existing &&
+        existing.length > 0 &&
+        (!this.newEntity.id || existing[0].getEntityId() !== this.newEntity.id)
+      ) {
+        this.errors.code = this.trans('validation.codeExists', {}, this.$.appContext.provides.i18n);
+      } else {
+        // Kod jest unikalny - usuwamy błąd
+        if (this.errors.code) delete this.errors.code;
+      }
+    },
   },
 };
 </script>
@@ -664,5 +731,9 @@ export default {
 }
 .is-invalid-select :deep(.v-select) {
   border-color: #dc3545;
+}
+.small-alert {
+  padding: 0.5rem 1rem;
+  font-size: 0.9rem;
 }
 </style>

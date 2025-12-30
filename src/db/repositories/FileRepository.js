@@ -9,18 +9,15 @@ export class FileRepository {
 
   async find(id) {
     const result = await db.selectFrom('File').where('id', '=', id).selectAll().executeTakeFirst();
-
     return result ? new File(result) : null;
   }
 
   async findBy(criteria) {
     let query = db.selectFrom('File');
-
     Object.entries(criteria).forEach(([key, value]) => {
       const snakeKey = key.replace(/[A-Z]/g, (letter) => `_${letter.toLowerCase()}`);
       query = query.where(snakeKey, '=', value);
     });
-
     const results = await query.selectAll().execute();
     return results.map((row) => new File(row));
   }
@@ -29,35 +26,32 @@ export class FileRepository {
     const data = file.toDatabase();
 
     if (file.getId()) {
-      const result = await db
-        .updateTable('File')
-        .set(data)
-        .where('id', '=', file.getId())
-        .executeTakeFirst();
-
+      await db.updateTable('File').set(data).where('id', '=', file.getId()).executeTakeFirst();
       return file.getId();
     } else {
       const result = await db.insertInto('File').values(data).executeTakeFirst();
-
       return result.insertId;
     }
   }
 
   async remove(file) {
-    await db.deleteFrom('File').where('id', '=', file.getId()).execute();
+    const id = typeof file.getId === 'function' ? file.getId() : file.id;
+    await db.deleteFrom('File').where('id', '=', id).execute();
   }
 
   async setPrimary(file) {
-    // Usuń primary ze wszystkich plików tej encji
-    await db
-      .updateTable('File')
-      .set({ is_primary: 0 })
-      .where('entity_id', '=', file.getEntityId())
-      .execute();
+    return await db.transaction().execute(async (trx) => {
+      await trx
+        .updateTable('File')
+        .set({ is_primary: 0 })
+        .where('entity_id', '=', file.getEntityId())
+        .execute();
 
-    // Ustaw ten plik jako primary
-    file.setIsPrimary(true);
-    return await this.save(file);
+      await trx.updateTable('File').set({ is_primary: 1 }).where('id', '=', file.getId()).execute();
+
+      file.setIsPrimary(true);
+      return file.getId();
+    });
   }
 }
 
