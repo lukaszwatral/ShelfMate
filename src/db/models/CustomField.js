@@ -10,7 +10,6 @@ export class CustomField {
     this.options = data.options || null;
     this.sortOrder = data.sort_order || data.sortOrder || null;
     this.isArchived = data.is_archived || data.isArchived || false;
-    this.deletedAt = data.deleted_at || data.deletedAt || null;
     this.createdAt = data.created_at || data.createdAt || null;
     this.updatedAt = data.updated_at || data.updatedAt || null;
   }
@@ -44,9 +43,6 @@ export class CustomField {
   }
   getIsArchived() {
     return this.isArchived;
-  }
-  getDeletedAt() {
-    return this.deletedAt;
   }
   getCreatedAt() {
     return this.createdAt;

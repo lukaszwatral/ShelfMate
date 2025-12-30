@@ -124,5 +124,6 @@ export default {
     number: 'Wartość musi być liczbą',
     nameLength: 'Nazwa musi mieć od 3 do 255 znaków',
     fixErrors: 'Proszę poprawić błędy w formularzu.',
+    codeExists: 'Ten kod już istnieje',
   },
 };

@@ -12,7 +12,6 @@ export class Entity {
     this.isArchived = data.is_archived || data.isArchived || false;
     this.createdAt = data.created_at || data.createdAt || null;
     this.updatedAt = data.updated_at || data.updatedAt || null;
-    this.deletedAt = data.deleted_at || data.deletedAt || null;
   }
 
   // Gettery
@@ -52,9 +51,7 @@ export class Entity {
   getUpdatedAt() {
     return this.updatedAt;
   }
-  getDeletedAt() {
-    return this.deletedAt;
-  }
+  // Usunięto obsługę soft delete (deleted_at)
 
   // Settery
   setType(value) {

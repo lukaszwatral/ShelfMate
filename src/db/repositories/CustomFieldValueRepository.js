@@ -4,7 +4,6 @@ import { CustomFieldValue } from '../models/CustomFieldValue.js';
 export class CustomFieldValueRepository {
   async findAll() {
     const results = await db.selectFrom('CustomFieldValue').selectAll().execute();
-
     return results.map((row) => new CustomFieldValue(row));
   }
 
@@ -14,30 +13,25 @@ export class CustomFieldValueRepository {
       .where('id', '=', id)
       .selectAll()
       .executeTakeFirst();
-
     return result ? new CustomFieldValue(result) : null;
   }
 
   async findOneBy(criteria) {
     let query = db.selectFrom('CustomFieldValue');
-
     Object.entries(criteria).forEach(([key, value]) => {
       const snakeKey = key.replace(/[A-Z]/g, (letter) => `_${letter.toLowerCase()}`);
       query = query.where(snakeKey, '=', value);
     });
-
     const result = await query.selectAll().executeTakeFirst();
     return result ? new CustomFieldValue(result) : null;
   }
 
   async findBy(criteria) {
     let query = db.selectFrom('CustomFieldValue');
-
     Object.entries(criteria).forEach(([key, value]) => {
       const snakeKey = key.replace(/[A-Z]/g, (letter) => `_${letter.toLowerCase()}`);
       query = query.where(snakeKey, '=', value);
     });
-
     const results = await query.selectAll().execute();
     return results.map((row) => new CustomFieldValue(row));
   }
@@ -46,16 +40,13 @@ export class CustomFieldValueRepository {
     const data = customFieldValue.toDatabase();
 
     if (customFieldValue.getId()) {
-      // Update
-      const result = await db
+      await db
         .updateTable('CustomFieldValue')
         .set(data)
         .where('id', '=', customFieldValue.getId())
         .executeTakeFirst();
-
       return customFieldValue.getId();
     } else {
-      // Insert lub Update (upsert) - bo mamy UNIQUE constraint
       const result = await db
         .insertInto('CustomFieldValue')
         .values(data)
@@ -65,35 +56,25 @@ export class CustomFieldValueRepository {
             .doUpdateSet({ field_value: data.field_value }),
         )
         .executeTakeFirst();
-
       return result.insertId;
     }
   }
 
   async remove(customFieldValue) {
-    await db.deleteFrom('CustomFieldValue').where('id', '=', customFieldValue.getId()).execute();
+    const id =
+      typeof customFieldValue.getId === 'function' ? customFieldValue.getId() : customFieldValue.id;
+    await db.deleteFrom('CustomFieldValue').where('id', '=', id).execute();
   }
 
-  /**
-   * Znajduje wszystkie wartości pól dla danej encji
-   * @param {number} entityId
-   * @returns {Promise<CustomFieldValue[]>}
-   */
   async findByEntity(entityId) {
     const results = await db
       .selectFrom('CustomFieldValue')
       .where('entity_id', '=', entityId)
       .selectAll()
       .execute();
-
     return results.map((row) => new CustomFieldValue(row));
   }
 
-  /**
-   * Znajduje wartości pól wraz z definicjami pól (JOIN)
-   * @param {number} entityId
-   * @returns {Promise<Object[]>}
-   */
   async findByEntityWithFields(entityId) {
     const results = await db
       .selectFrom('CustomFieldValue as cfv')
@@ -110,45 +91,29 @@ export class CustomFieldValueRepository {
         'cf.options',
       ])
       .execute();
-
     return results;
   }
 
-  /**
-   * Ustawia wartość pola dla encji (upsert)
-   * @param {number} entityId
-   * @param {number} customFieldId
-   * @param {string} value
-   * @returns {Promise<CustomFieldValue>}
-   */
   async setFieldValue(entityId, customFieldId, value) {
     const fieldValue = new CustomFieldValue({
       entity_id: entityId,
       custom_field_id: customFieldId,
       field_value: value,
     });
-
     return await this.save(fieldValue);
   }
 
-  /**
-   * Usuwa wszystkie wartości pól dla danej encji
-   * @param {number} entityId
-   */
   async removeByEntity(entityId) {
     await db.deleteFrom('CustomFieldValue').where('entity_id', '=', entityId).execute();
   }
 
   async count(criteria = {}) {
     let query = db.selectFrom('CustomFieldValue');
-
     Object.entries(criteria).forEach(([key, value]) => {
       const snakeKey = key.replace(/[A-Z]/g, (letter) => `_${letter.toLowerCase()}`);
       query = query.where(snakeKey, '=', value);
     });
-
     const result = await query.select((eb) => eb.fn.count('id').as('count')).executeTakeFirst();
-
     return Number(result.count);
   }
 }
