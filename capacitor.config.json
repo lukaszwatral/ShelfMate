@@ -4,8 +4,7 @@
   "webDir": "dist",
   "bundledWebRuntime": false,
   "server": {
-    "url": "http://192.168.1.17:5173",
-    "cleartext": true
+    "androidScheme": "https"
   },
   "plugins": {
     "CapacitorSQLite": {
