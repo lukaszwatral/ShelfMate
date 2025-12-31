@@ -89,6 +89,7 @@ export default {
     entityAdded: 'Pomyślnie dodano!',
     saveChanges: 'Zapisz zmiany',
     entityUpdated: 'Zapisano zmiany!',
+    entityRemoved: 'Usunięto!',
     nfc: {
       empty: 'Kliknij, aby przypisać.',
       valid: 'Przypisano poprawnie',
