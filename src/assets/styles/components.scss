@@ -625,3 +625,22 @@
     inset 2px 2px 5px darken($backgroundColor, 15%),
     inset -2px -2px 5px lighten($backgroundColor, 15%) !important;
 }
+
+.entity-actions-view {
+  display: flex;
+  gap: 1em;
+  place-self: flex-end;
+  padding: 0.5em;
+
+
+  button {
+    width: 24px;
+    height: 24px;
+    background: none;
+    border: none;
+  }
+
+  .bi-trash-fill {
+    color: $danger;
+  }
+}

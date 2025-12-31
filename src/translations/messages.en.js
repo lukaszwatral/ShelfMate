@@ -89,6 +89,7 @@ export default {
     entityAdded: 'Successfully added!',
     saveChanges: 'Save changes',
     entityUpdated: 'Changes saved!',
+    entityRemoved: 'Removed!',
     nfc: {
       empty: 'Tap to assign.',
       valid: 'Assigned successfully',

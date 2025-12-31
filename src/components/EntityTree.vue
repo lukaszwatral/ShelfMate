@@ -63,6 +63,7 @@
 import { trans } from '@/translations/translator.js';
 import { Dialog } from '@capacitor/dialog';
 import { entityRepository } from '@/db/index.js';
+import { Toast } from '@capacitor/toast';
 
 export default {
   name: 'EntityTree',
@@ -91,6 +92,10 @@ export default {
       if (value) {
         await entityRepository.remove(entity);
         this.$emit('removeEntity');
+        await Toast.show({
+          text: trans('addEntity.entityRemoved', {}, this.$.appContext.provides.i18n),
+          duration: 'long',
+        });
       }
     },
     redirectToView() {

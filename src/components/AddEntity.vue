@@ -187,6 +187,15 @@
           {{ isAdd ? trans('home.addEntity') : trans('addEntity.saveChanges') }}
         </span>
       </button>
+      <div class="entity-actions-view" v-if="isView">
+        <button @click.stop.prevent="redirectToEdit">
+          <i class="bi bi-pencil-square"></i>
+        </button>
+
+        <button @click.stop.prevent="toggleRemoveAction">
+          <i class="bi bi-trash-fill"></i>
+        </button>
+      </div>
     </form>
 
     <div v-if="showNfcModal" class="nfc-modal-overlay">
@@ -231,6 +240,7 @@ import TemplateCustomFields from '@/components/AddEntity/TemplateCustomFields.vu
 import AttributeManager from '@/components/AddEntity/AttributeManager.vue';
 import { Toast } from '@capacitor/toast';
 import { HistoryService } from '@/services/HistoryService.js';
+import { Dialog } from '@capacitor/dialog';
 
 export default {
   name: 'AddEntity',
@@ -790,6 +800,25 @@ export default {
       if (this.isEdit) return this.updateEntity();
       return this.addEntity();
     },
+    async toggleRemoveAction() {
+      const i18n = this.$.appContext.provides.i18n;
+      const { value } = await Dialog.confirm({
+        title: trans('removeEntity.alertTitle', { entity: this.newEntity.name }, i18n),
+        message: trans('removeEntity.alertMessage', { entity: this.newEntity.name }, i18n),
+      });
+      if (value) {
+        await entityRepository.remove(this.newEntity);
+        this.$emit('removeEntity');
+        await Toast.show({
+          text: trans('addEntity.entityRemoved', {}, this.$.appContext.provides.i18n),
+          duration: 'long',
+        });
+        this.$router.back();
+      }
+    },
+    redirectToEdit() {
+      this.$router.push({ name: 'editEntity', params: { id: this.newEntity.id } });
+    },
   },
   watch: {
     '$route.params.id': {
@@ -854,6 +883,11 @@ export default {
         this.errors.nfc = trans('validation.nfcCodeExists', {}, this.$.appContext.provides.i18n);
       } else {
         if (this.errors.nfc) delete this.errors.nfc;
+      }
+    },
+    mode(newMode, oldMode) {
+      if ((newMode === 'edit' || newMode === 'view') && this.$route.params.id) {
+        this.loadEntity(this.$route.params.id);
       }
     },
   },
