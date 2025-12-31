@@ -129,7 +129,15 @@ export default {
   methods: {
     trans,
     async loadHistory() {
-      this.history = await HistoryService.getList();
+      const history = await HistoryService.getList();
+      const validHistory = [];
+      for (const item of history) {
+        const entity = await entityRepository.find(item.id);
+        if (entity) {
+          validHistory.push(item);
+        }
+      }
+      this.history = validHistory;
     },
     async clearHistory() {
       await HistoryService.clear();
