@@ -179,10 +179,10 @@
         style="border: none"
         type="submit"
       >
-        <button class="add-circle-btn">
+        <span class="add-circle-btn">
           <i v-if="isAdd" class="bi bi-plus icon-large"></i>
           <i v-else class="bi bi-save icon-large"></i>
-        </button>
+        </span>
         <span class="add-label">
           {{ isAdd ? trans('home.addEntity') : trans('addEntity.saveChanges') }}
         </span>
