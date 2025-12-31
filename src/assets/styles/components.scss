@@ -176,6 +176,8 @@
     grid-template-areas: 'icon name toggle' 'icon description toggle';
     align-items: center;
     gap: 1em;
+    word-break: break-word;
+    white-space: normal;
 
     .entity-actions {
       grid-area: toggle;
@@ -202,6 +204,8 @@
     grid-template-areas: 'icon name toggle' 'icon description toggle';
     align-items: center;
     gap: 1em;
+    word-break: break-word;
+    white-space: normal;
 
     .entity-actions {
         grid-area: toggle;
@@ -406,6 +410,8 @@
   grid-template-areas: 'icon name colorpicker toggle' 'icon description colorpicker toggle';
   align-items: center;
   gap: 1em;
+  word-break: break-word;
+  white-space: normal;
 
   .pulse-hand {
     position: absolute;

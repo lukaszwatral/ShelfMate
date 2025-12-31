@@ -53,33 +53,34 @@
         </div>
       </router-link>
 
-      <div class="collection-slider-container">
-        <span>{{ trans('home.largestCollections') }}</span>
-        <div class="collection-slider">
-          <img class="img-thumbnail" src="@/assets/images/logo.png" alt="logo" />
-          <span>{{ trans('home.collection') }}</span>
-          <div class="count-container">
-            <span>0</span>
-            <span>{{ trans('home.items') }}</span>
-          </div>
-        </div>
-      </div>
-      <div class="collection-slider-container">
-        <span>{{ trans('home.recentCollections') }}</span>
-        <div class="collection-slider">
-          <img class="img-thumbnail" src="@/assets/images/logo.png" alt="logo" />
-          <span>{{ trans('home.collection') }}</span>
-          <div class="count-container">
-            <span>0</span>
-            <span>{{ trans('home.items') }}</span>
-          </div>
-        </div>
-      </div>
-
       <div class="expiry-date-items shadow-sm">
         <i class="bi bi-exclamation"></i>
         <span>2</span>
         <span>{{ trans('home.expiryWarning') }}</span>
+      </div>
+
+      <div class="collection-slider-container" v-if="history.length > 0">
+        <div class="header-row">
+          <span>{{ trans('home.recent') }}</span>
+          <i
+            class="bi bi-trash3 text-danger cursor-pointer"
+            @click="clearHistory"
+            style="font-size: 1.1rem"
+          ></i>
+        </div>
+
+        <div class="slider-wrapper">
+          <div v-for="item in history" :key="item.id" class="slider-item" @click="openRecent(item)">
+            <div class="icon-box">
+              <i :class="`bi bi-${item.icon}`"></i>
+            </div>
+
+            <div class="text-content">
+              <span class="item-name">{{ item.name }}</span>
+              <span class="item-type">{{ trans('addEntity.' + item.type) }}</span>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   </div>
@@ -88,6 +89,7 @@
 <script>
 import { trans } from '@/translations/translator.js';
 import { entityRepository } from '@/db/index.js';
+import { HistoryService } from '@/services/HistoryService.js';
 
 export default {
   name: 'HomePage',
@@ -98,11 +100,13 @@ export default {
         categories: [],
         places: [],
       },
+      history: [],
     };
   },
   async mounted() {
     try {
       const data = await entityRepository.findAll();
+      await this.loadHistory();
       const entities = data ? Object.values(data) : [];
       this.dashboardData = entities.reduce(
         (acc, entity) => {
@@ -124,6 +128,16 @@ export default {
   },
   methods: {
     trans,
+    async loadHistory() {
+      this.history = await HistoryService.getList();
+    },
+    async clearHistory() {
+      await HistoryService.clear();
+      this.history = [];
+    },
+    openRecent(item) {
+      this.$router.push({ name: 'viewEntity', params: { id: item.id } });
+    },
   },
   computed: {
     itemsCount() {

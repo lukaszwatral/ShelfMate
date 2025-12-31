@@ -24,6 +24,7 @@
     "@capacitor/dialog": "^7.0.2",
     "@capacitor/filesystem": "^7.1.5",
     "@capacitor/ios": "^7.4.3",
+    "@capacitor/preferences": "^7.0.3",
     "@capacitor/share": "^7.0.3",
     "@capacitor/toast": "^7.0.3",
     "@capgo/capacitor-nfc": "^7.0.9",

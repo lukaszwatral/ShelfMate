@@ -230,6 +230,7 @@ import EntityPreview from '@/components/AddEntity/EntityPreview.vue';
 import TemplateCustomFields from '@/components/AddEntity/TemplateCustomFields.vue';
 import AttributeManager from '@/components/AddEntity/AttributeManager.vue';
 import { Toast } from '@capacitor/toast';
+import { HistoryService } from '@/services/HistoryService.js';
 
 export default {
   name: 'AddEntity',
@@ -264,6 +265,9 @@ export default {
       this.newEntity.type = this.initialType;
     }
     await this.fetchEntities();
+
+    if (this.isView || this.isEdit) {
+    }
   },
   computed: {
     isAdd() {
@@ -694,6 +698,7 @@ export default {
         this.loadingEntity = true;
         const entity = await entityRepository.find(Number(id));
         if (!entity) return;
+        HistoryService.addItem(entity);
         this.newEntity = entity;
         this.attributes = [];
 
