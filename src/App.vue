@@ -60,6 +60,10 @@ export default {
     },
 
     async handleNfcTag(tag) {
+      if (['addEntity', 'editEntity'].includes(this.$route.name)) {
+        return;
+      }
+
       if (!tag.id) return;
       const scannedValue = this.convertBytesToHex(tag.id);
 
@@ -95,6 +99,9 @@ export default {
     async initGlobalNfc() {
       try {
         await CapacitorNfc.removeAllListeners();
+        try {
+          await CapacitorNfc.stopScanning();
+        } catch (e) {}
 
         this.nfcListener = await CapacitorNfc.addListener('nfcEvent', (event) => {
           const tag = event.tag || event;
@@ -130,13 +137,9 @@ export default {
     await this.initGlobalNfc();
 
     window.addEventListener('restart-global-nfc', () => {
-      CapacitorNfc.stopScanning()
-        .then(() => {
-          this.initGlobalNfc();
-        })
-        .catch(() => {
-          this.initGlobalNfc();
-        });
+      setTimeout(() => {
+        this.initGlobalNfc();
+      }, 100);
     });
 
     App.addListener('backButton', () => {
