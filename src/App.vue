@@ -29,6 +29,7 @@ import { Toast } from '@capacitor/toast';
 import { trans } from '@/translations/translator.js';
 import { codeRepository } from '@/db/index.js';
 import { CapacitorBarcodeScannerTypeHint } from '@capacitor/barcode-scanner';
+import { CapacitorCookies } from '@capacitor/core';
 
 export default {
   name: 'App',
@@ -141,6 +142,10 @@ export default {
         this.initGlobalNfc();
       }, 100);
     });
+
+    if (!document.cookie.includes('recent')) {
+      document.cookie;
+    }
 
     App.addListener('backButton', () => {
       if (this.isSearchActive) {
