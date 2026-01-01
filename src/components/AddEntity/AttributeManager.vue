@@ -58,7 +58,6 @@
             <template v-if="['radio', 'checkbox', 'select'].includes(attr.type)">
               <div class="d-flex align-items-center gap-2">
                 <label class="form-label mb-0">{{ trans('addEntity.attribute.value') }}:</label>
-
                 <template v-if="['radio', 'checkbox'].includes(attr.type)">
                   <div class="attribute-options-grid">
                     <div v-for="(opt, optIdx) in attr.options" :key="optIdx" class="form-check">
@@ -143,27 +142,6 @@
 
             <template v-if="attr.type === 'image'">
               <input type="file" accept="image/*" multiple @change="onImagesChange($event, idx)" />
-              <div v-if="errors[idx]?.value" class="text-danger small mt-1">
-                {{ errors[idx].value }}
-              </div>
-              <div v-if="attr.value && attr.value.length">
-                <div v-for="(img, i) in attr.value" :key="i" style="margin-bottom: 12px">
-                  <img
-                    :src="img.preview"
-                    style="max-width: 100px; margin-top: 8px"
-                    :alt="attr.name"
-                  />
-                  <div class="d-flex align-items-center gap-2 mt-1">
-                    <input
-                      type="radio"
-                      :name="'isPrimary-' + idx"
-                      :checked="img.isPrimary"
-                      @change="setPrimaryImage(idx, i)"
-                    />
-                    <label>Główne zdjęcie</label>
-                  </div>
-                </div>
-              </div>
             </template>
 
             <template v-if="attr.type === 'file'">
@@ -195,6 +173,7 @@
             >
               <div class="d-flex align-items-center gap-2">
                 <label class="form-label mb-0">{{ trans('addEntity.attribute.value') }}:</label>
+
                 <textarea
                   v-if="attr.type === 'textarea'"
                   class="form-control"
@@ -204,6 +183,16 @@
                   :placeholder="trans('addEntity.attribute.valuePlaceholder')"
                   autocomplete="off"
                 />
+
+                <input
+                  v-else-if="attr.type === 'expiry_date'"
+                  type="date"
+                  class="form-control"
+                  :class="{ 'is-invalid': errors[idx]?.value }"
+                  v-model="attr.value"
+                  @input="clearError(idx, 'value')"
+                />
+
                 <input
                   v-else
                   :type="attr.type"
@@ -387,8 +376,7 @@ export default {
         } else if (['radio', 'select'].includes(attr.type)) {
           attr.value = null;
         }
-      }
-      if (!['radio', 'checkbox', 'select'].includes(attr.type)) {
+      } else {
         attr.options = [];
         attr.value = '';
       }

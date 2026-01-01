@@ -7,11 +7,12 @@ export default {
     places: 'Miejsca',
     addEntity: 'Dodaj encję',
     recent: 'Ostatnio przeglądane: ',
-    expiryWarning: 'przedmiotom kończy się termin przydatności',
+    expiryWarning: 'obiektom kończy się termin przydatności',
     collection: 'Kolekcja',
     item: 'Przedmiot',
     category: 'Kategoria',
     place: 'Miejsce',
+    expiryListTitle: 'Obiekty z kończącym się terminem ważności',
   },
   category: {
     title: 'Kategorie',
@@ -115,6 +116,7 @@ export default {
     number: 'Liczba',
     date: 'Data',
     datetime: 'Data i czas',
+    expiryDate: 'Data ważności',
     textarea: 'Pole tekstowe (wiele linii)',
     checkbox: 'Pole wielokrotnego wyboru',
     radio: 'Pole jednokrotnego wyboru',
@@ -138,5 +140,9 @@ export default {
     nameLength: 'Nazwa musi mieć od 3 do 255 znaków',
     fixErrors: 'Proszę poprawić błędy w formularzu.',
     codeExists: 'Ten kod już istnieje',
+  },
+  notifications: {
+    expiryTitle: 'Kończy się termin ważności!',
+    expiryBody: '{entityName} wkrótce straci ważność!',
   },
 };

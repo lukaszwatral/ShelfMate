@@ -53,10 +53,41 @@
         </div>
       </router-link>
 
-      <div class="expiry-date-items shadow-sm">
+      <div
+        class="expiry-date-items shadow-sm"
+        v-if="expiringItems.length > 0"
+        data-bs-toggle="offcanvas"
+        data-bs-target="#expiringOffcanvas"
+      >
         <i class="bi bi-exclamation"></i>
-        <span>2</span>
+        <span>{{ expiringItems.length }}</span>
         <span>{{ trans('home.expiryWarning') }}</span>
+      </div>
+
+      <div
+        class="offcanvas offcanvas-end"
+        tabindex="-1"
+        id="expiringOffcanvas"
+        aria-labelledby="expiringOffcanvasLabel"
+      >
+        <div class="offcanvas-header">
+          <h5 class="offcanvas-title" id="expiringOffcanvasLabel">
+            {{ trans('home.expiryListTitle') }}
+          </h5>
+          <button
+            type="button"
+            class="btn-close"
+            data-bs-dismiss="offcanvas"
+            aria-label="Close"
+          ></button>
+        </div>
+        <div class="offcanvas-body">
+          <template v-for="item in expiringItems" :key="item.id">
+            <router-link :to="{ name: 'viewEntity', params: { id: item.id } }">
+              <EntityListItem :entity="item" />
+            </router-link>
+          </template>
+        </div>
       </div>
 
       <div class="collection-slider-container" v-if="history.length > 0">
@@ -90,9 +121,11 @@
 import { trans } from '@/translations/translator.js';
 import { entityRepository } from '@/db/index.js';
 import { HistoryService } from '@/services/HistoryService.js';
+import EntityListItem from '@/components/EntityListItem.vue';
 
 export default {
   name: 'HomePage',
+  components: { EntityListItem },
   data() {
     return {
       dashboardData: {
@@ -101,12 +134,14 @@ export default {
         places: [],
       },
       history: [],
+      expiringItems: [],
     };
   },
   async mounted() {
     try {
       const data = await entityRepository.findAll();
       await this.loadHistory();
+      await this.fetchExpiring();
       const entities = data ? Object.values(data) : [];
       this.dashboardData = entities.reduce(
         (acc, entity) => {
@@ -146,6 +181,9 @@ export default {
     openRecent(item) {
       this.$router.push({ name: 'viewEntity', params: { id: item.id } });
     },
+    async fetchExpiring() {
+      this.expiringItems = await entityRepository.findExpiringIn3Days();
+    },
   },
   computed: {
     itemsCount() {
@@ -161,4 +199,23 @@ export default {
 };
 </script>
 
-<style scoped></style>
+<style scoped>
+.offcanvas-header {
+  margin-top: env(safe-area-inset-top);
+}
+.list-group {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.5em;
+}
+
+.list-group-item {
+  display: grid;
+  grid-template-columns: 24px auto 64px;
+  grid-template-areas: 'icon name toggle' 'icon description toggle';
+  align-items: center;
+  gap: 1em;
+  word-break: break-word;
+  white-space: normal;
+}
+</style>

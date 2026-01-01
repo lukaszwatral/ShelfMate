@@ -154,6 +154,20 @@ export default {
         return;
       }
 
+      const openOffcanvas = document.querySelector('.offcanvas.show');
+      if (openOffcanvas) {
+        const bsOffcanvas = window.bootstrap?.Offcanvas.getInstance(openOffcanvas);
+        if (bsOffcanvas) {
+          bsOffcanvas.hide();
+        } else {
+          // Fallback: kliknij przycisk zamykania, jeśli instancja nie istnieje
+          const closeBtn = openOffcanvas.querySelector('[data-bs-dismiss="offcanvas"]');
+          if (closeBtn) closeBtn.click();
+          else openOffcanvas.classList.remove('show');
+        }
+        return;
+      }
+
       const openModal = document.querySelector('.modal.show');
       if (openModal) {
         const closeBtn = openModal.querySelector('[data-bs-dismiss="modal"]');

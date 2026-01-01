@@ -82,7 +82,25 @@ export async function initializeDatabase() {
                                                category_template_id INTEGER,
                                                entity_id INTEGER,
                                                field_name TEXT NOT NULL,
-                                               field_type TEXT NOT NULL CHECK(field_type IN ('text','number','date','datetime','textarea','checkbox','radio','select','file','image','color','url','boolean','email')),
+                                               field_type TEXT NOT NULL CHECK(
+                                               field_type IN (
+                                               'text',
+                                               'number',
+                                               'date',
+                                               'datetime-local',
+                                               'expiry_date',
+                                               'textarea',
+                                               'checkbox',
+                                               'radio',
+                                               'select',
+                                               'file',
+                                               'image',
+                                               'color',
+                                               'url',
+                                               'boolean',
+                                               'email'
+      )
+        ),
         is_required BOOLEAN NOT NULL DEFAULT 0,
         default_value TEXT,
         options TEXT,
