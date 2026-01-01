@@ -241,7 +241,9 @@ import AttributeManager from '@/components/AddEntity/AttributeManager.vue';
 import { Toast } from '@capacitor/toast';
 import { HistoryService } from '@/services/HistoryService.js';
 import { Dialog } from '@capacitor/dialog';
+import { NotificationService } from '@/services/NotificationService.js'; // Ważny import
 
+const notificationHour = import.meta.env.VITE_NOTIFICATION_HOUR;
 export default {
   name: 'AddEntity',
   props: {
@@ -275,9 +277,6 @@ export default {
       this.newEntity.type = this.initialType;
     }
     await this.fetchEntities();
-
-    if (this.isView || this.isEdit) {
-    }
   },
   computed: {
     isAdd() {
@@ -341,7 +340,6 @@ export default {
       this.code.type = result.format ? CapacitorBarcodeScannerTypeHint[result.format] : 'manual';
       this.code.value = result.ScanResult;
     },
-
     async openNfcModal() {
       this.showNfcModal = true;
       this.nfcState = 'empty';
@@ -355,7 +353,6 @@ export default {
               .map((byte) => ('0' + (byte & 0xff).toString(16)).slice(-2))
               .join(':')
               .toUpperCase();
-
             await this.checkNfcUniqueness(hexId);
           }
         });
@@ -369,33 +366,28 @@ export default {
         });
       }
     },
-
     async closeNfcModal() {
       this.showNfcModal = false;
       this.isScanningNfc = false;
       try {
         await CapacitorNfc.removeAllListeners();
         await CapacitorNfc.stopScanning();
-
         setTimeout(() => {
           window.dispatchEvent(new CustomEvent('restart-global-nfc'));
         }, 200);
       } catch (e) {}
     },
-
     removeNfcTag() {
       this.nfcCode.value = null;
       this.nfcState = 'empty';
       if (this.errors.nfc) delete this.errors.nfc;
     },
-
     async checkNfcUniqueness(hexId) {
       const existing = await codeRepository.findBy({ codeType: 'nfc', codeValue: hexId });
       const isDuplicate =
         existing &&
         existing.length > 0 &&
         (!this.newEntity.id || existing[0].getEntityId() !== this.newEntity.id);
-
       if (isDuplicate) {
         this.nfcState = 'error';
         this.nfcCode.value = null;
@@ -403,10 +395,8 @@ export default {
         this.nfcState = 'valid';
         this.nfcCode.value = hexId;
       }
-
       await this.closeNfcModal();
     },
-
     async saveFileToDevice(file) {
       return new Promise((resolve, reject) => {
         const reader = new FileReader();
@@ -453,7 +443,6 @@ export default {
       }
       return processed;
     },
-
     async fetchTemplateCustomFields() {
       const fields = [];
       if (this.newEntity.categoryId) {
@@ -475,7 +464,8 @@ export default {
             'text',
             'number',
             'date',
-            'datetime',
+            'expiry_date',
+            'datetime-local',
             'textarea',
             'color',
             'url',
@@ -492,7 +482,6 @@ export default {
         this.templateCustomFieldsValues = {};
       }
     },
-
     validateForm() {
       const existingCodeError = this.errors.code;
       const existingNfcError = this.errors.nfc;
@@ -501,7 +490,6 @@ export default {
       if (existingNfcError) this.errors.nfc = existingNfcError;
 
       let isValid = true;
-
       if (!this.newEntity.type) {
         this.errors.type = trans('validation.required', {}, this.$.appContext.provides.i18n);
         isValid = false;
@@ -518,25 +506,64 @@ export default {
         isValid = false;
       if (this.$refs.attributeManagerRef && !this.$refs.attributeManagerRef.validateAttributes())
         isValid = false;
-
       if (this.hasErrors) isValid = false;
       return isValid;
     },
     clearError(field) {
       if (this.errors[field]) delete this.errors[field];
     },
-
     resetForm() {
       this.newEntity = new Entity();
       this.newEntity.type = null;
       this.attributes = [];
       this.templateCustomFieldsValues = {};
       this.code = { type: 'manual', value: null };
-
       this.nfcCode = { value: null };
       this.nfcState = 'empty';
-
       this.errors = {};
+    },
+    async handleNotifications(entityId, entityName) {
+      try {
+        await NotificationService.cancelNotification(entityId);
+
+        let foundDate = null;
+
+        for (const [fieldId, value] of Object.entries(this.templateCustomFieldsValues)) {
+          const fieldDef = this.templateCustomFields.find((f) => f.id === Number(fieldId));
+          if (fieldDef && fieldDef.fieldType === 'expiry_date' && value) {
+            foundDate = value;
+            break;
+          }
+        }
+
+        if (!foundDate) {
+          const dateAttr = this.attributes.find((a) => a.type === 'expiry_date' && a.value);
+          if (dateAttr) {
+            foundDate = dateAttr.value;
+          }
+        }
+
+        if (foundDate) {
+          const expDate = new Date(foundDate);
+
+          const reminderDate = new Date(expDate);
+          reminderDate.setDate(expDate.getDate() - 1);
+          reminderDate.setHours(notificationHour, 0, 0, 0);
+
+          await NotificationService.scheduleNotification(
+            entityId,
+            trans('notifications.expiryTitle', {}, this.$.appContext.provides.i18n),
+            trans(
+              'notifications.expiryBody',
+              { entityName: entityName },
+              this.$.appContext.provides.i18n,
+            ),
+            reminderDate,
+          );
+        }
+      } catch (e) {
+        console.error('Error:', e);
+      }
     },
 
     async addEntity() {
@@ -557,6 +584,7 @@ export default {
           await codeRepository.save(nfc);
         }
 
+        await this.handleNotifications(entityId, this.newEntity.name);
         this.resetForm();
         await this.fetchEntities();
         setTimeout(async () => {
@@ -598,9 +626,7 @@ export default {
           await codeRepository.remove(barcodeCode);
         }
 
-        // NFC Logic
         const nfcCodeDb = existingCodes.find((c) => c.getCodeType() === 'nfc');
-
         if (this.nfcCode.value && this.nfcState === 'valid') {
           if (nfcCodeDb) {
             nfcCodeDb.setCodeValue(this.nfcCode.value);
@@ -659,7 +685,6 @@ export default {
                 } else {
                   continue;
                 }
-
                 const file = new File();
                 file.setEntityId(id);
                 file.setFileName(fileObj.name || fileObj.file.name);
@@ -692,6 +717,7 @@ export default {
           this.templateCustomFieldsValues = mapped;
         }
 
+        await this.handleNotifications(id, this.newEntity.name);
         setTimeout(async () => {
           await Toast.show({
             text: trans('addEntity.entityUpdated', {}, this.$.appContext.provides.i18n),
@@ -726,7 +752,6 @@ export default {
 
         const entityId = entity.getId ? entity.getId() : entity.id;
         const codes = await codeRepository.findBy({ entityId: entityId });
-
         this.code = { type: 'manual', value: null };
         this.nfcCode = { value: null };
         this.nfcState = 'empty';
@@ -737,7 +762,6 @@ export default {
             this.nfcCode.value = nfc.getCodeValue();
             this.nfcState = 'valid';
           }
-
           const barcode = codes.find((c) => c.getCodeType() !== 'nfc');
           if (barcode) {
             this.code = { type: barcode.getCodeType(), value: barcode.getCodeValue() };
@@ -807,6 +831,7 @@ export default {
         message: trans('removeEntity.alertMessage', { entity: this.newEntity.name }, i18n),
       });
       if (value) {
+        await NotificationService.cancelNotification(this.newEntity.id);
         await entityRepository.remove(this.newEntity);
         this.$emit('removeEntity');
         await Toast.show({
@@ -824,9 +849,7 @@ export default {
     '$route.params.id': {
       immediate: true,
       handler(newId) {
-        if ((this.isEdit || this.isView) && newId) {
-          this.loadEntity(newId);
-        }
+        if ((this.isEdit || this.isView) && newId) this.loadEntity(newId);
       },
     },
     'newEntity.type'(newVal, oldVal) {
@@ -920,8 +943,6 @@ export default {
 .nfc-status-icon {
   transition: color 0.3s ease;
 }
-
-/* Modal Styles */
 .nfc-modal-overlay {
   position: fixed;
   top: 0;

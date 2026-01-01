@@ -265,6 +265,33 @@ export class EntityRepository {
 
     return result ? new Entity(result) : null;
   }
+
+  async findExpiringIn3Days() {
+    const today = new Date();
+    const threeDaysLater = new Date();
+    threeDaysLater.setDate(today.getDate() + 3);
+
+    const results = await db
+      .selectFrom('Entity as e')
+      .innerJoin('CustomField as cf', 'cf.entity_id', 'e.id')
+      .innerJoin('CustomFieldValue as cfv', (join) =>
+        join.onRef('cfv.custom_field_id', '=', 'cf.id').onRef('cfv.entity_id', '=', 'e.id'),
+      )
+      .where('cf.field_type', '=', 'expiry_date')
+      .where('cf.is_archived', '=', 0)
+      .where('e.is_archived', '=', 0)
+      .where((eb) =>
+        eb('cfv.field_value', '>=', today.toISOString().slice(0, 10)).and(
+          'cfv.field_value',
+          '<=',
+          threeDaysLater.toISOString().slice(0, 10),
+        ),
+      )
+      .selectAll('e')
+      .execute();
+
+    return results.map((row) => new Entity(row));
+  }
 }
 
 export const entityRepository = new EntityRepository();

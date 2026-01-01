@@ -7,11 +7,12 @@ export default {
     places: 'Places',
     addEntity: 'Add entity',
     recent: 'Recently viewed:',
-    expiryWarning: 'items are nearing their expiration date',
+    expiryWarning: 'objects are nearing their expiration date',
     collection: 'Collection',
     item: 'Item',
     category: 'Category',
     place: 'Place',
+    expiryListTitle: 'Objects with nearing expiration date',
   },
   category: {
     title: 'Categories',
@@ -115,6 +116,7 @@ export default {
     number: 'Number',
     date: 'Date',
     datetime: 'Date and time',
+    expiryDate: 'Expiry date',
     textarea: 'Textarea (multiple lines)',
     checkbox: 'Checkbox (multiple choice)',
     radio: 'Radio button (single choice)',
@@ -138,5 +140,9 @@ export default {
     nameLength: 'Name must be between 3 and 255 characters',
     codeExists: 'This code already exists',
     fixErrors: 'Please fix validation errors.',
+  },
+  notifications: {
+    expiryTitle: 'Item is nearing expiration!',
+    expiryBody: '{entityName} is nearing expiration!',
   },
 };
