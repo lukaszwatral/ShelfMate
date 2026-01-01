@@ -3,6 +3,7 @@ import { Filesystem, Directory, Encoding } from '@capacitor/filesystem';
 import { Share } from '@capacitor/share';
 import { Capacitor } from '@capacitor/core';
 import { Toast } from '@capacitor/toast';
+import { trans } from '@/translations/translator.js';
 
 export class BackupService {
   /**
@@ -60,7 +61,14 @@ export class BackupService {
         throw new Error('Nieprawidłowy format pliku backupu.');
       }
 
-      await backupRepository.restoreDatabase(data);
+      await backupRepository.performFactoryReset();
+      setTimeout(async () => {
+        await Toast.show({
+          text: trans('settings.clearDataNotification', {}, this.$.appContext.provides.i18n),
+          duration: 'short',
+        });
+      }, 1000);
+      setTimeout(() => window.location.reload(), 1000);
       return true;
     } catch (e) {
       console.error('Błąd importu:', e);

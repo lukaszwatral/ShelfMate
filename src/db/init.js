@@ -69,9 +69,9 @@ export async function initializeDatabase() {
                                         id INTEGER PRIMARY KEY AUTOINCREMENT,
                                         entity_id INTEGER NOT NULL,
                                         code_type TEXT NOT NULL,
-        code_value TEXT NOT NULL,
-        created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-        FOREIGN KEY (entity_id) REFERENCES Entity(id) ON DELETE CASCADE,
+                                        code_value TEXT NOT NULL,
+                                        created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                                        FOREIGN KEY (entity_id) REFERENCES Entity(id) ON DELETE CASCADE,
         UNIQUE(code_value, code_type)
         )
     `.execute(db);
@@ -330,115 +330,28 @@ export async function initializeDatabase() {
       .execute(db);
 
     // ==========================================
-    // 5. SEEDING
+    // 5. SEEDING (Tylko konfiguracja i języki)
     // ==========================================
 
-    const existingPlaces = await db
-      .selectFrom('Entity')
-      .where('type', '=', 'place')
-      .select('id')
+    await db
+      .insertInto('Locale')
+      .values([
+        { code: 'en', name: 'English' },
+        { code: 'pl', name: 'Polski' },
+        { code: 'de', name: 'Deutsch' },
+        { code: 'fr', name: 'Français' },
+        { code: 'es', name: 'Español' },
+      ])
+      .onConflict((oc) => oc.column('code').doNothing())
       .execute();
 
-    if (existingPlaces.length === 0) {
-      await db
-        .insertInto('Entity')
-        .values([
-          {
-            type: 'place',
-            name: 'Dom',
-            description: 'Główne miejsce zamieszkania',
-            parent_id: null,
-          },
-          { type: 'place', name: 'Biuro', description: 'Miejsce pracy', parent_id: null },
-        ])
-        .execute();
+    await db
+      .insertInto('Setting')
+      .values({ key: 'locale', value: 'en' })
+      .onConflict((oc) => oc.column('key').doNothing())
+      .execute();
 
-      const dom = await db
-        .selectFrom('Entity')
-        .where('name', '=', 'Dom')
-        .select('id')
-        .executeTakeFirst();
-      if (dom) {
-        await db
-          .insertInto('Entity')
-          .values({
-            type: 'place',
-            name: 'Garaż',
-            description: 'Garaż przydomowy',
-            icon: 'house',
-            parent_id: dom.id,
-          })
-          .execute();
-      }
-
-      await db
-        .insertInto('Entity')
-        .values([
-          {
-            type: 'category',
-            name: 'Elektronika',
-            description: 'Urządzenia elektroniczne.',
-            icon: 'laptop',
-            color: '#4A90E2',
-            category_id: null,
-          },
-          {
-            type: 'category',
-            name: 'Dokumenty',
-            description: 'Ważne dokumenty.',
-            icon: 'paperclip',
-            color: '#F5A623',
-            category_id: null,
-          },
-          {
-            type: 'category',
-            name: 'Narzędzia',
-            description: 'Narzędzia ręczne i osprzęt.',
-            icon: 'tools',
-            color: '#7ED321',
-            category_id: null,
-          },
-          {
-            type: 'category',
-            name: 'Książki',
-            description: 'Książki i czasopisma.',
-            icon: 'book',
-            color: '#BD10E0',
-            category_id: null,
-          },
-        ])
-        .execute();
-
-      const elektronika = await db
-        .selectFrom('Entity')
-        .where('name', '=', 'Elektronika')
-        .select('id')
-        .executeTakeFirst();
-      if (elektronika) {
-        await db
-          .insertInto('Entity')
-          .values({
-            type: 'category',
-            name: 'AGD',
-            description: 'Sprzęt gospodarstwa domowego',
-            icon: 'tv',
-            color: '#4A90E2',
-            parent_id: elektronika.id,
-          })
-          .execute();
-      }
-
-      await db
-        .insertInto('Locale')
-        .values([
-          { code: 'pl', name: 'Polski' },
-          { code: 'en', name: 'English' },
-        ])
-        .execute();
-      await db.insertInto('Setting').values({ key: 'locale', value: 'pl' }).execute();
-    }
-
-    console.log('Baza danych ShelfMate zainicjalizowana!');
+    console.log('Baza danych ShelfMate zainicjalizowana (Tylko ustawienia systemowe)!');
     return true;
   } catch (error) {
     console.error('Błąd podczas inicjalizacji bazy:', error);

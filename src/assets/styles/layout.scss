@@ -1,11 +1,7 @@
 @import 'variables';
+
 * {
-  font-family:
-    'Tahoma',
-    Segoe UI,
-    Geneva,
-    Verdana,
-    sans-serif;
+  font-family: 'Tahoma', Segoe UI, Geneva, Verdana, sans-serif;
   margin: 0;
   padding: 0;
   box-sizing: border-box;
@@ -13,26 +9,31 @@
 
 html,
 body,
-#app,
-.app-container {
+#app {
   height: 100%;
 }
+
+/* GŁÓWNY KONTENER APLIKACJI */
 .app-container {
   background-color: $backgroundColor;
-
   background-image:
     radial-gradient(circle at 10% 20%, rgba(232, 93, 4, 0.15) 0%, transparent 50%),
-      radial-gradient(circle at 90% 80%, rgba(255, 209, 0, 0.2) 0%, transparent 50%);
+    radial-gradient(circle at 90% 80%, rgba(255, 209, 0, 0.2) 0%, transparent 50%);
+
   min-height: 100vh;
   display: flex;
   flex-direction: column;
-  justify-content: center;
+
+  /* ZMIANA: flex-start zamiast center - treść zaczyna się od góry */
+  justify-content: flex-start;
   align-items: center;
+
   box-sizing: border-box;
-  //padding: 70px 24px;
+  /* Padding uwzględniający header (70px) i footer (70px) + bezpieczne strefy */
   padding: calc(70px + env(safe-area-inset-top)) 24px 70px;
 }
 
+/* HEADER (Górny pasek) */
 .header {
   color: white;
   position: fixed;
@@ -58,15 +59,17 @@ body,
     padding: 8px;
     border-radius: 25px;
     overflow: hidden;
+
     input {
       background: transparent;
       border: none;
       margin-left: 10px;
       min-width: 0;
+      &:focus {
+        outline: none;
+      }
     }
-    input:focus {
-      outline: none;
-    }
+
     i {
       background: $thirdColor;
       display: flex;
@@ -82,6 +85,7 @@ body,
   }
 }
 
+/* FOOTER (Dolny pasek) */
 .footer {
   color: white;
   position: fixed;
@@ -108,7 +112,6 @@ body,
 
     li {
       list-style: none;
-
       .bi {
         font-size: 24px;
       }
@@ -126,6 +129,7 @@ a {
   text-shadow: 0 0 4px $activeColor, 0 0 8px $activeColor;
 }
 
+/* Animacje przejść */
 .fade-enter-active,
 .fade-leave-active {
   transition: opacity 0.1s;

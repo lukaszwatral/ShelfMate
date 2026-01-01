@@ -1,20 +1,16 @@
 @import 'variables';
-* {
-  font-family:
-    'Tahoma',
-    Segoe UI,
-    Geneva,
-    Verdana,
-    sans-serif;
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-}
 
 .homepage {
-  display: grid;
+  /* ZMIANA: Flexbox kolumnowy, aby układać elementy od góry */
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  gap: 20px; /* Odstęp między Logo a resztą treści */
+
   color: $textColor;
-  height: calc(100vh - 140px - env(safe-area-inset-top));
+  /* Wysokość na 100% dostępnego miejsca w kontenerze rodzica */
+  height: 100%;
+  width: 100%;
   padding-top: 10px;
   padding-bottom: 10px;
   overflow-y: auto;
@@ -22,15 +18,20 @@
   .logo-container {
     display: flex;
     width: 100%;
-    margin-bottom: 1em;
+    height: fit-content;
+    flex-shrink: 0;
+
     .logo {
       display: grid;
       grid-template-columns: 2fr 3fr;
       gap: 1em;
+      align-items: center;
+
       .logo-name {
-        display: grid;
-        grid-template-columns: 1fr;
-        place-items: center;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+
         .title {
           display: block;
           font-size: 48px;
@@ -69,11 +70,12 @@
   }
 
   .content {
-    display: grid;
-    grid-template-columns: 1fr;
-    gap: 1em;
+    /* ZMIANA: Układ kolumnowy dla elementów wewnątrz contentu */
+    display: flex;
+    flex-direction: column;
+    gap: 1.5em; /* Odstępy między kafelkami */
     width: 100%;
-    height: 100%;
+    height: fit-content;
 
     .dashboard {
       display: flex;
@@ -84,21 +86,29 @@
       background: rgba(#fff, 0.5);
       border-radius: 10px;
       padding: 1em;
+      height: fit-content;
 
       .dashboard-content {
         display: grid;
         grid-template-columns: repeat(3, 1fr);
         gap: 1em;
 
+        a {
+          text-decoration: none;
+          color: inherit;
+        }
+
         .tile-container {
           margin-top: 1em;
           width: 100%;
           text-align: center;
+
           .tile {
             aspect-ratio: 1/1;
             display: flex;
-            justify-self: center;
-            align-self: center;
+            margin: 0 auto;
+            align-items: center;
+            justify-content: center;
             background: $primaryColor;
             width: 70px;
             height: 70px;
@@ -107,21 +117,19 @@
 
             span {
               color: $textColor;
-              display: flex;
-              width: 100%;
-              height: 100%;
-              justify-content: center;
-              align-items: center;
+              font-weight: bold;
+              font-size: 1.2rem;
             }
           }
 
           .tile-name {
+            display: block;
+            margin-top: 0.5em;
             font-size: clamp(14px, 2vw, 18px);
             overflow: hidden;
             text-overflow: ellipsis;
             white-space: nowrap;
             max-width: 100%;
-            margin-bottom: 0.5em;
           }
         }
       }
@@ -134,10 +142,11 @@
       width: 100%;
       background: $primaryColor;
       border-radius: 0 25px 25px 0;
-      padding: 0.3em 0.3em 0.3em 1em;
+      padding: 0.5em 0.5em 0.5em 1.5em;
       color: $textColor;
       font-weight: bold;
       font-size: 1.2rem;
+      text-decoration: none;
     }
 
     .add-circle-btn {
@@ -159,14 +168,13 @@
     }
 
     .collection-slider-container {
-      margin-top: 1.5rem;
       width: 100%;
       min-width: 0;
       display: flex;
       flex-direction: column;
       background: rgba(255, 255, 255, 0.5);
       border-radius: 10px;
-      padding: 0.5em;
+      padding: 0.8em;
 
       .header-row {
         display: flex;
@@ -204,23 +212,20 @@
         flex: 0 0 auto;
         width: 240px;
         max-width: 80vw;
-
         display: grid;
         grid-template-columns: auto 1fr;
         gap: 15px;
         align-items: center;
-
         background: rgba(255, 255, 255, 0.8);
         backdrop-filter: blur(5px);
         padding: 12px 16px;
         border-radius: 15px;
         border: 1px solid rgba(255, 255, 255, 0.4);
         box-shadow: 0 4px 6px rgba(0, 0, 0, 0.02);
-        transition: transform 0.1s;
 
         &:active {
           transform: scale(0.98);
-          background: rgba(255, 255, 255, 0.8);
+          background: rgba(255, 255, 255, 0.9);
         }
 
         .icon-box {
@@ -258,40 +263,46 @@
       }
     }
 
-    .cursor-pointer {
-      cursor: pointer;
-    }
-
     .expiry-date-items {
       background: $pinkColor;
       border-radius: 10px;
-      padding: 10px;
-      display: grid;
-      grid-template-columns: auto auto 1fr;
+      padding: 15px;
+      display: flex;
+      align-items: center;
       gap: 1em;
+      cursor: pointer;
 
       i {
-        font-size: 32px;
+        font-size: 24px;
         background: red;
-        aspect-ratio: 1/1;
+        width: 40px;
+        height: 40px;
         display: flex;
-        justify-self: center;
-        align-self: center;
+        justify-content: center;
+        align-items: center;
         color: white;
         border-radius: 50%;
+        flex-shrink: 0;
       }
+
       span:nth-child(2) {
-        font-size: 32px;
+        font-size: 24px;
         font-weight: bold;
+        min-width: 30px;
+        text-align: center;
       }
-      span {
-        text-wrap: wrap;
-        white-space: wrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        max-width: 100%;
+
+      span:last-child {
         font-size: 16px;
+        line-height: 1.2;
       }
     }
   }
+}
+
+.offcanvas-header {
+  margin-top: env(safe-area-inset-top);
+}
+.cursor-pointer {
+  cursor: pointer;
 }
