@@ -1,3 +1,6 @@
+/**
+ * Represents the actual value assigned to a Custom Field for a specific Entity.
+ */
 export class CustomFieldValue {
   constructor(data = {}) {
     this.id = data.id || null;
@@ -40,6 +43,10 @@ export class CustomFieldValue {
     return this;
   }
 
+  /**
+   * Converts the model instance to a database-compatible object (snake_case).
+   * @returns {Object}
+   */
   toDatabase() {
     return {
       entity_id: this.entityId,

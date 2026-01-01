@@ -241,9 +241,10 @@ import AttributeManager from '@/components/AddEntity/AttributeManager.vue';
 import { Toast } from '@capacitor/toast';
 import { HistoryService } from '@/services/HistoryService.js';
 import { Dialog } from '@capacitor/dialog';
-import { NotificationService } from '@/services/NotificationService.js'; // Ważny import
+import { NotificationService } from '@/services/NotificationService.js';
 
 const notificationHour = import.meta.env.VITE_NOTIFICATION_HOUR;
+
 export default {
   name: 'AddEntity',
   props: {
@@ -608,7 +609,6 @@ export default {
         const id = await entityRepository.save(this.newEntity);
         const existingCodes = await codeRepository.findBy({ entityId: id });
 
-        // Barcode logic
         const barcodeCode = existingCodes.find((c) => c.getCodeType() !== 'nfc');
         if (this.code && this.code.value) {
           if (barcodeCode) {
@@ -922,58 +922,4 @@ export default {
 };
 </script>
 
-<style scoped>
-.required-field {
-  color: red;
-}
-.is-invalid-select :deep(.v-select) {
-  border-color: #dc3545;
-}
-.small-alert {
-  padding: 0.5rem 1rem;
-  font-size: 0.9rem;
-}
-.nfc-icon-wrapper {
-  cursor: pointer;
-  font-size: 1.8rem;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-}
-.nfc-status-icon {
-  transition: color 0.3s ease;
-}
-.nfc-modal-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100vw;
-  height: 100vh;
-  background-color: rgba(0, 0, 0, 0.6);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  z-index: 9999;
-}
-.nfc-modal-content {
-  background: white;
-  padding: 2rem;
-  border-radius: 1rem;
-  width: 80%;
-  max-width: 350px;
-}
-.blink-animation {
-  animation: blink 1.5s infinite;
-}
-@keyframes blink {
-  0% {
-    opacity: 0.2;
-  }
-  50% {
-    opacity: 1;
-  }
-  100% {
-    opacity: 0.2;
-  }
-}
-</style>
+<style scoped></style>

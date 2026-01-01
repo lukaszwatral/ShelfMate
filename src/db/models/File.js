@@ -1,3 +1,6 @@
+/**
+ * Represents a file attachment linked to an Entity (e.g., an image or document).
+ */
 export class File {
   constructor(data = {}) {
     this.id = data.id || null;
@@ -60,6 +63,11 @@ export class File {
     return this;
   }
 
+  /**
+   * Converts the model instance to a database-compatible object (snake_case).
+   * Handles boolean to integer conversion for SQLite (0/1).
+   * @returns {Object}
+   */
   toDatabase() {
     return {
       entity_id: this.entityId,

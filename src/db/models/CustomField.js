@@ -1,3 +1,6 @@
+/**
+ * Represents the definition of a Custom Field.
+ */
 export class CustomField {
   constructor(data = {}) {
     this.id = data.id || null;
@@ -88,6 +91,11 @@ export class CustomField {
     return this;
   }
 
+  /**
+   * Converts the model instance to a database-compatible object (snake_case).
+   * Handles boolean to integer conversion (0/1).
+   * @returns {Object}
+   */
   toDatabase() {
     return {
       category_template_id: this.categoryTemplateId,

@@ -1,18 +1,23 @@
 import { db } from './database.js';
 import { sql } from 'kysely';
 
+/**
+ * Initializes the database structure.
+ * Creates tables, indices, triggers, and seeds default system data (locales, settings).
+ * @returns {Promise<boolean>} True if initialization succeeds.
+ */
 export async function initializeDatabase() {
   try {
     await sql`PRAGMA foreign_keys = ON`.execute(db);
 
     // ==========================================
-    // 1. DEFINICJE TABEL
+    // 1. TABLE DEFINITIONS
     // ==========================================
 
     await sql`
       CREATE TABLE IF NOT EXISTS Entity (
-                                          id INTEGER PRIMARY KEY AUTOINCREMENT,
-                                          type TEXT NOT NULL CHECK(type IN ('item', 'category', 'place')),
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        type TEXT NOT NULL CHECK(type IN ('item', 'category', 'place')),
         parent_id INTEGER,
         category_id INTEGER,
         name TEXT NOT NULL,
@@ -30,21 +35,21 @@ export async function initializeDatabase() {
 
     await sql`
       CREATE TABLE IF NOT EXISTS Tag (
-                                       id INTEGER PRIMARY KEY AUTOINCREMENT,
-                                       name TEXT NOT NULL UNIQUE,
-                                       color TEXT,
-                                       icon TEXT,
-                                       created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        name TEXT NOT NULL UNIQUE,
+        color TEXT,
+        icon TEXT,
+        created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
       )
     `.execute(db);
 
     await sql`
       CREATE TABLE IF NOT EXISTS EntityTag (
-                                             id INTEGER PRIMARY KEY AUTOINCREMENT,
-                                             entity_id INTEGER NOT NULL,
-                                             tag_id INTEGER NOT NULL,
-                                             created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-                                             FOREIGN KEY (entity_id) REFERENCES Entity(id) ON DELETE CASCADE,
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        entity_id INTEGER NOT NULL,
+        tag_id INTEGER NOT NULL,
+        created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (entity_id) REFERENCES Entity(id) ON DELETE CASCADE,
         FOREIGN KEY (tag_id) REFERENCES Tag(id) ON DELETE CASCADE,
         UNIQUE(entity_id, tag_id)
         )
@@ -52,53 +57,41 @@ export async function initializeDatabase() {
 
     await sql`
       CREATE TABLE IF NOT EXISTS File (
-                                        id INTEGER PRIMARY KEY AUTOINCREMENT,
-                                        entity_id INTEGER NOT NULL,
-                                        file_path TEXT NOT NULL,
-                                        file_name TEXT NOT NULL,
-                                        mime_type TEXT,
-                                        is_primary BOOLEAN NOT NULL DEFAULT 0,
-                                        thumbnail_path TEXT,
-                                        created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-                                        FOREIGN KEY (entity_id) REFERENCES Entity(id) ON DELETE CASCADE
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        entity_id INTEGER NOT NULL,
+        file_path TEXT NOT NULL,
+        file_name TEXT NOT NULL,
+        mime_type TEXT,
+        is_primary BOOLEAN NOT NULL DEFAULT 0,
+        thumbnail_path TEXT,
+        created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (entity_id) REFERENCES Entity(id) ON DELETE CASCADE
         )
     `.execute(db);
 
     await sql`
       CREATE TABLE IF NOT EXISTS Code (
-                                        id INTEGER PRIMARY KEY AUTOINCREMENT,
-                                        entity_id INTEGER NOT NULL,
-                                        code_type TEXT NOT NULL,
-                                        code_value TEXT NOT NULL,
-                                        created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-                                        FOREIGN KEY (entity_id) REFERENCES Entity(id) ON DELETE CASCADE,
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        entity_id INTEGER NOT NULL,
+        code_type TEXT NOT NULL,
+        code_value TEXT NOT NULL,
+        created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (entity_id) REFERENCES Entity(id) ON DELETE CASCADE,
         UNIQUE(code_value, code_type)
         )
     `.execute(db);
 
     await sql`
       CREATE TABLE IF NOT EXISTS CustomField (
-                                               id INTEGER PRIMARY KEY AUTOINCREMENT,
-                                               category_template_id INTEGER,
-                                               entity_id INTEGER,
-                                               field_name TEXT NOT NULL,
-                                               field_type TEXT NOT NULL CHECK(
-                                               field_type IN (
-                                               'text',
-                                               'number',
-                                               'date',
-                                               'datetime-local',
-                                               'expiry_date',
-                                               'textarea',
-                                               'checkbox',
-                                               'radio',
-                                               'select',
-                                               'file',
-                                               'image',
-                                               'color',
-                                               'url',
-                                               'boolean',
-                                               'email'
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        category_template_id INTEGER,
+        entity_id INTEGER,
+        field_name TEXT NOT NULL,
+        field_type TEXT NOT NULL CHECK(
+        field_type IN (
+        'text', 'number', 'date', 'datetime-local', 'expiry_date',
+        'textarea', 'checkbox', 'radio', 'select', 'file',
+        'image', 'color', 'url', 'boolean', 'email'
       )
         ),
         is_required BOOLEAN NOT NULL DEFAULT 0,
@@ -116,13 +109,13 @@ export async function initializeDatabase() {
 
     await sql`
       CREATE TABLE IF NOT EXISTS CustomFieldValue (
-                                                    id INTEGER PRIMARY KEY AUTOINCREMENT,
-                                                    entity_id INTEGER NOT NULL,
-                                                    custom_field_id INTEGER NOT NULL,
-                                                    field_value TEXT,
-                                                    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-                                                    updated_at DATETIME,
-                                                    FOREIGN KEY (entity_id) REFERENCES Entity(id) ON DELETE CASCADE,
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        entity_id INTEGER NOT NULL,
+        custom_field_id INTEGER NOT NULL,
+        field_value TEXT,
+        created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        updated_at DATETIME,
+        FOREIGN KEY (entity_id) REFERENCES Entity(id) ON DELETE CASCADE,
         FOREIGN KEY (custom_field_id) REFERENCES CustomField(id) ON DELETE RESTRICT,
         UNIQUE(entity_id, custom_field_id)
         )
@@ -130,10 +123,10 @@ export async function initializeDatabase() {
 
     await sql`
       CREATE TABLE IF NOT EXISTS EntityFieldException (
-                                                        entity_id INTEGER NOT NULL,
-                                                        custom_field_id INTEGER NOT NULL,
-                                                        created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-                                                        PRIMARY KEY (entity_id, custom_field_id),
+        entity_id INTEGER NOT NULL,
+        custom_field_id INTEGER NOT NULL,
+        created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        PRIMARY KEY (entity_id, custom_field_id),
         FOREIGN KEY (entity_id) REFERENCES Entity(id) ON DELETE CASCADE,
         FOREIGN KEY (custom_field_id) REFERENCES CustomField(id) ON DELETE CASCADE
         )
@@ -141,21 +134,21 @@ export async function initializeDatabase() {
 
     await sql`
       CREATE TABLE IF NOT EXISTS Setting (
-                                           key TEXT PRIMARY KEY NOT NULL,
-                                           value TEXT,
-                                           updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+        key TEXT PRIMARY KEY NOT NULL,
+        value TEXT,
+        updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
       )
     `.execute(db);
 
     await sql`
       CREATE TABLE IF NOT EXISTS Locale (
-                                          code TEXT PRIMARY KEY NOT NULL,
-                                          name TEXT NOT NULL,
-                                          created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+        code TEXT PRIMARY KEY NOT NULL,
+        name TEXT NOT NULL,
+        created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
       )
     `.execute(db);
 
-    // --- TABELA WYSZUKIWANIA (FTS) ---
+    // --- Full Text Search (FTS) Table ---
     await sql`
       CREATE VIRTUAL TABLE IF NOT EXISTS EntitySearch USING fts5(
         entity_id UNINDEXED,
@@ -166,7 +159,7 @@ export async function initializeDatabase() {
     `.execute(db);
 
     // ==========================================
-    // 2. INDEKSY
+    // 2. INDICES
     // ==========================================
     await sql`CREATE INDEX IF NOT EXISTS idx_entity_parent ON Entity(parent_id)`.execute(db);
     await sql`CREATE INDEX IF NOT EXISTS idx_entity_category ON Entity(category_id)`.execute(db);
@@ -175,22 +168,26 @@ export async function initializeDatabase() {
     );
     await sql`CREATE INDEX IF NOT EXISTS idx_entity_recent ON Entity(created_at DESC)`.execute(db);
     await sql`CREATE INDEX IF NOT EXISTS idx_entity_name ON Entity(name)`.execute(db);
+
     await sql`CREATE INDEX IF NOT EXISTS idx_entity_tag_entity ON EntityTag(entity_id)`.execute(db);
     await sql`CREATE INDEX IF NOT EXISTS idx_entity_tag_tag ON EntityTag(tag_id)`.execute(db);
+
     await sql`CREATE INDEX IF NOT EXISTS idx_file_entity ON File(entity_id)`.execute(db);
     await sql`CREATE INDEX IF NOT EXISTS idx_code_entity ON Code(entity_id)`.execute(db);
     await sql`CREATE INDEX IF NOT EXISTS idx_code_value ON Code(code_value)`.execute(db);
+
     await sql`CREATE INDEX IF NOT EXISTS idx_cf_template ON CustomField(category_template_id)`.execute(
       db,
     );
     await sql`CREATE INDEX IF NOT EXISTS idx_cf_entity ON CustomField(entity_id)`.execute(db);
+
     await sql`CREATE INDEX IF NOT EXISTS idx_cfv_entity ON CustomFieldValue(entity_id)`.execute(db);
     await sql`CREATE INDEX IF NOT EXISTS idx_cfv_lookup ON CustomFieldValue(custom_field_id, field_value)`.execute(
       db,
     );
 
     // ==========================================
-    // 3. TRIGGERY SYSTEMOWE
+    // 3. SYSTEM TRIGGERS (Auto-update timestamps)
     // ==========================================
     await sql
       .raw(
@@ -241,8 +238,10 @@ export async function initializeDatabase() {
       .execute(db);
 
     // ==========================================
-    // 4. TRIGGERY WYSZUKIWANIA
+    // 4. SEARCH TRIGGERS (Sync with FTS)
     // ==========================================
+
+    // Sync Entity inserts
     await sql
       .raw(
         `
@@ -255,6 +254,7 @@ export async function initializeDatabase() {
       )
       .execute(db);
 
+    // Sync Entity updates
     await sql
       .raw(
         `
@@ -267,6 +267,7 @@ export async function initializeDatabase() {
       )
       .execute(db);
 
+    // Sync Entity deletes
     await sql
       .raw(
         `
@@ -278,6 +279,7 @@ export async function initializeDatabase() {
       )
       .execute(db);
 
+    // Sync CustomFieldValue inserts
     await sql
       .raw(
         `
@@ -295,6 +297,7 @@ export async function initializeDatabase() {
       )
       .execute(db);
 
+    // Sync CustomFieldValue updates
     await sql
       .raw(
         `
@@ -312,6 +315,7 @@ export async function initializeDatabase() {
       )
       .execute(db);
 
+    // Sync CustomFieldValue deletes
     await sql
       .raw(
         `
@@ -330,7 +334,7 @@ export async function initializeDatabase() {
       .execute(db);
 
     // ==========================================
-    // 5. SEEDING (Tylko konfiguracja i języki)
+    // 5. SEEDING (System configuration and locales)
     // ==========================================
 
     await db
@@ -351,10 +355,9 @@ export async function initializeDatabase() {
       .onConflict((oc) => oc.column('key').doNothing())
       .execute();
 
-    console.log('Baza danych ShelfMate zainicjalizowana (Tylko ustawienia systemowe)!');
     return true;
   } catch (error) {
-    console.error('Błąd podczas inicjalizacji bazy:', error);
+    console.error('Database initialization failed:', error);
     throw error;
   }
 }

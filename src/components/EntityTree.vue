@@ -1,16 +1,13 @@
 <template>
   <li
     class="entity-item"
-    :class="{ active: entity.active, nested: depth > 0, 'shadow-sm': this.view === 'list' }"
+    :class="{ active: entity.active, nested: depth > 0, 'shadow-sm': view === 'list' }"
     :style="{ width: 100 - depth * 2 + '%', minWidth: 80 + '%', backgroundColor: entity.color }"
     @click="redirectToView"
   >
     <div :class="{ 'entity-row': view === 'list', 'entity-row-folder': view === 'folder' }">
       <slot name="entity" :entity="entity" :depth="depth">
-        <i v-if="entity.icon" :class="`bi bi-${entity.icon} entity-icon`"></i>
-        <i v-else-if="entity.type === 'category'" class="bi bi-tag-fill entity-icon"></i>
-        <i v-else-if="entity.type === 'place'" class="bi bi-box-seam-fill entity-icon"></i>
-        <i v-else-if="entity.type === 'item'" class="bi bi-bag-fill entity-icon"></i>
+        <i :class="getIconClass(entity)"></i>
         <span class="entity-name">{{ entity.name }}</span>
         <span class="entity-description">{{ entity.description }}</span>
       </slot>
@@ -83,6 +80,19 @@ export default {
     toggle() {
       this.expanded = !this.expanded;
     },
+    getIconClass(entity) {
+      if (entity.icon) return `bi bi-${entity.icon} entity-icon`;
+      switch (entity.type) {
+        case 'category':
+          return 'bi bi-tag-fill entity-icon';
+        case 'place':
+          return 'bi bi-box-seam-fill entity-icon';
+        case 'item':
+          return 'bi bi-bag-fill entity-icon';
+        default:
+          return 'bi bi-question-circle entity-icon';
+      }
+    },
     async toggleRemoveAction(entity) {
       const i18n = this.$.appContext.provides.i18n;
       const { value } = await Dialog.confirm({
@@ -108,12 +118,4 @@ export default {
 };
 </script>
 
-<style scoped>
-.children-list {
-  padding-left: 20px;
-  list-style: none;
-}
-.nested {
-  margin: 0 !important;
-}
-</style>
+<style scoped></style>

@@ -1,7 +1,10 @@
 import { LocalNotifications } from '@capacitor/local-notifications';
-import { Toast } from '@capacitor/toast';
 
 export const NotificationService = {
+  /**
+   * Checks and requests notification permissions from the OS.
+   * @returns {Promise<boolean>} True if permissions are granted.
+   */
   async ensurePermissions() {
     let status = await LocalNotifications.checkPermissions();
 
@@ -10,46 +13,48 @@ export const NotificationService = {
     }
 
     const request = await LocalNotifications.requestPermissions();
-
-    if (request.display === 'granted') {
-      return true;
-    } else {
-      return false;
-    }
+    return request.display === 'granted';
   },
 
+  /**
+   * Schedules a local notification for a specific future date.
+   * Checks for permissions and validates the date before scheduling.
+   * @param {number|string} id - Unique identifier for the notification.
+   * @param {string} title - Notification title.
+   * @param {string} body - Notification body text.
+   * @param {Date} date - The date and time to trigger the notification.
+   */
   async scheduleNotification(id, title, body, date) {
     const hasPermission = await this.ensurePermissions();
     if (!hasPermission) return;
 
     if (date <= new Date()) return;
 
-    const notificationId = Number(id);
-
     try {
       await LocalNotifications.schedule({
         notifications: [
           {
-            title: title,
-            body: body,
-            id: notificationId,
+            id: Number(id),
+            title,
+            body,
             schedule: { at: date },
-            sound: null,
-            attachments: null,
-            actionTypeId: '',
-            extra: null,
           },
         ],
       });
-      console.log(`Zaplanowano powiadomienie na: ${date.toLocaleString()}`);
     } catch (e) {
-      console.error('Błąd planowania powiadomienia:', e);
+      console.error('Failed to schedule notification:', e);
     }
   },
 
+  /**
+   * Cancels a specific notification by its ID.
+   * @param {number|string} id - The identifier of the notification to cancel.
+   */
   async cancelNotification(id) {
     try {
       await LocalNotifications.cancel({ notifications: [{ id: Number(id) }] });
-    } catch (e) {}
+    } catch (e) {
+      // Ignore errors if notification doesn't exist
+    }
   },
 };

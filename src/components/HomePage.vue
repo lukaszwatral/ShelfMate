@@ -138,52 +138,7 @@ export default {
     };
   },
   async mounted() {
-    try {
-      const data = await entityRepository.findAll();
-      await this.loadHistory();
-      await this.fetchExpiring();
-      const entities = data ? Object.values(data) : [];
-      this.dashboardData = entities.reduce(
-        (acc, entity) => {
-          if (!entity || !entity.type) return acc;
-          if (entity.type === 'item') {
-            acc.items.push(entity);
-          } else if (entity.type === 'category') {
-            acc.categories.push(entity);
-          } else if (entity.type === 'place') {
-            acc.places.push(entity);
-          }
-          return acc;
-        },
-        { items: [], categories: [], places: [] },
-      );
-    } catch (error) {
-      this.dashboardData = { items: [], categories: [], places: [] };
-    }
-  },
-  methods: {
-    trans,
-    async loadHistory() {
-      const history = await HistoryService.getList();
-      const validHistory = [];
-      for (const item of history) {
-        const entity = await entityRepository.find(item.id);
-        if (entity) {
-          validHistory.push(item);
-        }
-      }
-      this.history = validHistory;
-    },
-    async clearHistory() {
-      await HistoryService.clear();
-      this.history = [];
-    },
-    openRecent(item) {
-      this.$router.push({ name: 'viewEntity', params: { id: item.id } });
-    },
-    async fetchExpiring() {
-      this.expiringItems = await entityRepository.findExpiringIn3Days();
-    },
+    await Promise.all([this.fetchDashboardData(), this.loadHistory(), this.fetchExpiring()]);
   },
   computed: {
     itemsCount() {
@@ -196,26 +151,57 @@ export default {
       return this.dashboardData?.places?.length ?? 0;
     },
   },
+  methods: {
+    trans,
+    async fetchDashboardData() {
+      try {
+        const data = await entityRepository.findAll();
+        const entities = data ? Object.values(data) : [];
+
+        this.dashboardData = entities.reduce(
+          (acc, entity) => {
+            if (!entity || !entity.type) return acc;
+            if (entity.type === 'item') acc.items.push(entity);
+            else if (entity.type === 'category') acc.categories.push(entity);
+            else if (entity.type === 'place') acc.places.push(entity);
+            return acc;
+          },
+          { items: [], categories: [], places: [] },
+        );
+      } catch (error) {
+        this.dashboardData = { items: [], categories: [], places: [] };
+      }
+    },
+    async loadHistory() {
+      try {
+        const history = await HistoryService.getList();
+        const checks = history.map(async (item) => {
+          const entity = await entityRepository.find(item.id);
+          return entity ? item : null;
+        });
+
+        const validItems = await Promise.all(checks);
+        this.history = validItems.filter((item) => item !== null);
+      } catch (e) {
+        this.history = [];
+      }
+    },
+    async clearHistory() {
+      await HistoryService.clear();
+      this.history = [];
+    },
+    openRecent(item) {
+      this.$router.push({ name: 'viewEntity', params: { id: item.id } });
+    },
+    async fetchExpiring() {
+      try {
+        this.expiringItems = await entityRepository.findExpiringIn3Days();
+      } catch (e) {
+        this.expiringItems = [];
+      }
+    },
+  },
 };
 </script>
 
-<style scoped>
-.offcanvas-header {
-  margin-top: env(safe-area-inset-top);
-}
-.list-group {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 0.5em;
-}
-
-.list-group-item {
-  display: grid;
-  grid-template-columns: 24px auto 64px;
-  grid-template-areas: 'icon name toggle' 'icon description toggle';
-  align-items: center;
-  gap: 1em;
-  word-break: break-word;
-  white-space: normal;
-}
-</style>
+<style scoped></style>

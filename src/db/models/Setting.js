@@ -1,3 +1,6 @@
+/**
+ * Represents a global application configuration key-value pair.
+ */
 export class Setting {
   constructor(data = {}) {
     this.key = data.key || '';
@@ -24,6 +27,10 @@ export class Setting {
     return this;
   }
 
+  /**
+   * Converts the model instance to a database-compatible object.
+   * @returns {Object}
+   */
   toDatabase() {
     return {
       key: this.key,

@@ -2,12 +2,11 @@ import { backupRepository } from '@/db/repositories/BackupRepository';
 import { Filesystem, Directory, Encoding } from '@capacitor/filesystem';
 import { Share } from '@capacitor/share';
 import { Capacitor } from '@capacitor/core';
-import { Toast } from '@capacitor/toast';
-import { trans } from '@/translations/translator.js';
 
 export class BackupService {
   /**
-   * Generuje JSON, zapisuje go na dysku I otwiera okno udostępniania.
+   * Generates JSON, saves it to disk, and opens the share dialog.
+   * On Android, it attempts to save a copy to Downloads.
    */
   async exportBackup() {
     try {
@@ -31,19 +30,19 @@ export class BackupService {
             encoding: Encoding.UTF8,
           });
         } catch (err) {
-          console.warn('Nie udało się zapisać kopii w Pobrane:', err);
+          console.warn('Failed to save copy to Downloads:', err);
         }
       }
 
       await Share.share({
-        title: 'Kopia zapasowa ShelfMate',
-        text: 'Oto Twój plik kopii zapasowej.',
+        title: 'ShelfMate Backup',
+        text: 'Here is your backup file.',
         files: [result.uri],
       });
 
       return true;
     } catch (e) {
-      console.error('Błąd eksportu:', e);
+      console.error('Export failed:', e);
       if (e.message !== 'Share canceled') {
         throw e;
       }
@@ -51,27 +50,21 @@ export class BackupService {
   }
 
   /**
-   * Import (Bez zmian)
+   * Parses the backup file and restores the database.
+   * @param {string} jsonString - The raw JSON string from the backup file.
    */
   async importBackup(jsonString) {
     try {
       const data = JSON.parse(jsonString);
 
       if (!data.version || !data.data) {
-        throw new Error('Nieprawidłowy format pliku backupu.');
+        throw new Error('Invalid backup file format.');
       }
 
-      await backupRepository.performFactoryReset();
-      setTimeout(async () => {
-        await Toast.show({
-          text: trans('settings.clearDataNotification', {}, this.$.appContext.provides.i18n),
-          duration: 'short',
-        });
-      }, 1000);
-      setTimeout(() => window.location.reload(), 1000);
+      await backupRepository.restoreDatabase(data);
       return true;
     } catch (e) {
-      console.error('Błąd importu:', e);
+      console.error('Import failed:', e);
       throw e;
     }
   }

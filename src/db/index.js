@@ -1,7 +1,7 @@
 export { db } from './database.js';
 export { initializeDatabase } from './init.js';
 
-// Modele
+// Models
 export { Entity } from './models/Entity.js';
 export { Tag } from './models/Tag.js';
 export { File } from './models/File.js';
@@ -11,7 +11,7 @@ export { CustomFieldValue } from './models/CustomFieldValue.js';
 export { Setting } from './models/Setting.js';
 export { Locale } from './models/Locale.js';
 
-// Repozytoria
+// Repositories
 export { entityRepository } from './repositories/EntityRepository.js';
 export { tagRepository } from './repositories/TagRepository.js';
 export { fileRepository } from './repositories/FileRepository.js';

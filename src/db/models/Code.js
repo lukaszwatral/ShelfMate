@@ -1,3 +1,6 @@
+/**
+ * Represents a Code entity (e.g., Barcode, NFC, QR).
+ */
 export class Code {
   constructor(data = {}) {
     this.id = data.id || null;
@@ -36,6 +39,10 @@ export class Code {
     return this;
   }
 
+  /**
+   * Converts the model instance to a database-compatible object (snake_case).
+   * @returns {Object}
+   */
   toDatabase() {
     return {
       entity_id: this.entityId,

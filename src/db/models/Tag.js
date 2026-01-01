@@ -1,3 +1,6 @@
+/**
+ * Represents a Tag that can be assigned to multiple Entities.
+ */
 export class Tag {
   constructor(data = {}) {
     this.id = data.id || null;
@@ -36,6 +39,10 @@ export class Tag {
     return this;
   }
 
+  /**
+   * Converts the model instance to a database-compatible object.
+   * @returns {Object}
+   */
   toDatabase() {
     return {
       name: this.name,

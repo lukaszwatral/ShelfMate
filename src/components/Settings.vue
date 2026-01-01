@@ -1,8 +1,9 @@
 <template>
   <div class="content-container settings" v-if="isInitialized">
-    <h1>{{ $t('settings.title') }}</h1>
+    <h1>{{ trans('settings.title') }}</h1>
+
     <div class="settings-row">
-      <label for="language">{{ $t('settings.chooseLanguage') }}: </label>
+      <label for="language">{{ trans('settings.chooseLanguage') }}: </label>
       <div class="form-input-container">
         <VueSelect
           name="language"
@@ -17,7 +18,7 @@
           <template #placeholder>
             <span class="select-option">
               <img
-                :src="flagSrc(currentLocale?.code || 'pl')"
+                :src="flagSrc(currentLocale?.code || 'en')"
                 :alt="currentLocale?.code"
                 class="option-flag"
               />
@@ -39,8 +40,10 @@
         </VueSelect>
       </div>
     </div>
-    <span>{{ $t('settings.importExport') }}</span>
+
+    <span>{{ trans('settings.importExport') }}</span>
     <p class="text-muted small mb-3">{{ trans('settings.importExportInfo') }}</p>
+
     <button class="btn btn-primary" @click="handleExport" :disabled="loading">
       <span
         v-if="loading && mode === 'export'"
@@ -67,6 +70,8 @@
       @change="handleImport"
     />
 
+    <hr class="my-4" />
+
     <span class="text-danger">
       <i class="bi bi-exclamation-triangle-fill me-2"></i>{{ trans('settings.clearData') }}
     </span>
@@ -86,6 +91,7 @@ import { localeRepository } from '@/db/repositories/LocaleRepository.js';
 import { backupRepository } from '@/db/repositories/BackupRepository';
 import { backupService } from '@/services/BackupService';
 import { Toast } from '@capacitor/toast';
+import { Dialog } from '@capacitor/dialog';
 
 export default {
   name: 'Settings',
@@ -107,12 +113,11 @@ export default {
       const foundLocale = this.availableLocales.find((l) => l.code === localeCode);
 
       this.currentLocale = foundLocale ||
-        this.availableLocales[0] || { code: 'pl', name: 'Polski' };
+        this.availableLocales[0] || { code: 'en', name: 'English' };
 
       this.isInitialized = true;
     } catch (e) {
-      console.error('Błąd inicjalizacji ustawień:', e);
-      this.currentLocale = { code: 'pl', name: 'Polski' };
+      this.currentLocale = { code: 'en', name: 'English' };
       this.isInitialized = true;
     }
   },
@@ -142,7 +147,10 @@ export default {
           });
         }, 500);
       } catch (e) {
-        alert(trans('settings.error') + ': ' + e.message);
+        await Dialog.alert({
+          title: trans('settings.error', {}, this.$.appContext.provides.i18n),
+          message: e.message,
+        });
       } finally {
         this.loading = false;
         this.mode = null;
@@ -154,7 +162,12 @@ export default {
       if (!file) return;
       event.target.value = '';
 
-      if (!confirm(trans('settings.importConfirm', {}, this.$.appContext.provides.i18n))) return;
+      const { value } = await Dialog.confirm({
+        title: trans('settings.import', {}, this.$.appContext.provides.i18n),
+        message: trans('settings.importConfirm', {}, this.$.appContext.provides.i18n),
+      });
+
+      if (!value) return;
 
       this.loading = true;
       this.mode = 'import';
@@ -171,14 +184,20 @@ export default {
           });
           setTimeout(() => window.location.reload(), 1000);
         } catch (err) {
-          alert(trans('settings.error') + ': ' + err.message);
+          await Dialog.alert({
+            title: trans('settings.error', {}, this.$.appContext.provides.i18n),
+            message: err.message,
+          });
           this.loading = false;
           this.mode = null;
         }
       };
 
-      reader.onerror = () => {
-        alert(trans('settings.error') + ': ' + reader.error.message);
+      reader.onerror = async () => {
+        await Dialog.alert({
+          title: trans('settings.error', {}, this.$.appContext.provides.i18n),
+          message: reader.error.message,
+        });
         this.loading = false;
         this.mode = null;
       };
@@ -187,7 +206,12 @@ export default {
     },
 
     async handleFactoryReset() {
-      if (!confirm(trans('settings.clearDataConfirm', {}, this.$.appContext.provides.i18n))) return;
+      const { value } = await Dialog.confirm({
+        title: trans('settings.clearData', {}, this.$.appContext.provides.i18n),
+        message: trans('settings.clearDataConfirm', {}, this.$.appContext.provides.i18n),
+      });
+
+      if (!value) return;
 
       this.loading = true;
       try {
@@ -200,8 +224,10 @@ export default {
         }, 1000);
         setTimeout(() => window.location.reload(), 1000);
       } catch (e) {
-        console.error(e);
-        alert(trans('settings.error') + ': ' + e.message);
+        await Dialog.alert({
+          title: trans('settings.error', {}, this.$.appContext.provides.i18n),
+          message: e.message,
+        });
       } finally {
         this.loading = false;
       }
@@ -210,25 +236,4 @@ export default {
 };
 </script>
 
-<style scoped>
-.settings {
-  padding: 1rem;
-}
-.settings-row {
-  margin-bottom: 1rem;
-}
-.option-flag {
-  width: 20px;
-  height: 15px;
-  margin-right: 8px;
-  object-fit: cover;
-  border-radius: 2px;
-}
-.select-option {
-  display: flex;
-  align-items: center;
-}
-.danger-zone {
-  opacity: 0.9;
-}
-</style>
+<style scoped></style>

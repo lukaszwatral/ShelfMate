@@ -10,13 +10,14 @@ import App from './App.vue';
 import router from './router';
 import { initializeDatabase, settingRepository } from '@/db';
 
+/**
+ * Asynchronous application entry point.
+ * Initializes the database and retrieves user settings before mounting the Vue app.
+ */
 const startApp = async () => {
   try {
-    // Inicjalizacja bazy danych z Kysely
     await initializeDatabase();
-    console.log('Database initialized, starting Vue app.');
 
-    // Pobierz locale z bazy używając repository
     const dbLocale = await settingRepository.getValue('locale');
     const locale = dbLocale || 'en';
 
@@ -26,14 +27,24 @@ const startApp = async () => {
     app.use(createPinia());
     app.use(router);
     app.use(i18n);
-    app.provide('i18n', i18n); // Dodano provide instancji i18n
+
+    // Provide the i18n instance globally
+    app.provide('i18n', i18n);
 
     app.mount('#app');
   } catch (error) {
-    console.error('Failed to initialize database or start the app:', error);
-    // Pokaż błąd użytkownikowi
-    document.getElementById('app').innerHTML =
-      '<h1>Error</h1><p>Could not initialize the application. Please try again later.</p>';
+    console.error('Critical initialization error:', error);
+
+    // Fallback UI for the user in case of critical failure
+    const appElement = document.getElementById('app');
+    if (appElement) {
+      appElement.innerHTML = `
+        <div class="container mt-5 text-center text-danger">
+          <h1>System Error</h1>
+          <p>Could not initialize the application. Please reload or contact support.</p>
+        </div>
+      `;
+    }
   }
 };
 

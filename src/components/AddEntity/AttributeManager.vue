@@ -274,29 +274,22 @@ export default {
     validateAttributes() {
       this.errors = {};
       let isValid = true;
+      const i18n = this.$.appContext.provides.i18n;
 
       this.localAttributes.forEach((attr, idx) => {
         const attrErrors = {};
 
         if (!attr.name || attr.name.trim() === '') {
-          attrErrors.name = trans('validation.required', {}, this.$.appContext.provides.i18n);
+          attrErrors.name = trans('validation.required', {}, i18n);
           isValid = false;
         }
 
         if (['radio', 'select', 'checkbox'].includes(attr.type)) {
           if (!attr.options || attr.options.length === 0) {
-            attrErrors.options = trans(
-              'validation.optionsRequired',
-              {},
-              this.$.appContext.provides.i18n,
-            );
+            attrErrors.options = trans('validation.optionsRequired', {}, i18n);
             isValid = false;
           } else if (attr.options.some((opt) => !opt || opt.trim() === '')) {
-            attrErrors.options = trans(
-              'validation.emptyOptions',
-              {},
-              this.$.appContext.provides.i18n,
-            );
+            attrErrors.options = trans('validation.emptyOptions', {}, i18n);
             isValid = false;
           }
         }
@@ -304,29 +297,17 @@ export default {
         if (attr.required) {
           if (attr.type === 'checkbox') {
             if (!attr.value || attr.value.length === 0) {
-              attrErrors.value = trans(
-                'validation.requiredField',
-                {},
-                this.$.appContext.provides.i18n,
-              );
+              attrErrors.value = trans('validation.requiredField', {}, i18n);
               isValid = false;
             }
           } else if (attr.type === 'image' || attr.type === 'file') {
             if (!attr.value || attr.value.length === 0) {
-              attrErrors.value = trans(
-                'validation.fileRequired',
-                {},
-                this.$.appContext.provides.i18n,
-              );
+              attrErrors.value = trans('validation.fileRequired', {}, i18n);
               isValid = false;
             }
           } else {
             if (!attr.value || String(attr.value).trim() === '') {
-              attrErrors.value = trans(
-                'validation.requiredField',
-                {},
-                this.$.appContext.provides.i18n,
-              );
+              attrErrors.value = trans('validation.requiredField', {}, i18n);
               isValid = false;
             }
           }
@@ -359,6 +340,13 @@ export default {
       this.localAttributes = newAttributes;
     },
     removeAttribute(idx) {
+      const attr = this.localAttributes[idx];
+      if ((attr.type === 'image' || attr.type === 'file') && Array.isArray(attr.value)) {
+        attr.value.forEach((fileObj) => {
+          if (fileObj.preview) URL.revokeObjectURL(fileObj.preview);
+        });
+      }
+
       const newAttributes = [...this.localAttributes];
       newAttributes.splice(idx, 1);
       this.localAttributes = newAttributes;
@@ -367,6 +355,7 @@ export default {
     onTypeChange(idx) {
       if (this.errors[idx]) delete this.errors[idx];
       const attr = this.localAttributes[idx];
+
       if (['radio', 'checkbox', 'select'].includes(attr.type)) {
         if (!attr.options || attr.options.length <= 0) {
           attr.options = [''];
@@ -385,6 +374,7 @@ export default {
     onImagesChange(event, idx) {
       this.clearError(idx, 'value');
       const files = Array.from(event.target.files);
+
       this.localAttributes[idx].value = files.map((file) => ({
         file,
         preview: URL.createObjectURL(file),
@@ -399,6 +389,10 @@ export default {
       }));
     },
     removeFile(attrIdx, fileIdx) {
+      const fileObj = this.localAttributes[attrIdx].value[fileIdx];
+      if (fileObj.preview) {
+        URL.revokeObjectURL(fileObj.preview);
+      }
       this.localAttributes[attrIdx].value.splice(fileIdx, 1);
     },
     setPrimaryImage(attrIdx, imgIdx) {
@@ -418,16 +412,16 @@ export default {
       return Math.round((bytes / Math.pow(k, i)) * 100) / 100 + ' ' + sizes[i];
     },
   },
+  beforeUnmount() {
+    this.localAttributes.forEach((attr) => {
+      if ((attr.type === 'image' || attr.type === 'file') && Array.isArray(attr.value)) {
+        attr.value.forEach((fileObj) => {
+          if (fileObj.preview) URL.revokeObjectURL(fileObj.preview);
+        });
+      }
+    });
+  },
 };
 </script>
 
-<style scoped>
-.attribute-options-box {
-  background: #f8f9fa;
-  padding: 10px;
-  border-radius: 5px;
-}
-.icon-small {
-  font-size: 1rem;
-}
-</style>
+<style scoped></style>

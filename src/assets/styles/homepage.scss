@@ -1,14 +1,12 @@
 @import 'variables';
 
 .homepage {
-  /* ZMIANA: Flexbox kolumnowy, aby układać elementy od góry */
   display: flex;
   flex-direction: column;
   justify-content: flex-start;
-  gap: 20px; /* Odstęp między Logo a resztą treści */
+  gap: 20px;
 
   color: $textColor;
-  /* Wysokość na 100% dostępnego miejsca w kontenerze rodzica */
   height: 100%;
   width: 100%;
   padding-top: 10px;
@@ -70,10 +68,9 @@
   }
 
   .content {
-    /* ZMIANA: Układ kolumnowy dla elementów wewnątrz contentu */
     display: flex;
     flex-direction: column;
-    gap: 1.5em; /* Odstępy między kafelkami */
+    gap: 1.5em;
     width: 100%;
     height: fit-content;
 

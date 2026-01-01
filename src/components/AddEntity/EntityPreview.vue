@@ -79,9 +79,10 @@
 <script>
 import { trans } from '@/translations/translator.js';
 import VueSelect from 'vue3-select-component';
-import iconsObject from '/src/assets/icons-picker.json';
+import iconsObject from '@/assets/icons-picker.json';
 
 const animationDuration = 5000;
+
 export default {
   name: 'EntityPreview',
   components: { VueSelect },
@@ -89,11 +90,19 @@ export default {
     newEntity: { type: Object, required: true },
     initialIcon: { type: String, default: null },
   },
+  data() {
+    return {
+      isColorpickerActive: true,
+      showIconSelect: false,
+      isIconClicked: true,
+      iconNamesArray: Object.keys(iconsObject),
+      iconOptions: [],
+    };
+  },
   created() {
     this.iconOptions = this.iconNamesArray.map((icon) => ({ label: icon, value: icon }));
   },
-  async mounted() {
-    this.newEntity.type = this.initialType;
+  mounted() {
     document.addEventListener('click', this.handleClickOutside);
     setTimeout(() => {
       this.isIconClicked = false;
@@ -105,15 +114,6 @@ export default {
   },
   beforeUnmount() {
     document.removeEventListener('click', this.handleClickOutside);
-  },
-  data() {
-    return {
-      isColorpickerActive: true,
-      showIconSelect: false,
-      isIconClicked: true,
-      iconNamesArray: Object.keys(iconsObject),
-      iconOptions: [],
-    };
   },
   methods: {
     trans,

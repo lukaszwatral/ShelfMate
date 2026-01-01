@@ -1,4 +1,7 @@
 /**
+ * Global Database Schema Definition.
+ * Represents the structure of the database tables for Kysely type inference.
+ *
  * @typedef {Object} Database
  * @property {EntityTable} Entity
  * @property {TagTable} Tag
@@ -72,7 +75,7 @@
  * @property {number|null} categoryTemplateId
  * @property {number|null} entityId
  * @property {string} fieldName
- * @property {'text'|'number'|'date'|'datetime'|'textarea'|'checkbox'|'radio'|'select'|'file'|'image'|'color'|'url'|'boolean'|'email'} fieldType
+ * @property {'text'|'number'|'date'|'datetime-local'|'expiry_date'|'textarea'|'checkbox'|'radio'|'select'|'file'|'image'|'color'|'url'|'boolean'|'email'} fieldType
  * @property {boolean} isRequired
  * @property {string|null} defaultValue
  * @property {string|null} options

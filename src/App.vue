@@ -21,15 +21,14 @@
 <script>
 import { CapacitorNfc } from '@capgo/capacitor-nfc';
 import { App } from '@capacitor/app';
+import { Toast } from '@capacitor/toast';
+import { CapacitorBarcodeScannerTypeHint } from '@capacitor/barcode-scanner';
 import AppHeader from '@/components/Header.vue';
 import AppFooter from '@/components/Footer.vue';
 import SearchResults from '@/components/SearchResults.vue';
 import { entityRepository } from '@/db/repositories/EntityRepository';
-import { Toast } from '@capacitor/toast';
-import { trans } from '@/translations/translator.js';
 import { codeRepository } from '@/db/index.js';
-import { CapacitorBarcodeScannerTypeHint } from '@capacitor/barcode-scanner';
-import { CapacitorCookies } from '@capacitor/core';
+import { trans } from '@/translations/translator.js';
 
 export default {
   name: 'App',
@@ -51,6 +50,9 @@ export default {
     },
   },
   methods: {
+    /**
+     * Handles barcode scan results.
+     */
     async handleScannedCode(scanResult) {
       const scannedValue = scanResult.ScanResult;
       const scannedType = scanResult.format
@@ -60,6 +62,10 @@ export default {
       await this.processCodeSearch(scannedType, scannedValue);
     },
 
+    /**
+     * Handles NFC tag detection.
+     * Skips processing if currently on add/edit screens to prevent data loss or conflict.
+     */
     async handleNfcTag(tag) {
       if (['addEntity', 'editEntity'].includes(this.$route.name)) {
         return;
@@ -71,6 +77,10 @@ export default {
       await this.processCodeSearch('nfc', scannedValue);
     },
 
+    /**
+     * Core logic to search for an entity by code (barcode or NFC).
+     * Navigates to the entity view if found, otherwise shows a toast.
+     */
     async processCodeSearch(type, value) {
       let entity = await codeRepository.findEntityByCode(type, value);
 
@@ -89,6 +99,9 @@ export default {
       this.isSearchActive = false;
     },
 
+    /**
+     * Converts raw NFC byte array to a colon-separated hex string.
+     */
     convertBytesToHex(byteArray) {
       if (!byteArray) return '';
       return byteArray
@@ -115,6 +128,16 @@ export default {
       }
     },
 
+    /**
+     * Wrapper to handle NFC restart with a slight delay.
+     * Needed for correct event listener removal.
+     */
+    handleNfcRestart() {
+      setTimeout(() => {
+        this.initGlobalNfc();
+      }, 100);
+    },
+
     async performSearch(query) {
       if (!query || query.length < 2) {
         this.searchResults = [];
@@ -137,15 +160,7 @@ export default {
   async mounted() {
     await this.initGlobalNfc();
 
-    window.addEventListener('restart-global-nfc', () => {
-      setTimeout(() => {
-        this.initGlobalNfc();
-      }, 100);
-    });
-
-    if (!document.cookie.includes('recent')) {
-      document.cookie;
-    }
+    window.addEventListener('restart-global-nfc', this.handleNfcRestart);
 
     App.addListener('backButton', () => {
       if (this.isSearchActive) {
@@ -160,7 +175,6 @@ export default {
         if (bsOffcanvas) {
           bsOffcanvas.hide();
         } else {
-          // Fallback: kliknij przycisk zamykania, jeśli instancja nie istnieje
           const closeBtn = openOffcanvas.querySelector('[data-bs-dismiss="offcanvas"]');
           if (closeBtn) closeBtn.click();
           else openOffcanvas.classList.remove('show');
@@ -184,7 +198,7 @@ export default {
     });
   },
   async beforeUnmount() {
-    window.removeEventListener('restart-global-nfc', this.initGlobalNfc);
+    window.removeEventListener('restart-global-nfc', this.handleNfcRestart);
     if (this.nfcListener) await this.nfcListener.remove();
     try {
       await CapacitorNfc.stopScanning();

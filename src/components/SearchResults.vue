@@ -23,7 +23,6 @@ import { trans } from '@/translations/translator.js';
 
 export default {
   name: 'SearchResults',
-  methods: { trans },
   components: { EntityListItem },
   props: {
     results: {
@@ -36,26 +35,8 @@ export default {
     },
   },
   emits: ['select'],
+  methods: { trans },
 };
 </script>
 
-<style scoped>
-.search-overlay {
-  position: fixed;
-  top: calc(70px + env(safe-area-inset-top));
-  bottom: 70px;
-  left: 0;
-  right: 0;
-  background-color: #f8f9fa;
-  z-index: 1050;
-  overflow-y: auto;
-}
-
-.no-results {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  height: 50vh;
-}
-</style>
+<style scoped></style>

@@ -33,11 +33,12 @@ export default {
   components: { EntityToggle, EntityList },
   methods: {
     trans,
-    getPlaces() {
-      return Promise.all([
+    async getPlaces() {
+      const [places, items] = await Promise.all([
         entityRepository.findBy({ type: 'place' }),
         entityRepository.findBy({ type: 'item' }),
-      ]).then(([places, items]) => [...places, ...items]);
+      ]);
+      return [...places, ...items];
     },
   },
 };

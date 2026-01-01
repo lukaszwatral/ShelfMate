@@ -3,12 +3,18 @@ import { sql } from 'kysely';
 import { Entity } from '../models/Entity.js';
 
 /**
- * Helper: Przygotowuje bezpieczne zapytanie dla FTS5.
+ * Helper: Sanitizes and prepares a query string for SQLite FTS5.
+ * Removes special characters and adds wildcards for prefix matching.
+ * @param {string} query
+ * @returns {string}
  */
 function prepareSearchQuery(query) {
   if (!query) return '';
+  // Allow letters, numbers, and spaces. Remove FTS syntax chars like OR, AND, etc.
   const sanitized = query.replace(/[^a-zA-Z0-9\s\p{L}]/gu, '').trim();
   if (!sanitized) return '';
+
+  // Append * to each word for prefix search
   return sanitized
     .split(/\s+/)
     .map((term) => `"${term}"*`)
@@ -17,15 +23,20 @@ function prepareSearchQuery(query) {
 
 export class EntityRepository {
   /**
-   * Tworzy encję wraz ze wszystkimi powiązanymi danymi w jednej transakcji.
+   * Complex transaction to create an Entity along with its Codes, Template Fields,
+   * and Ad-Hoc Attributes (CustomFields created on the fly).
+   * * @param {Entity} entityData - The main entity model.
+   * @param {Object} codeData - { type: string, value: string }
+   * @param {Object} templateFieldsData - Key-value pairs of { fieldId: value }
+   * @param {Array} adHocAttributes - Array of objects defining new fields and values.
+   * @returns {Promise<number>} The ID of the newly created Entity.
    */
   async createWithRelatedData(entityData, codeData, templateFieldsData, adHocAttributes) {
     return await db.transaction().execute(async (trx) => {
-      // 1. Zapisz Entity
-      // Pobieramy dane przygotowane przez klasę Entity (toDatabase handles logic like isArchived -> 1/0)
+      // 1. Save Entity
       const dbData = entityData.toDatabase();
 
-      // Usuwamy ID (auto-increment) i daty (baza ustawi defaulty)
+      // Clean up fields handled by DB defaults
       delete dbData.id;
       delete dbData.created_at;
       delete dbData.updated_at;
@@ -39,7 +50,7 @@ export class EntityRepository {
 
       const entityId = entityResult.id;
 
-      // 2. Zapisz Kod
+      // 2. Save Code (if provided)
       if (codeData && codeData.value) {
         const type = codeData.type || 'manual';
         await trx
@@ -52,7 +63,7 @@ export class EntityRepository {
           .execute();
       }
 
-      // 3. Zapisz Pola z szablonu
+      // 3. Save Template Field Values
       if (templateFieldsData && Object.keys(templateFieldsData).length > 0) {
         for (const [fieldId, value] of Object.entries(templateFieldsData)) {
           if (value === null || value === undefined || value === '') continue;
@@ -68,9 +79,10 @@ export class EntityRepository {
         }
       }
 
-      // 4. Obsługa atrybutów ad-hoc
+      // 4. Handle Ad-Hoc Attributes (Create Field definition -> Save Value)
       if (adHocAttributes && adHocAttributes.length > 0) {
         for (const [idx, attr] of adHocAttributes.entries()) {
+          // 4a. Create the CustomField definition linked to this specific entity
           const fieldResult = await trx
             .insertInto('CustomField')
             .values({
@@ -87,6 +99,7 @@ export class EntityRepository {
           const customFieldId = fieldResult.id;
           let fieldValueToSave = '';
 
+          // 4b. Handle specific logic for files/images vs simple text
           if (
             (attr.type === 'image' || attr.type === 'file') &&
             attr.savedFiles &&
@@ -115,6 +128,7 @@ export class EntityRepository {
                 : String(attr.value || '');
           }
 
+          // 4c. Save the value
           await trx
             .insertInto('CustomFieldValue')
             .values({
@@ -130,6 +144,11 @@ export class EntityRepository {
     });
   }
 
+  /**
+   * Retrieves all non-archived entities, optionally filtered by type.
+   * @param {string|null} type - 'item', 'category', or 'place'.
+   * @returns {Promise<Entity[]>}
+   */
   async findAll(type = null) {
     let query = db.selectFrom('Entity').selectAll();
 
@@ -138,11 +157,14 @@ export class EntityRepository {
     }
 
     const results = await query.where('is_archived', '=', 0).orderBy('sort_order', 'asc').execute();
-
-    // Twój konstruktor Entity obsłuży mapowanie snake_case -> camelCase
     return results.map((row) => new Entity(row));
   }
 
+  /**
+   * Finds an entity by ID.
+   * @param {number} id
+   * @returns {Promise<Entity|null>}
+   */
   async find(id) {
     const result = await db
       .selectFrom('Entity')
@@ -153,30 +175,38 @@ export class EntityRepository {
     return result ? new Entity(result) : null;
   }
 
+  /**
+   * Finds a single entity matching the criteria.
+   * @param {Object} criteria
+   * @returns {Promise<Entity|null>}
+   */
   async findOneBy(criteria) {
     let query = db.selectFrom('Entity');
-
-    Object.entries(criteria).forEach(([key, value]) => {
-      const snakeKey = key.replace(/[A-Z]/g, (letter) => `_${letter.toLowerCase()}`);
-      query = query.where(snakeKey, '=', value);
-    });
+    query = this._applyCriteria(query, criteria);
 
     const result = await query.selectAll().executeTakeFirst();
     return result ? new Entity(result) : null;
   }
 
+  /**
+   * Finds all entities matching the criteria.
+   * @param {Object} criteria
+   * @returns {Promise<Entity[]>}
+   */
   async findBy(criteria) {
     let query = db.selectFrom('Entity');
-
-    Object.entries(criteria).forEach(([key, value]) => {
-      const snakeKey = key.replace(/[A-Z]/g, (letter) => `_${letter.toLowerCase()}`);
-      query = query.where(snakeKey, '=', value);
-    });
+    query = this._applyCriteria(query, criteria);
 
     const results = await query.selectAll().execute();
     return results.map((row) => new Entity(row));
   }
 
+  /**
+   * Saves or Updates an Entity.
+   * On update, it preserves the original 'created_at' timestamp.
+   * @param {Entity} entity
+   * @returns {Promise<number>} ID of the saved entity.
+   */
   async save(entity) {
     const data = entity.toDatabase();
 
@@ -194,17 +224,26 @@ export class EntityRepository {
     } else {
       // Insert
       const result = await db.insertInto('Entity').values(data).executeTakeFirst();
-      return result.insertId;
+      return Number(result.insertId);
     }
   }
 
+  /**
+   * Deletes an entity by ID.
+   * Note: Triggers defined in DB initialization handle the cleanup of EntitySearch.
+   * @param {Entity|number} entity
+   */
   async remove(entity) {
-    const id = typeof entity.getId === 'function' ? entity.getId() : entity.id;
-
+    const id = typeof entity.getId === 'function' ? entity.getId() : entity.id || entity;
     await db.deleteFrom('Entity').where('id', '=', id).execute();
-    await sql`DELETE FROM EntitySearch WHERE entity_id = ${id}`.execute(db);
   }
 
+  /**
+   * Finds child entities for a given parent.
+   * @param {number} parentId
+   * @param {string|null} type
+   * @returns {Promise<Entity[]>}
+   */
   async findChildren(parentId, type = null) {
     let query = db
       .selectFrom('Entity')
@@ -219,6 +258,12 @@ export class EntityRepository {
     return results.map((row) => new Entity(row));
   }
 
+  /**
+   * Performs a Full Text Search using the virtual EntitySearch table.
+   * @param {string} searchTerm
+   * @param {string|null} type
+   * @returns {Promise<Entity[]>}
+   */
   async search(searchTerm, type = null) {
     const ftsQuery = prepareSearchQuery(searchTerm);
 
@@ -229,32 +274,37 @@ export class EntityRepository {
       // Join with virtual FTS table
       .innerJoin('EntitySearch as es', 'es.entity_id', 'e.id')
       .selectAll('e')
-      // Use MATCH operator
+      // Use MATCH operator on the virtual table
       .where(sql`EntitySearch`, 'match', ftsQuery);
 
     if (type) {
       query = query.where('e.type', '=', type);
     }
 
-    // Sort by rank (relevance)
+    // Sort by rank (relevance) provided by FTS5
     const results = await query.orderBy(sql`rank`).execute();
 
     return results.map((row) => new Entity(row));
   }
 
+  /**
+   * Counts entities matching criteria.
+   * @param {Object} criteria
+   * @returns {Promise<number>}
+   */
   async count(criteria = {}) {
     let query = db.selectFrom('Entity');
-
-    Object.entries(criteria).forEach(([key, value]) => {
-      const snakeKey = key.replace(/[A-Z]/g, (letter) => `_${letter.toLowerCase()}`);
-      query = query.where(snakeKey, '=', value);
-    });
+    query = this._applyCriteria(query, criteria);
 
     const result = await query.select((eb) => eb.fn.count('id').as('count')).executeTakeFirst();
-
     return Number(result.count);
   }
 
+  /**
+   * Finds an entity linked to a specific barcode/NFC code.
+   * @param {string} codeValue
+   * @returns {Promise<Entity|null>}
+   */
   async findByCode(codeValue) {
     const result = await db
       .selectFrom('Code')
@@ -266,6 +316,11 @@ export class EntityRepository {
     return result ? new Entity(result) : null;
   }
 
+  /**
+   * Finds active (not archived) entities that have an 'expiry_date' field
+   * falling within the next 3 days.
+   * @returns {Promise<Entity[]>}
+   */
   async findExpiringIn3Days() {
     const today = new Date();
     const threeDaysLater = new Date();
@@ -291,6 +346,22 @@ export class EntityRepository {
       .execute();
 
     return results.map((row) => new Entity(row));
+  }
+
+  /**
+   * Helper to apply WHERE clauses from a criteria object.
+   * Converts camelCase keys (JS) to snake_case columns (DB).
+   * @param {Object} query - Kysely query builder.
+   * @param {Object} criteria - Filter object.
+   * @returns {Object} Modified query builder.
+   * @private
+   */
+  _applyCriteria(query, criteria) {
+    Object.entries(criteria).forEach(([key, value]) => {
+      const snakeKey = key.replace(/[A-Z]/g, (letter) => `_${letter.toLowerCase()}`);
+      query = query.where(snakeKey, '=', value);
+    });
+    return query;
   }
 }
 

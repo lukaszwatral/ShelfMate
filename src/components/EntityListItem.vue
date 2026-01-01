@@ -28,6 +28,7 @@
 
 <script>
 import { trans } from '@/translations/translator.js';
+
 export default {
   name: 'EntityListItem',
   props: {
@@ -49,19 +50,4 @@ export default {
 };
 </script>
 
-<style scoped>
-.entity-row {
-  cursor: pointer;
-  transition: background 0.2s;
-}
-.entity-row:active {
-  background: #f8f9fa !important;
-}
-.icon-box {
-  width: 40px;
-  height: 40px;
-  border-radius: 10px;
-  font-size: 1.2rem;
-  flex-shrink: 0;
-}
-</style>
+<style scoped></style>

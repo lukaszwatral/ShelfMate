@@ -44,19 +44,16 @@ export default {
   },
   methods: {
     trans,
-
     handleInput() {
       if (this.debounceTimer) clearTimeout(this.debounceTimer);
       this.debounceTimer = setTimeout(() => {
         this.$emit('search', this.inputValue);
       }, 300);
     },
-
     clearSearch() {
       this.inputValue = '';
       this.$emit('search', '');
     },
-
     async scanBarcode() {
       if (document.activeElement && document.activeElement.blur) {
         document.activeElement.blur();
@@ -69,12 +66,11 @@ export default {
 
         if (result.ScanResult) {
           this.$emit('scan', result);
-
           this.inputValue = '';
           this.$emit('search', '');
         }
       } catch (e) {
-        console.error('Error:', e);
+        // Error handling suppressed
       }
     },
   },

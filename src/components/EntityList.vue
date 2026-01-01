@@ -2,8 +2,8 @@
   <div
     class="mt-3"
     :class="{
-      'entity-list': this.viewMode === 'list',
-      'entity-list-folder': this.viewMode === 'folder',
+      'entity-list': viewMode === 'list',
+      'entity-list-folder': viewMode === 'folder',
     }"
   >
     <div class="buttons-container">
@@ -26,6 +26,7 @@
         <i class="bi bi-grid"></i>
       </button>
     </div>
+
     <div v-if="viewMode === 'list'">
       <ul v-if="rows.length" class="list-unstyled">
         <EntityTree
@@ -36,32 +37,16 @@
           @removeEntity="loadRows"
         >
           <template #entity="{ entity }">
-            <template v-if="entity.icon">
-              <i :class="`bi bi-${entity.icon} entity-icon`"></i>
-              <span class="entity-name">{{ entity.name }}</span>
-              <span class="entity-description">{{ entity.description }}</span>
-            </template>
-            <template v-else-if="entity.type === 'category'">
-              <i class="bi bi-tag-fill entity-icon"></i>
-              <span class="entity-name">{{ entity.name }}</span>
-              <span class="entity-description">{{ entity.description }}</span>
-            </template>
-            <template v-else-if="entity.type === 'place'">
-              <i class="bi bi-box-seam-fill entity-icon"></i>
-              <span class="entity-name">{{ entity.name }}</span>
-              <span class="entity-description">{{ entity.description }}</span>
-            </template>
-            <template v-else-if="entity.type === 'item'">
-              <i class="bi bi-bag-fill entity-icon"></i>
-              <span class="entity-name">{{ entity.name }}</span>
-              <span class="entity-description">{{ entity.description }}</span>
-            </template>
+            <i :class="getEntityIcon(entity)" class="entity-icon"></i>
+            <span class="entity-name">{{ entity.name }}</span>
+            <span class="entity-description">{{ entity.description }}</span>
           </template>
         </EntityTree>
       </ul>
       <div v-else-if="isLoading">{{ trans(loadingLabel) }}</div>
       <div v-else>{{ trans(emptyLabel) }}</div>
     </div>
+
     <div v-else>
       <button class="btn btn-primary" v-if="currentPath.length" @click="goUp">
         <i class="bi bi-chevron-left"></i>
@@ -76,26 +61,9 @@
           @enter="enter"
         >
           <template #entity="{ entity }">
-            <template v-if="entity.icon">
-              <i :class="`bi bi-${entity.icon} entity-icon`"></i>
-              <span class="entity-name">{{ entity.name }}</span>
-              <span class="entity-description">{{ entity.description }}</span>
-            </template>
-            <template v-else-if="entity.type === 'category'">
-              <i class="bi bi-tag-fill entity-icon"></i>
-              <span class="entity-name">{{ entity.name }}</span>
-              <span class="entity-description">{{ entity.description }}</span>
-            </template>
-            <template v-else-if="entity.type === 'place'">
-              <i class="bi bi-box-seam-fill entity-icon"></i>
-              <span class="entity-name">{{ entity.name }}</span>
-              <span class="entity-description">{{ entity.description }}</span>
-            </template>
-            <template v-else-if="entity.type === 'item'">
-              <i class="bi bi-bag-fill entity-icon"></i>
-              <span class="entity-name">{{ entity.name }}</span>
-              <span class="entity-description">{{ entity.description }}</span>
-            </template>
+            <i :class="getEntityIcon(entity)" class="entity-icon"></i>
+            <span class="entity-name">{{ entity.name }}</span>
+            <span class="entity-description">{{ entity.description }}</span>
           </template>
         </EntityTree>
       </ul>
@@ -156,6 +124,19 @@ export default {
   },
   methods: {
     trans,
+    getEntityIcon(entity) {
+      if (entity.icon) return `bi bi-${entity.icon}`;
+      switch (entity.type) {
+        case 'category':
+          return 'bi bi-tag-fill';
+        case 'place':
+          return 'bi bi-box-seam-fill';
+        case 'item':
+          return 'bi bi-bag-fill';
+        default:
+          return 'bi bi-question-circle';
+      }
+    },
     buildTree(entities) {
       const map = new Map();
       entities.forEach((e) => map.set(e.id, { ...e, children: [] }));
@@ -211,7 +192,6 @@ export default {
         const flat = await this.fetchFunction();
         this.rows = this.buildTree(flat);
       } catch (error) {
-        console.error('Error fetching entities:', error);
         this.error = error;
       } finally {
         this.isLoading = false;

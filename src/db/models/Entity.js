@@ -1,3 +1,6 @@
+/**
+ * Represents a core Entity (Item, Category, or Place).
+ */
 export class Entity {
   constructor(data = {}) {
     this.id = data.id || null;
@@ -14,7 +17,7 @@ export class Entity {
     this.updatedAt = data.updated_at || data.updatedAt || null;
   }
 
-  // Gettery
+  // Getters
   getId() {
     return this.id;
   }
@@ -51,9 +54,8 @@ export class Entity {
   getUpdatedAt() {
     return this.updatedAt;
   }
-  // Usunięto obsługę soft delete (deleted_at)
 
-  // Settery
+  // Setters
   setType(value) {
     this.type = value;
     return this;
@@ -102,7 +104,11 @@ export class Entity {
     return this.type === 'place';
   }
 
-  // Konwersja do formatu bazy danych (snake_case)
+  /**
+   * Converts the model instance to a database-compatible object (snake_case).
+   * Handles boolean to integer conversion (0/1).
+   * @returns {Object}
+   */
   toDatabase() {
     return {
       type: this.type,

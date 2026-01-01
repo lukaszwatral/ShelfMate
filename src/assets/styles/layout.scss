@@ -13,7 +13,6 @@ body,
   height: 100%;
 }
 
-/* GŁÓWNY KONTENER APLIKACJI */
 .app-container {
   background-color: $backgroundColor;
   background-image:
@@ -24,16 +23,13 @@ body,
   display: flex;
   flex-direction: column;
 
-  /* ZMIANA: flex-start zamiast center - treść zaczyna się od góry */
   justify-content: flex-start;
   align-items: center;
 
   box-sizing: border-box;
-  /* Padding uwzględniający header (70px) i footer (70px) + bezpieczne strefy */
   padding: calc(70px + env(safe-area-inset-top)) 24px 70px;
 }
 
-/* HEADER (Górny pasek) */
 .header {
   color: white;
   position: fixed;
@@ -85,7 +81,6 @@ body,
   }
 }
 
-/* FOOTER (Dolny pasek) */
 .footer {
   color: white;
   position: fixed;
@@ -129,7 +124,6 @@ a {
   text-shadow: 0 0 4px $activeColor, 0 0 8px $activeColor;
 }
 
-/* Animacje przejść */
 .fade-enter-active,
 .fade-leave-active {
   transition: opacity 0.1s;

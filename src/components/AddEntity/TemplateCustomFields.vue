@@ -136,9 +136,4 @@ export default {
 };
 </script>
 
-<style scoped>
-.required-field {
-  color: red;
-  margin-left: 3px;
-}
-</style>
+<style scoped></style>

@@ -37,10 +37,10 @@ export default {
   name: 'Footer',
   computed: {
     route() {
-      return this.$route
+      return this.$route;
     },
   },
-}
+};
 </script>
 
 <style scoped></style>

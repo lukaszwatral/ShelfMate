@@ -1,3 +1,6 @@
+/**
+ * Represents a supported system locale/language.
+ */
 export class Locale {
   constructor(data = {}) {
     this.code = data.code || '';
@@ -24,6 +27,10 @@ export class Locale {
     return this;
   }
 
+  /**
+   * Converts the model instance to a database-compatible object.
+   * @returns {Object}
+   */
   toDatabase() {
     return {
       code: this.code,
