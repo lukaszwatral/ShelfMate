@@ -101,6 +101,9 @@ export default {
       nfcError: 'Error de NFC',
       nfcCodeExists: '¡Esta etiqueta NFC ya está asignada!',
     },
+    current: 'Entidad buscada',
+    location: 'Ubicación',
+    noParent: 'Ninguna entidad padre',
   },
   header: {
     searchPlaceholder: 'Buscar artículo...',

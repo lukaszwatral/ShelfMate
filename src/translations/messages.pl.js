@@ -101,6 +101,9 @@ export default {
       nfcError: 'Błąd NFC',
       nfcCodeExists: 'Ten tag NFC jest już przypisany!',
     },
+    current: 'Szukana encja',
+    location: 'Lokalizacja',
+    noParent: 'Brak encji nadrzędnej',
   },
   header: {
     searchPlaceholder: 'Wyszukaj przedmiot...',
