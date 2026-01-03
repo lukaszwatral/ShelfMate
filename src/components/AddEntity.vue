@@ -167,7 +167,6 @@
 
         <AttributeManager ref="attributeManagerRef" v-if="isAdd || isEdit" v-model="attributes" />
       </template>
-
       <div v-if="hasErrors && !isView" class="alert alert-danger mt-3 mb-3 text-center small-alert">
         <i class="bi bi-exclamation-triangle-fill me-2"></i>
         {{ trans('validation.fixErrors', {}, this.$.appContext.provides.i18n) }}
@@ -187,7 +186,12 @@
           {{ isAdd ? trans('home.addEntity') : trans('addEntity.saveChanges') }}
         </span>
       </button>
+
       <div class="entity-actions-view" v-if="isView">
+        <button @click.stop.prevent="openHierarchyOffcanvas">
+          <i class="bi bi-tag-fill"></i>
+        </button>
+
         <button @click.stop.prevent="redirectToEdit">
           <i class="bi bi-pencil-square"></i>
         </button>
@@ -208,6 +212,54 @@
         <button class="btn btn-outline-secondary mt-3" @click="closeNfcModal">
           {{ trans('addEntity.nfc.cancel') }}
         </button>
+      </div>
+    </div>
+
+    <div
+      class="offcanvas offcanvas-bottom h-auto"
+      tabindex="-1"
+      id="hierarchyOffcanvas"
+      ref="hierarchyOffcanvas"
+      style="max-height: 80vh"
+    >
+      <div class="offcanvas-header">
+        <h5 class="offcanvas-title">
+          <i class="bi bi-geo-alt-fill me-2"></i>
+          {{ trans('addEntity.location') }}
+        </h5>
+        <button
+          type="button"
+          class="btn-close text-reset"
+          data-bs-dismiss="offcanvas"
+          aria-label="Close"
+        ></button>
+      </div>
+      <div class="offcanvas-body">
+        <div v-if="hierarchyPath.length === 0" class="text-center text-muted">
+          {{ trans('addEntity.noParent') }}
+        </div>
+
+        <div v-else class="hierarchy-timeline">
+          <div v-for="(item, index) in hierarchyPath" :key="item.id" class="hierarchy-item">
+            <div class="timeline-marker">
+              <div class="marker-dot" :class="{ 'is-current': index === hierarchyPath.length - 1 }">
+                <i v-if="item.icon" :class="`bi bi-${item.icon}`"></i>
+                <i v-else-if="item.type === 'place'" class="bi bi-box-seam-fill"></i>
+                <i v-else class="bi bi-bag-fill"></i>
+              </div>
+              <div v-if="index !== hierarchyPath.length - 1" class="timeline-line"></div>
+            </div>
+            <div class="hierarchy-content ms-3 pb-4">
+              <h6 class="mb-0 fw-bold">{{ item.name }}</h6>
+              <small class="text-muted">
+                {{ trans('addEntity.' + item.type, {}, this.$.appContext.provides.i18n) }}
+                <span v-if="index === hierarchyPath.length - 1" class="badge ms-2">
+                  {{ trans('addEntity.current') }}
+                </span>
+              </small>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   </div>
@@ -242,6 +294,7 @@ import { Toast } from '@capacitor/toast';
 import { HistoryService } from '@/services/HistoryService.js';
 import { Dialog } from '@capacitor/dialog';
 import { NotificationService } from '@/services/NotificationService.js';
+import { Offcanvas } from 'bootstrap';
 
 const notificationHour = import.meta.env.VITE_NOTIFICATION_HOUR;
 
@@ -259,18 +312,18 @@ export default {
       allCategories: [],
       newEntity: new Entity(),
       code: { type: 'manual', value: null },
-
       nfcCode: { value: null },
       nfcState: 'empty',
       showNfcModal: false,
       isScanningNfc: false,
-
       initialIcon: 'question',
       loadingEntity: false,
       templateCustomFields: [],
       templateCustomFieldsValues: {},
       attributes: [],
       errors: {},
+      hierarchyPath: [],
+      bsOffcanvas: null,
     };
   },
   async mounted() {
@@ -292,13 +345,11 @@ export default {
     hasErrors() {
       return Object.values(this.errors).some((error) => !!error);
     },
-
     nfcIconClass() {
       if (this.nfcState === 'valid') return 'text-success';
       if (this.nfcState === 'error') return 'text-danger';
       return 'text-secondary';
     },
-
     typeOptions() {
       return [
         { label: trans('addEntity.category'), value: 'category', icon: 'tag-fill' },
@@ -566,7 +617,6 @@ export default {
         console.error('Error:', e);
       }
     },
-
     async addEntity() {
       try {
         const preparedAttributes = await this.prepareAttributesWithFiles(this.attributes);
@@ -603,7 +653,6 @@ export default {
         });
       }
     },
-
     async updateEntity() {
       try {
         const id = await entityRepository.save(this.newEntity);
@@ -728,7 +777,6 @@ export default {
         console.error('Error updating entity:', e);
       }
     },
-
     async loadEntity(id) {
       try {
         this.loadingEntity = true;
@@ -844,6 +892,37 @@ export default {
     redirectToEdit() {
       this.$router.push({ name: 'editEntity', params: { id: this.newEntity.id } });
     },
+    async openHierarchyOffcanvas() {
+      await this.fetchEntityPath();
+      const el = this.$refs.hierarchyOffcanvas;
+      if (el) {
+        this.bsOffcanvas = new Offcanvas(el);
+        this.bsOffcanvas.show();
+      }
+    },
+    async fetchEntityPath() {
+      if (!this.newEntity || !this.newEntity.id) return;
+      this.hierarchyPath = [];
+
+      let current = this.newEntity;
+      const path = [current];
+
+      try {
+        let parentId = current.parentId;
+        while (parentId) {
+          const parent = await entityRepository.find(Number(parentId));
+          if (parent) {
+            path.unshift(parent);
+            parentId = parent.parentId;
+          } else {
+            parentId = null;
+          }
+        }
+      } catch (e) {
+        console.error('Error building hierarchy path:', e);
+      }
+      this.hierarchyPath = path;
+    },
   },
   watch: {
     '$route.params.id': {
@@ -917,6 +996,9 @@ export default {
   async beforeUnmount() {
     if (this.isScanningNfc) {
       await this.closeNfcModal();
+    }
+    if (this.bsOffcanvas) {
+      this.bsOffcanvas.hide();
     }
   },
 };

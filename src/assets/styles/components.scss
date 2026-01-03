@@ -771,3 +771,57 @@
 .danger-zone {
   opacity: 0.9;
 }
+
+.hierarchy-timeline {
+  position: relative;
+  padding-left: 10px;
+}
+
+.hierarchy-item {
+  display: flex;
+  position: relative;
+}
+
+.timeline-marker {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 32px;
+  min-width: 32px;
+}
+
+.marker-dot {
+  width: 30px;
+  height: 30px;
+  background-color: $thirdColor;
+  border: 2px solid $primaryColor;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: $primaryColor;
+  font-size: 1rem;
+  z-index: 2;
+}
+
+.marker-dot.is-current {
+  background-color: $primaryColor;
+  color: $textColor;
+}
+
+.timeline-line {
+  flex-grow: 1;
+  width: 2px;
+  background-color: $textColor;
+  margin-top: -2px;
+  margin-bottom: -2px;
+  min-height: 20px;
+}
+
+.badge {
+ background-color: $secondaryColor;
+}
+
+.bi-geo-alt-fill {
+  color: $secondaryColor;
+}

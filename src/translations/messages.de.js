@@ -101,6 +101,9 @@ export default {
       nfcError: 'NFC-Fehler',
       nfcCodeExists: 'Dieser NFC-Tag ist bereits zugewiesen!',
     },
+    current: 'Gesuchte Entität',
+    location: 'Standort',
+    noParent: 'Keine übergeordnete Entität',
   },
   header: {
     searchPlaceholder: 'Artikel suchen...',

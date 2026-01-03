@@ -101,6 +101,9 @@ export default {
       nfcError: 'NFC error',
       nfcCodeExists: 'This tag NFC already assigned!',
     },
+    current: 'Searched entity',
+    location: 'Location',
+    noParent: 'No parent entity',
   },
   header: {
     searchPlaceholder: 'Search item...',
